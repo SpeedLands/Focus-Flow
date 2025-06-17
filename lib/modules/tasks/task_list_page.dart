@@ -1,10 +1,7 @@
-// lib/app/modules/tasks/views/tasks_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:focus_flow/modules/tasks/tasks_controller.dart'; // Ajusta ruta
+import 'package:focus_flow/modules/tasks/tasks_controller.dart';
 import 'package:focus_flow/data/models/task_model.dart';
-// Asegúrate de importar AppNotificationModel si _buildPendingRequestsSection lo necesita directamente, aunque aquí no parece
-// import 'package:focus_flow/data/models/app_notification_model.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:intl/intl.dart';
 
@@ -21,18 +18,11 @@ class TasksListScreen extends GetView<TaskController> {
     final bool isTV = screenWidth > 800 && Get.height > 500;
     final bool isWatch = screenWidth < 300;
 
-    // Se llama a loadTasksForProject una sola vez cuando el projectId cambia o está vacío
-    // Esto se maneja mejor con el 'ever' en el onInit del controlador o una lógica
-    // que no dependa de addPostFrameCallback para evitar múltiples llamadas.
-    // Para este ejemplo, mantendremos tu lógica original, pero considera optimizarla.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (controller.currentProjectId.value != projectId ||
           (controller.tasks.isEmpty &&
               !controller.isLoadingTasks.value &&
-              controller
-                  .taskListError
-                  .value
-                  .isEmpty /* Solo reintentar si no hubo error */ )) {
+              controller.taskListError.value.isEmpty)) {
         controller.loadTasksForProject(projectId);
       }
     });
@@ -47,16 +37,15 @@ class TasksListScreen extends GetView<TaskController> {
         projectId,
         projectName,
         isTV: false,
-      ); // Pasar isTV
+      );
     }
   }
 
-  // --- BUILDER PARA PANTALLA MÓVIL/TABLET ---
   Widget _buildMobileTasksScreen(
     BuildContext context,
     String projectId,
     String projectName, {
-    required bool isTV, // Añadido para consistencia con _buildTvTasksScreen
+    required bool isTV,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
@@ -77,9 +66,7 @@ class TasksListScreen extends GetView<TaskController> {
       ),
       body: Column(
         children: [
-          // --- SECCIÓN DE SOLICITUDES PENDIENTES (SOLO ADMIN) ---
           Obx(() {
-            // Mostrar la sección si es admin Y (está cargando O ya tiene solicitudes)
             if (controller.isCurrentUserAdminForCurrentProject &&
                 (controller.isLoadingRequests.value ||
                     controller.pendingTaskModificationRequests.isNotEmpty)) {
@@ -87,12 +74,9 @@ class TasksListScreen extends GetView<TaskController> {
             }
             return const SizedBox.shrink();
           }),
-          // --- PESTAÑAS DE TAREAS ---
           Expanded(
             child: Obx(() {
-              // Loader principal para tareas
               if (controller.isLoadingTasks.value && controller.tasks.isEmpty) {
-                // No mostrar este loader si el de solicitudes ya está activo y la lista de tareas también está vacía
                 if (!(controller.isCurrentUserAdminForCurrentProject &&
                     controller.isLoadingRequests.value)) {
                   return const Center(
@@ -111,7 +95,6 @@ class TasksListScreen extends GetView<TaskController> {
                   .where((t) => t.isCompleted)
                   .toList();
 
-              // Estado vacío general (sin tareas Y sin solicitudes pendientes visibles para el admin)
               if (!controller.isLoadingTasks.value &&
                   pendingTasks.isEmpty &&
                   completedTasks.isEmpty &&
@@ -180,12 +163,10 @@ class TasksListScreen extends GetView<TaskController> {
   }
 
   Widget _buildWatchTasksScreen(
-    /* ... (sin cambios significativos, se mantiene tu lógica original) ... */
     BuildContext context,
     String projectId,
     String projectName,
   ) {
-    // ... tu código existente para watch ...
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -254,12 +235,11 @@ class TasksListScreen extends GetView<TaskController> {
   }
 
   Widget _buildTvTasksScreen(
-    /* ... (adaptado de _buildMobileTasksScreen) ... */
     BuildContext context,
     String projectId,
     String projectName,
   ) {
-    final bool isTV = true; // Definido para este builder
+    final bool isTV = true;
     return Scaffold(
       backgroundColor: Colors.blueGrey[900],
       appBar: GFAppBar(
@@ -280,8 +260,6 @@ class TasksListScreen extends GetView<TaskController> {
         ],
       ),
       body: Obx(() {
-        // Un solo Obx principal para la pantalla de TV
-        // Loader principal para tareas y solicitudes
         bool showMainLoader =
             (controller.isLoadingTasks.value && controller.tasks.isEmpty) ||
             (controller.isCurrentUserAdminForCurrentProject &&
@@ -302,7 +280,6 @@ class TasksListScreen extends GetView<TaskController> {
             .where((t) => t.isCompleted)
             .toList();
 
-        // Estado vacío general
         if (pendingTasks.isEmpty &&
             completedTasks.isEmpty &&
             !(controller.isCurrentUserAdminForCurrentProject &&
@@ -312,7 +289,6 @@ class TasksListScreen extends GetView<TaskController> {
 
         return CustomScrollView(
           slivers: [
-            // --- SECCIÓN DE SOLICITUDES PENDIENTES (SOLO ADMIN) ---
             SliverToBoxAdapter(
               child:
                   (controller.isCurrentUserAdminForCurrentProject &&
@@ -356,7 +332,6 @@ class TasksListScreen extends GetView<TaskController> {
     );
   }
 
-  // --- SECCIÓN DE SOLICITUDES PENDIENTES ---
   Widget _buildPendingRequestsSection(
     BuildContext context, {
     required bool isTV,
@@ -387,7 +362,6 @@ class TasksListScreen extends GetView<TaskController> {
               top: isTV ? 4 : 0,
             ),
             child: Text(
-              // El título muestra "cargando..." o el número de solicitudes
               "Solicitudes Pendientes (${controller.isLoadingRequests.value && controller.pendingTaskModificationRequests.isEmpty ? "cargando..." : controller.pendingTaskModificationRequests.length})",
               style: TextStyle(
                 fontSize: isTV ? 20 : 16,
@@ -396,7 +370,6 @@ class TasksListScreen extends GetView<TaskController> {
               ),
             ),
           ),
-          // Mostrar loader solo si está cargando Y aún no hay items en la lista
           if (controller.isLoadingRequests.value &&
               controller.pendingTaskModificationRequests.isEmpty)
             Padding(
@@ -408,7 +381,6 @@ class TasksListScreen extends GetView<TaskController> {
                 ),
               ),
             )
-          // Si no está cargando y la lista está vacía (después de cargar), mostrar mensaje
           else if (!controller.isLoadingRequests.value &&
               controller.pendingTaskModificationRequests.isEmpty)
             Padding(
@@ -423,7 +395,6 @@ class TasksListScreen extends GetView<TaskController> {
                 ),
               ),
             )
-          // Si hay items (independientemente del estado de carga, porque si carga y tiene items, los muestra)
           else
             ListView.builder(
               shrinkWrap: true,
@@ -533,7 +504,7 @@ class TasksListScreen extends GetView<TaskController> {
     );
   }
 
-  Widget _buildSectionHeaderTV(/* ... (sin cambios) ... */ String title) {
+  Widget _buildSectionHeaderTV(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
       child: Text(
@@ -547,7 +518,6 @@ class TasksListScreen extends GetView<TaskController> {
   }
 
   Widget _buildTasksListView(
-    /* ... (sin cambios) ... */
     BuildContext context,
     List<TaskModel> tasks,
     String emptyMessage,
@@ -610,11 +580,7 @@ class TasksListScreen extends GetView<TaskController> {
     );
   }
 
-  Widget _buildTaskItemMobile(
-    /* ... (sin cambios) ... */
-    BuildContext context,
-    TaskModel task,
-  ) {
+  Widget _buildTaskItemMobile(BuildContext context, TaskModel task) {
     final colorScheme = Theme.of(context).colorScheme;
     final priorityColor = _getPriorityColor(task.priority, context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -746,11 +712,7 @@ class TasksListScreen extends GetView<TaskController> {
     );
   }
 
-  Widget _buildTaskCardTV(
-    /* ... (sin cambios) ... */
-    BuildContext context,
-    TaskModel task,
-  ) {
+  Widget _buildTaskCardTV(BuildContext context, TaskModel task) {
     final priorityColor = _getPriorityColor(task.priority, context, isTV: true);
     final focusNode = FocusNode();
     bool canInteractWithMenu = controller.isCurrentUserMemberForCurrentProject;
@@ -869,11 +831,7 @@ class TasksListScreen extends GetView<TaskController> {
     );
   }
 
-  Widget _buildTaskItemWatch(
-    /* ... (sin cambios) ... */
-    BuildContext context,
-    TaskModel task,
-  ) {
+  Widget _buildTaskItemWatch(BuildContext context, TaskModel task) {
     bool canRequestActions = controller.isCurrentUserMemberForCurrentProject;
     final priorityColor = _getPriorityColor(
       task.priority,
@@ -999,7 +957,6 @@ class TasksListScreen extends GetView<TaskController> {
   }
 
   Widget _buildEmptyState(
-    /* ... (sin cambios) ... */
     BuildContext context,
     String projectId, {
     required bool isTV,
@@ -1048,7 +1005,6 @@ class TasksListScreen extends GetView<TaskController> {
   }
 
   List<PopupMenuEntry<String>> _taskMenuItems(
-    /* ... (sin cambios) ... */
     BuildContext context,
     TaskModel task, {
     required bool isTV,
@@ -1109,11 +1065,7 @@ class TasksListScreen extends GetView<TaskController> {
     return items;
   }
 
-  Widget _buildErrorState(
-    /* ... (sin cambios) ... */
-    BuildContext context, {
-    required bool isTV,
-  }) {
+  Widget _buildErrorState(BuildContext context, {required bool isTV}) {
     final textColor = isTV ? Colors.white70 : Get.textTheme.bodyLarge?.color;
     final titleColor = isTV ? Colors.white : Get.textTheme.headlineSmall?.color;
     return Center(
@@ -1156,11 +1108,7 @@ class TasksListScreen extends GetView<TaskController> {
     );
   }
 
-  void _handleTaskMenuAction(
-    /* ... (sin cambios) ... */
-    String value,
-    TaskModel task,
-  ) {
+  void _handleTaskMenuAction(String value, TaskModel task) {
     if (value == 'edit') {
       controller.navigateToEditTask(task);
     } else if (value == 'delete') {
@@ -1169,7 +1117,6 @@ class TasksListScreen extends GetView<TaskController> {
   }
 
   Color _getPriorityColor(
-    /* ... (sin cambios) ... */
     TaskPriority priority,
     BuildContext context, {
     bool isTV = false,

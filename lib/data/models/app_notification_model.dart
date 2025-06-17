@@ -1,32 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum AppNotificationType {
-  projectInvitation, // Invitación a un proyecto
-  taskAssigned, // Si implementas asignación de tareas
-  taskCompleted, // Tarea completada por otro miembro
-  projectUpdate, // Actualización importante en un proyecto
-  pomodoroEnd, // Fin de un ciclo Pomodoro
-  generic, // Notificación genérica
-  taskModificationRequest, //  Solicitud de miembro para editar/eliminar tarea
-  taskModificationApproved, //  Notificación al miembro de que su solicitud fue aprobada
-  taskModificationRejected, // Notificación al miembro de que su solicitud fue rechazada
+  projectInvitation,
+  taskAssigned,
+  taskCompleted,
+  projectUpdate,
+  pomodoroEnd,
+  generic,
+  taskModificationRequest,
+  taskModificationApproved,
+  taskModificationRejected,
   projectDeletionRequest,
   projectDeletionApproved,
   projectDeletionRejected,
 }
 
 class AppNotificationModel {
-  final String?
-  id; // ID del documento de notificación en Firestore (para el usuario)
+  final String? id;
   final String title;
   final String body;
   final AppNotificationType type;
-  final Map<String, dynamic>?
-  data; // Datos adicionales (ej. projectId, taskId, invitationId)
+  final Map<String, dynamic>? data;
   final bool isRead;
   final Timestamp createdAt;
-  final String? iconName; // Opcional: para mostrar un icono específico
-  final String? routeToNavigate; // Opcional: ruta a la que navegar al tocar
+  final String? iconName;
+  final String? routeToNavigate;
 
   AppNotificationModel({
     this.id,
@@ -91,9 +89,7 @@ class AppNotificationModel {
       title: title ?? this.title,
       body: body ?? this.body,
       type: type ?? this.type,
-      data:
-          data ??
-          this.data, // Si se pasa data, se usa; si no, se mantiene el anterior. Para eliminarlo, se pasaría un mapa vacío o null explícitamente.
+      data: data ?? this.data,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
       iconName: setIconNameToNull ? null : (iconName ?? this.iconName),

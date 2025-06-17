@@ -2,15 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ProjectModel {
-  final String? id; // ID del documento en Firestore
+  final String? id;
   final String name;
   final String? description;
   final String colorHex;
   final String iconName;
-  final String adminUserId; // UID del administrador del proyecto
-  // MODIFICADO: De Map<String, String> members a List<String> userRoles
-  final List<String> userRoles; // Lista de roles: ["userId:role"]
-  final String? accessCode; // Código de acceso opcional
+  final String adminUserId;
+  final List<String> userRoles;
+  final String? accessCode;
   final Timestamp createdAt;
   final Timestamp? updatedAt;
 
@@ -21,7 +20,6 @@ class ProjectModel {
     required this.colorHex,
     required this.iconName,
     required this.adminUserId,
-    // MODIFICADO: Cambiar members por userRoles
     required this.userRoles,
     this.accessCode,
     required this.createdAt,
@@ -39,10 +37,8 @@ class ProjectModel {
     DocumentSnapshot<Map<String, dynamic>> snapshot,
   ) {
     final data = snapshot.data()!;
-    // MODIFICADO: Manejo de 'userRoles' como una lista de strings
     List<String> userRolesList = [];
     if (data['userRoles'] != null && data['userRoles'] is List) {
-      // Asegurarse de que los elementos de la lista son strings
       userRolesList = List<String>.from(
         (data['userRoles'] as List).whereType<String>(),
       );
@@ -52,15 +48,13 @@ class ProjectModel {
       id: snapshot.id,
       name: data['name'] ?? 'Sin Nombre',
       description: data['description'],
-      colorHex: data['colorHex'] ?? '#9E9E9E', // Color por defecto gris
+      colorHex: data['colorHex'] ?? '#9E9E9E',
       iconName: data['iconName'] ?? 'default_icon',
       adminUserId: data['adminUserId'] ?? '',
       userRoles: userRolesList,
       accessCode: data['accessCode'],
-      createdAt:
-          data['createdAt'] ??
-          Timestamp.now(), // Proveer un valor por defecto si es nulo
-      updatedAt: data['updatedAt'], // Puede ser nulo
+      createdAt: data['createdAt'] ?? Timestamp.now(),
+      updatedAt: data['updatedAt'],
     );
   }
 
@@ -96,7 +90,6 @@ class ProjectModel {
     String? colorHex,
     String? iconName,
     String? adminUserId,
-    // MODIFICADO: Cambiar Map<String, String>? members a List<String>? userRoles
     List<String>? userRoles,
     String? accessCode,
     bool setAccessCodeToNull = false,
@@ -111,7 +104,6 @@ class ProjectModel {
       colorHex: colorHex ?? this.colorHex,
       iconName: iconName ?? this.iconName,
       adminUserId: adminUserId ?? this.adminUserId,
-      // MODIFICADO: Usar userRoles
       userRoles: userRoles ?? this.userRoles,
       accessCode: setAccessCodeToNull ? null : (accessCode ?? this.accessCode),
       createdAt: createdAt ?? this.createdAt,
@@ -120,7 +112,6 @@ class ProjectModel {
   }
 }
 
-// La función getIconData no necesita cambios
 IconData getIconData(String iconName) {
   switch (iconName.toLowerCase()) {
     case 'work':
@@ -137,9 +128,8 @@ IconData getIconData(String iconName) {
       return Icons.fitness_center_outlined;
     case 'school':
       return Icons.school_outlined;
-    // Agrega más mapeos según necesites
     case 'default_icon':
     default:
-      return Icons.folder_special_outlined; // Un ícono por defecto
+      return Icons.folder_special_outlined;
   }
 }

@@ -9,4 +9,5 @@ abstract class AppRoutes {
   static const TASKS_LIST = '/tasks_list';
   static const TASK_FORM = '/task_form';
   static const NOTIFICATIONS_LIST = '/notifications_list';
+  static const USER_SETTINGS = '/user-settings';
 }

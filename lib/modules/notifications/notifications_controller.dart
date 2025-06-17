@@ -1,4 +1,3 @@
-// lib/app/modules/notifications/notification_controller.dart
 import 'dart:async';
 import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
@@ -245,28 +244,23 @@ class NotificationController extends GetxController {
   void navigateFromNotification(AppNotificationModel notification) {
     final AuthController authController = Get.find<AuthController>();
 
-    // 1. Marcar como leída (si aplica)
     if (!notification.isRead && notification.id != null) {
       markAsRead(notification.id!);
     }
 
-    // 2. Extraer datos comunes de notification.data
     final String? projectId = notification.data?['projectId'] as String?;
     final String? projectName = notification.data?['projectName'] as String?;
     final String? taskId = notification.data?['taskId'] as String?;
-    // final String? taskName = notification.data?['taskName'] as String?;
     final String? adminUserIdForProject =
         notification.data?['adminUserIdForProject'] as String?;
     final String? requestingUserId =
         notification.data?['requestingUserId'] as String?;
 
-    // 3. Lógica de navegación específica por tipo
     switch (notification.type) {
       case AppNotificationType.projectInvitation:
         if (projectId != null) {
           Get.toNamed(
-            AppRoutes
-                .PROJECTS_LIST, // Asume que PROJECT_FORM puede manejar invitaciones
+            AppRoutes.PROJECTS_LIST,
             arguments: {
               'projectId': projectId,
               'projectName': projectName ?? 'Invitación a Proyecto',
@@ -357,7 +351,6 @@ class NotificationController extends GetxController {
         if (requestingUserId != null &&
             authController.currentUser.value?.uid == requestingUserId) {
           Get.offAllNamed(AppRoutes.PROJECTS_LIST);
-          // Es bueno mostrar el snackbar incluso después de la navegación para confirmar
           Get.snackbar(
             notification.title,
             notification.body,
@@ -366,7 +359,6 @@ class NotificationController extends GetxController {
           );
           return;
         }
-        // Si es para otros miembros, caerá al manejo genérico
         break;
 
       case AppNotificationType.projectDeletionRejected:
@@ -385,19 +377,12 @@ class NotificationController extends GetxController {
         break;
 
       case AppNotificationType.pomodoroEnd:
-        // Generalmente no navega. Si routeToNavigate está configurado, se usará.
-        // Si no, caerá al snackbar. Puedes añadir un Get.dialog() aquí si prefieres.
-        // Ejemplo:
-        // Get.dialog(AlertDialog(title: Text(notification.title), content: Text(notification.body)));
-        // return; // Si el diálogo es suficiente y no quieres snackbar ni routeToNavigate.
         break;
 
       case AppNotificationType.generic:
-        // No hay navegación específica, usará routeToNavigate o snackbar.
         break;
     }
 
-    // 4. Manejo genérico de navegación (si `routeToNavigate` está presente y no se navegó antes)
     if (notification.routeToNavigate != null &&
         notification.routeToNavigate!.isNotEmpty) {
       if (notification.routeToNavigate == AppRoutes.VERIFY_EMAIL &&
@@ -405,23 +390,16 @@ class NotificationController extends GetxController {
         print(
           "Advertencia: Se intenta navegar a una ruta vacía (VERIFY_EMAIL). Esto podría no funcionar con Get.toNamed().",
         );
-        // Decide cómo manejar esto. Podría ser un error o necesitar una lógica especial.
-        // Por ahora, se intentará la navegación.
       }
       Get.toNamed(notification.routeToNavigate!, arguments: notification.data);
       return;
     }
 
-    // 5. Fallback final: mostrar un snackbar si no hubo navegación y no hay routeToNavigate.
-    // El modelo de AppNotificationModel requiere title y body, por lo que no deberían ser null.
     Get.snackbar(
       notification.title,
       notification.body,
       snackPosition: SnackPosition.TOP,
       duration: const Duration(seconds: 4),
-      // Considera usar los colores de tu tema:
-      // backgroundColor: Get.theme.colorScheme.secondaryContainer,
-      // colorText: Get.theme.colorScheme.onSecondaryContainer,
     );
   }
 

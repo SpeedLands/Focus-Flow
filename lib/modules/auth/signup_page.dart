@@ -1,8 +1,7 @@
-// lib/app/modules/auth/views/register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:focus_flow/modules/auth/auth_controller.dart'; // Ajusta ruta
+import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 
 class RegisterScreen extends GetView<AuthController> {
@@ -10,12 +9,10 @@ class RegisterScreen extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
-    // ASUME que tienes controller.deviceType.value o una lógica similar
-    // final deviceType = controller.deviceType.value;
     final screenWidth = Get.width;
-    final screenHeight = Get.height; // Puede ser útil
+    final screenHeight = Get.height;
     final isTV = screenWidth > 800 && screenHeight > 500;
-    final isWatch = screenWidth < 320; // Umbral un poco más generoso para watch
+    final isWatch = screenWidth < 320;
     final isTablet = Get.mediaQuery.size.shortestSide >= 600 && !isTV;
 
     if (isWatch) {
@@ -58,21 +55,16 @@ class RegisterScreen extends GetView<AuthController> {
     double maxWidth = isTablet ? 500 : 400;
 
     if (isTV) {
-      logoSize = 0; // Sin logo en TV para maximizar espacio del formulario
-      padding = const EdgeInsets.symmetric(
-        horizontal: 80.0,
-        vertical: 40.0,
-      ); // Más padding para TV
+      logoSize = 0;
+      padding = const EdgeInsets.symmetric(horizontal: 80.0, vertical: 40.0);
       spacing = 25.0;
       maxWidth = 600;
     }
 
-    // FocusNodes (creados aquí para que se reconstruyan si la vista lo hace, o en el initState del StatefulWidget si fuera el caso)
     final nameFocusNode = FocusNode();
     final emailFocusNode = FocusNode();
     final passwordFocusNode = FocusNode();
     final confirmPasswordFocusNode = FocusNode();
-    // El botón de registro puede obtener foco automáticamente en TV si es el último.
 
     return Center(
       child: SingleChildScrollView(
@@ -80,14 +72,12 @@ class RegisterScreen extends GetView<AuthController> {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: Form(
-            // Envolver Column en Form
-            key: controller.registerFormKey, // Usar la clave del controlador
+            key: controller.registerFormKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                if (!isTV &&
-                    logoSize > 0) // Mostrar logo si no es TV y hay tamaño
+                if (!isTV && logoSize > 0)
                   Icon(
                     Icons.person_add_alt_1,
                     size: logoSize,
@@ -172,17 +162,14 @@ class RegisterScreen extends GetView<AuthController> {
                   () => _buildFormField(
                     controller: controller.registerConfirmPasswordController,
                     focusNode: confirmPasswordFocusNode,
-                    // nextFocusNode: null, // El siguiente es el botón
                     labelText: "Confirmar Contraseña",
                     hintText: "Vuelve a escribirla",
                     prefixIcon: Icons.lock_outline,
                     obscureText:
                         !controller.registerConfirmPasswordVisible.value,
-                    textInputAction: TextInputAction
-                        .done, // Para que el teclado muestre "Done"
+                    textInputAction: TextInputAction.done,
                     isTV: isTV,
-                    onFieldSubmitted: (_) => controller
-                        .register(), // Intentar registrar al presionar "Done"
+                    onFieldSubmitted: (_) => controller.register(),
                     suffixIcon: IconButton(
                       icon: Icon(
                         controller.registerConfirmPasswordVisible.value
@@ -210,7 +197,7 @@ class RegisterScreen extends GetView<AuthController> {
                   () => GFButton(
                     onPressed: controller.isRegisterLoading.value
                         ? null
-                        : controller.registerWithFormValidation, // Cambiado
+                        : controller.registerWithFormValidation,
                     text: controller.isRegisterLoading.value
                         ? "Registrando..."
                         : "REGISTRARME",
@@ -267,14 +254,7 @@ class RegisterScreen extends GetView<AuthController> {
     );
   }
 
-  // --- BUILDER PARA PANTALLA DE WATCH (SIMPLIFICADO) ---
   Widget _buildWatchRegisterScreen(BuildContext context) {
-    // Para Watch, el registro tradicional es muy engorroso.
-    // Opción 1: Indicar que se registre en el móvil.
-    // Opción 2: Un formulario MUY simplificado (ej: solo email para enviar enlace, o username)
-    // Opción 3: No tener registro en watch, solo login si ya existe cuenta.
-
-    // Aquí un ejemplo de formulario simplificado (email y pass), pero aún así no es ideal.
     final emailFocusNode = FocusNode();
     final passwordFocusNode = FocusNode();
 
@@ -284,9 +264,7 @@ class RegisterScreen extends GetView<AuthController> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Form(
-            // Envolver en Form
-            key: controller
-                .registerFormKey, // Usar la misma clave si la lógica del controlador lo permite
+            key: controller.registerFormKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -307,11 +285,11 @@ class RegisterScreen extends GetView<AuthController> {
                   nextFocusNode: passwordFocusNode,
                   labelText: "Email",
                   hintText: "tu@correo.com",
-                  prefixIcon: null, // Sin icono para ahorrar espacio
+                  prefixIcon: null,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   isTV: false,
-                  isWatch: true, // Estilos específicos de Watch
+                  isWatch: true,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Correo requerido.';
@@ -330,11 +308,10 @@ class RegisterScreen extends GetView<AuthController> {
                     prefixIcon: null,
                     obscureText: !controller.registerPasswordVisible.value,
                     textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => controller
-                        .registerWithFormValidation(), // Llama a la validación
+                    onFieldSubmitted: (_) =>
+                        controller.registerWithFormValidation(),
                     isTV: false,
                     isWatch: true,
-                    // Suffix icon para ver/ocultar es demasiado grande para watch
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Requerida.';
                       if (value.length < 6) return 'Mín. 6.';
@@ -342,7 +319,6 @@ class RegisterScreen extends GetView<AuthController> {
                     },
                   ),
                 ),
-                // No pediremos confirmación de contraseña en Watch para simplificar
                 const SizedBox(height: 15),
                 Obx(
                   () => GFButton(
@@ -379,7 +355,6 @@ class RegisterScreen extends GetView<AuthController> {
     );
   }
 
-  // --- WIDGET HELPER REUTILIZABLE PARA CAMPOS DE TEXTO ---
   Widget _buildFormField({
     required TextEditingController controller,
     FocusNode? focusNode,
@@ -394,7 +369,7 @@ class RegisterScreen extends GetView<AuthController> {
     Function(String)? onFieldSubmitted,
     String? Function(String?)? validator,
     required bool isTV,
-    bool isWatch = false, // Nuevo flag para Watch
+    bool isWatch = false,
   }) {
     final colorScheme = Get.theme.colorScheme;
     final textTheme = Get.textTheme;
@@ -447,7 +422,7 @@ class RegisterScreen extends GetView<AuthController> {
         prefixIcon: prefixIcon != null
             ? Icon(prefixIcon, color: Colors.white70, size: 18)
             : null,
-        suffixIcon: suffixIcon, // Probablemente no se use en watch
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey[700]!),
@@ -464,7 +439,6 @@ class RegisterScreen extends GetView<AuthController> {
         isDense: true,
       );
     } else {
-      // Móvil/Tablet
       style = textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface);
       decoration = InputDecoration(
         labelText: labelText,
@@ -480,10 +454,7 @@ class RegisterScreen extends GetView<AuthController> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: GFColors.SUCCESS,
-            width: 2,
-          ), // Usar color primario del tema para foco
+          borderSide: BorderSide(color: GFColors.SUCCESS, width: 2),
         ),
         contentPadding: contentPadding,
       );

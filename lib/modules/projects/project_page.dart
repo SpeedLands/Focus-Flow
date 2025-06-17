@@ -1,4 +1,3 @@
-// lib/app/modules/projects/views/projects_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
@@ -51,14 +50,12 @@ class ProjectsScreen extends GetView<ProjectController> {
             controller.projectInvitations.isEmpty) {
           return const Center(child: GFLoader(type: GFLoaderType.circle));
         }
-        // No mostrar error si solo las solicitudes o invitaciones están cargando pero hay proyectos.
         if (controller.projectListError.value.isNotEmpty &&
             controller.projects.isEmpty) {
           return _buildErrorState(context, isTV: false);
         }
         return Column(
           children: [
-            // Sección para mostrar solicitudes de eliminación pendientes
             _buildPendingDeletionRequestsSection(),
             _buildPendingInvitationsSection(),
             Expanded(
@@ -124,7 +121,6 @@ class ProjectsScreen extends GetView<ProjectController> {
     );
   }
 
-  // Widget para mostrar solicitudes de eliminación de proyectos pendientes
   Widget _buildPendingDeletionRequestsSection() {
     return Obx(() {
       if (controller.isLoadingDeletionRequests.value &&
@@ -139,17 +135,12 @@ class ProjectsScreen extends GetView<ProjectController> {
       if (controller.pendingProjectDeletionRequests.isEmpty) {
         return const SizedBox.shrink();
       }
-      // Solo mostramos esta sección si el usuario actual es un admin (el controlador ya filtra las notificaciones)
-      // No necesitamos una comprobación explícita aquí si _fetchPendingProjectDeletionRequestsForCurrentUserAdmin()
-      // ya se encarga de cargar solo las relevantes para el admin actual.
 
       return Container(
         padding: const EdgeInsets.all(8.0),
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: Get.theme.colorScheme.errorContainer.withAlpha(
-            100,
-          ), // Usar color de error
+          color: Get.theme.colorScheme.errorContainer.withAlpha(100),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -246,9 +237,7 @@ class ProjectsScreen extends GetView<ProjectController> {
         padding: const EdgeInsets.all(8.0),
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: Get.theme.colorScheme.secondaryContainer.withAlpha(
-            70,
-          ), // Ajuste alpha
+          color: Get.theme.colorScheme.secondaryContainer.withAlpha(70),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -277,9 +266,7 @@ class ProjectsScreen extends GetView<ProjectController> {
                       color: GFColors.INFO,
                     ),
                     title: Text("Invitación a: ${invitation.projectName}"),
-                    subtitle: Text(
-                      "De: ${invitation.invitedByUserId}",
-                    ), // Mostrar email si está disponible
+                    subtitle: Text("De: ${invitation.invitedByUserId}"),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -316,13 +303,10 @@ class ProjectsScreen extends GetView<ProjectController> {
   }
 
   Widget _buildProjectCardMobile(BuildContext context, ProjectModel project) {
-    // ... (sin cambios significativos aquí, solo asegúrate de que el PopupMenuButton llame a la acción correcta)
     final projectColor = project.projectColor;
     final iconData = controller.getIconDataByName(project.iconName);
     final bool isAdmin = controller.isCurrentUserAdmin(project);
-    final bool isMember = controller.isCurrentUserMemberOfProject(
-      project,
-    ); // << NUEVO >> Para el menú
+    final bool isMember = controller.isCurrentUserMemberOfProject(project);
 
     final int memberCount = project.userRoles
         .map((roleEntry) => roleEntry.split(':')[0])
@@ -386,7 +370,7 @@ class ProjectsScreen extends GetView<ProjectController> {
                       project,
                       isTV: false,
                       isAdmin: isAdmin,
-                      isMember: isMember, // << NUEVO >>
+                      isMember: isMember,
                     ),
                   ),
                 ],
@@ -418,9 +402,7 @@ class ProjectsScreen extends GetView<ProjectController> {
     ProjectModel project,
   ) {
     final bool isAdmin = controller.isCurrentUserAdmin(project);
-    final bool isMember = controller.isCurrentUserMemberOfProject(
-      project,
-    ); // << NUEVO >>
+    final bool isMember = controller.isCurrentUserMemberOfProject(project);
 
     switch (value) {
       case 'tasks':
@@ -450,11 +432,8 @@ class ProjectsScreen extends GetView<ProjectController> {
           );
         }
         break;
-      case 'manage_members': // Considerar si esta acción debe ser visible para miembros también (solo lectura)
+      case 'manage_members':
         if (isAdmin) {
-          // O if (isMember) para permitir vista
-          // Aquí iría la navegación a la pantalla de gestión de miembros
-          // Get.toNamed(AppRoutes.PROJECT_MEMBERS, arguments: {'project': project});
           Get.snackbar("Próximamente", "Pantalla para gestionar miembros.");
         } else {
           Get.snackbar(
@@ -476,7 +455,6 @@ class ProjectsScreen extends GetView<ProjectController> {
         break;
       case 'leave_project':
         if (isMember && !isAdmin) {
-          // Miembros no admin pueden abandonar
           controller.performLeaveProject(project.id!);
         } else if (isAdmin) {
           Get.snackbar(
@@ -486,7 +464,6 @@ class ProjectsScreen extends GetView<ProjectController> {
         }
         break;
       case 'delete_project_or_request':
-        // El controlador ya maneja la lógica de si es admin o miembro
         controller.handleDeleteProjectAction(project);
         break;
     }
@@ -542,7 +519,7 @@ class ProjectsScreen extends GetView<ProjectController> {
               controller.generatedAccessCode.value,
               style: Get.textTheme.headlineSmall,
             ),
-          ), // Hacer el código seleccionable
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             icon: const Icon(Icons.copy),
@@ -614,14 +591,6 @@ class ProjectsScreen extends GetView<ProjectController> {
             title: Text('Invitar Miembro', style: TextStyle(color: textColor)),
           ),
         ),
-        // Podríasmos añadir "Gestionar Miembros" aquí para admins
-        // PopupMenuItem<String>(
-        //   value: 'manage_members',
-        //   child: ListTile(
-        //     leading: Icon(Icons.group_outlined, color: isTV ? Colors.blue.withAlpha(180) : Colors.blue),
-        //     title: Text('Gestionar Miembros', style: TextStyle(color: textColor)),
-        //   ),
-        // ),
         PopupMenuItem<String>(
           value: 'view_access_code',
           child: ListTile(
@@ -643,12 +612,11 @@ class ProjectsScreen extends GetView<ProjectController> {
             title: Text(
               'Eliminar Proyecto',
               style: TextStyle(color: textColor),
-            ), // El admin ve "Eliminar Proyecto"
+            ),
           ),
         ),
       ]);
     } else if (isMember) {
-      // Si es miembro pero no admin
       items.add(const PopupMenuDivider());
       items.add(
         PopupMenuItem<String>(
@@ -665,7 +633,6 @@ class ProjectsScreen extends GetView<ProjectController> {
           ),
         ),
       );
-      // Opción para que el miembro solicite eliminación
       items.add(
         PopupMenuItem<String>(
           value: 'delete_project_or_request',
@@ -673,16 +640,15 @@ class ProjectsScreen extends GetView<ProjectController> {
             leading: Icon(
               Icons.delete_outline,
               color: isTV ? Colors.redAccent.withAlpha(180) : Colors.redAccent,
-            ), // Icono diferente
+            ),
             title: Text(
               'Solicitar Eliminación',
               style: TextStyle(color: textColor),
-            ), // El miembro ve "Solicitar Eliminación"
+            ),
           ),
         ),
       );
     }
-    // Si no es ni admin ni miembro (aunque no debería pasar si los proyectos se filtran bien), no se muestran opciones sensibles.
     return items;
   }
 
@@ -717,7 +683,6 @@ class ProjectsScreen extends GetView<ProjectController> {
             controller.projects.isEmpty) {
           return _buildErrorState(context, isTV: true);
         }
-        // Construir la columna para TV si hay solicitudes o invitaciones
         bool hasHeaderContent =
             controller.pendingProjectDeletionRequests.isNotEmpty ||
             controller.projectInvitations.isNotEmpty;
@@ -732,8 +697,8 @@ class ProjectsScreen extends GetView<ProjectController> {
                 ),
                 child: Column(
                   children: [
-                    _buildPendingDeletionRequestsSection(), // Reutilizar el widget
-                    _buildPendingInvitationsSection(), // Reutilizar el widget
+                    _buildPendingDeletionRequestsSection(),
+                    _buildPendingInvitationsSection(),
                   ],
                 ),
               ),
@@ -746,15 +711,12 @@ class ProjectsScreen extends GetView<ProjectController> {
                       padding: const EdgeInsets.all(30.0),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount:
-                                3, // Ajusta según el tamaño de pantalla de TV
+                            crossAxisCount: 3,
                             childAspectRatio: 1.5,
                             crossAxisSpacing: 30,
                             mainAxisSpacing: 30,
                           ),
-                      itemCount:
-                          controller.projects.length +
-                          1, // +1 para el botón de añadir
+                      itemCount: controller.projects.length + 1,
                       itemBuilder: (ctx, index) {
                         if (index == controller.projects.length) {
                           return _buildAddProjectCardTV(context);
@@ -771,7 +733,6 @@ class ProjectsScreen extends GetView<ProjectController> {
   }
 
   Widget _buildWatchProjectsScreen(BuildContext context) {
-    // Para el watch, la UI es muy limitada. Mostrar solicitudes pendientes podría ser demasiado.
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -931,7 +892,6 @@ class ProjectsScreen extends GetView<ProjectController> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              // MODIFICADO: Usar memberCount
               Text(
                 "$memberCount miembro(s)",
                 style: Get.textTheme.bodySmall?.copyWith(color: Colors.white60),
@@ -1013,7 +973,7 @@ class ProjectsScreen extends GetView<ProjectController> {
             ),
             const SizedBox(height: 25),
             GFButton(
-              onPressed: controller.reloadProjects, // Cambiado a reloadProjects
+              onPressed: controller.reloadProjects,
               text: "Reintentar",
               icon: const Icon(Icons.refresh, color: Colors.white),
               type: isTV ? GFButtonType.outline2x : GFButtonType.solid,

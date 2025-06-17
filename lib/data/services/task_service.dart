@@ -1,8 +1,7 @@
-// lib/data/services/task_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_flow/data/models/task_model.dart';
-import 'package:focus_flow/data/models/project_model.dart'; // Asegúrate que este es el ProjectModel actualizado
+import 'package:focus_flow/data/models/project_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class TaskService {
@@ -22,7 +21,6 @@ class TaskService {
 
   String? get _currentUserId => _auth.currentUser?.uid;
 
-  // Helper para verificar si un usuario es miembro de un proyecto
   bool _isUserMember(ProjectModel project, String userId) {
     return project.userRoles.any(
       (roleEntry) => roleEntry.startsWith('$userId:'),
@@ -34,10 +32,8 @@ class TaskService {
         .collection('projects')
         .doc(projectId)
         .withConverter<ProjectModel>(
-          fromFirestore: (snap, _) => ProjectModel.fromFirestore(
-            snap,
-          ), // Usa el constructor actualizado
-          toFirestore: (proj, _) => proj.toJson(), // Usa el toJson actualizado
+          fromFirestore: (snap, _) => ProjectModel.fromFirestore(snap),
+          toFirestore: (proj, _) => proj.toJson(),
         )
         .get();
     return projectDoc.data();
@@ -84,7 +80,6 @@ class TaskService {
     }
 
     final project = await _getProjectModel(projectId);
-    // MODIFICADO: Usar _isUserMember
     if (project == null || !_isUserMember(project, createdById)) {
       throw Exception(
         "No eres miembro de este proyecto o el proyecto no existe.",
@@ -132,7 +127,6 @@ class TaskService {
     }
 
     final project = await _getProjectModel(task.projectId);
-    // Solo el admin del proyecto puede editar detalles de la tarea
     if (project == null || project.adminUserId != editorId) {
       throw Exception(
         "No tienes permisos (admin) para editar detalles de esta tarea.",
@@ -157,7 +151,6 @@ class TaskService {
     }
 
     final project = await _getProjectModel(projectId);
-    // MODIFICADO: Usar _isUserMember
     if (project == null || !_isUserMember(project, completerId)) {
       throw Exception(
         "No eres miembro de este proyecto o el proyecto no existe.",
@@ -187,7 +180,6 @@ class TaskService {
     }
 
     final project = await _getProjectModel(projectId);
-    // Solo el admin del proyecto puede eliminar tareas
     if (project == null || project.adminUserId != adminCandidateId) {
       throw Exception("No tienes permisos (admin) para eliminar esta tarea.");
     }
@@ -221,7 +213,6 @@ class TaskService {
     }
 
     final project = await _getProjectModel(projectId);
-    // MODIFICADO: Usar _isUserMember
     if (project == null || !_isUserMember(project, userId)) {
       debugPrint(
         "Usuario $userId no es miembro del proyecto $projectId o el proyecto no existe.",

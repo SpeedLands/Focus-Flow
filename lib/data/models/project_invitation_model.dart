@@ -1,14 +1,13 @@
-// lib/data/models/project_invitation_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum InvitationStatus { pending, accepted, declined }
 
 class ProjectInvitationModel {
-  final String? id; // ID del documento de invitación
+  final String? id;
   final String projectId;
-  final String projectName; // Desnormalizado para la UI
-  final String invitedUserEmail; // O podrías usar invitedUserId si ya lo tienes
-  final String invitedByUserId; // UID del admin que invita
+  final String projectName;
+  final String invitedUserEmail;
+  final String invitedByUserId;
   final InvitationStatus status;
   final Timestamp createdAt;
 

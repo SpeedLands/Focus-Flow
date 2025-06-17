@@ -1,4 +1,3 @@
-// lib/app/modules/tasks/views/task_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/modules/tasks/tasks_controller.dart';
@@ -68,7 +67,6 @@ class TaskFormScreen extends GetView<TaskController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            // --- Campo Nombre de la Tarea ---
             _buildTextFormField(
               controller: controller.taskNameController,
               labelText: "Nombre de la Tarea",
@@ -85,7 +83,6 @@ class TaskFormScreen extends GetView<TaskController> {
             ),
             SizedBox(height: isTV ? 30.0 : 20.0),
 
-            // --- Campo Descripción de la Tarea ---
             _buildTextFormField(
               controller: controller.taskDescriptionController,
               labelText: "Descripción (Opcional)",
@@ -102,13 +99,11 @@ class TaskFormScreen extends GetView<TaskController> {
             ),
             SizedBox(height: isTV ? 35.0 : 25.0),
 
-            // --- Selector de Prioridad ---
             Text("Prioridad:", style: isTV ? tvLabelStyle : mobileLabelStyle),
             SizedBox(height: isTV ? 15.0 : 10.0),
             _buildPrioritySelector(context, isTV),
             SizedBox(height: isTV ? 35.0 : 25.0),
 
-            // --- Selector de Fecha de Vencimiento ---
             Text(
               "Fecha de Vencimiento (Opcional):",
               style: isTV ? tvLabelStyle : mobileLabelStyle,
@@ -117,7 +112,6 @@ class TaskFormScreen extends GetView<TaskController> {
             _buildDueDateSelector(context, isTV),
             SizedBox(height: isTV ? 40.0 : 30.0),
 
-            // --- Botón de Guardar ---
             Obx(
               () => GFButton(
                 onPressed: controller.isSavingTask.value
@@ -166,7 +160,6 @@ class TaskFormScreen extends GetView<TaskController> {
     );
   }
 
-  // Reutilizamos el helper de ProjectFormScreen, adaptándolo si es necesario
   Widget _buildTextFormField({
     required TextEditingController controller,
     required String labelText,
@@ -179,7 +172,6 @@ class TaskFormScreen extends GetView<TaskController> {
   }) {
     final colorScheme = Get.theme.colorScheme;
     final textTheme = Get.textTheme;
-    // (Misma implementación de _buildTextFormField que en ProjectFormScreen)
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
@@ -232,11 +224,10 @@ class TaskFormScreen extends GetView<TaskController> {
     final colorScheme = Get.theme.colorScheme;
 
     if (isTV) {
-      // Para TV, un DropdownButtonFormField es más estándar y manejable con D-Pad
       return Obx(
         () => DropdownButtonFormField<TaskPriority>(
           value: controller.selectedPriority.value,
-          dropdownColor: Colors.blueGrey[700], // Fondo del menú desplegable
+          dropdownColor: Colors.blueGrey[700],
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.blueGrey[800],
@@ -280,23 +271,18 @@ class TaskFormScreen extends GetView<TaskController> {
       );
     }
 
-    // Móvil: GFDropdown
     return Obx(
       () => GFDropdown<TaskPriority>(
         padding: const EdgeInsets.all(0),
-        borderRadius: BorderRadius.circular(8), // Bordes más redondeados
-        border: BorderSide(
-          color: colorScheme.outline,
-          width: 1,
-        ), // Usar color del tema
+        borderRadius: BorderRadius.circular(8),
+        border: BorderSide(color: colorScheme.outline, width: 1),
         dropdownButtonColor: colorScheme.surfaceContainerHighest.withValues(
           alpha: 0.5,
         ),
         value: controller.selectedPriority.value,
-        style: TextStyle(color: colorScheme.onSurface), // Color de texto
+        style: TextStyle(color: colorScheme.onSurface),
         icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
-        dropdownColor:
-            colorScheme.surfaceContainer, // Color de fondo del dropdown
+        dropdownColor: colorScheme.surfaceContainer,
         onChanged: (TaskPriority? newValue) {
           if (newValue != null) controller.selectedPriority.value = newValue;
         },
@@ -306,7 +292,6 @@ class TaskFormScreen extends GetView<TaskController> {
             child: Text(
               priority.toString().split('.').last.capitalizeFirst ??
                   priority.toString(),
-              // El estilo dentro del DropdownMenuItem ya lo toma del `style` del GFDropdown
             ),
           );
         }).toList(),
@@ -318,25 +303,18 @@ class TaskFormScreen extends GetView<TaskController> {
     final colorScheme = Get.theme.colorScheme;
 
     if (isTV) {
-      // Para TV, un botón que abre el DatePicker. El DatePicker estándar
-      // puede no ser ideal con D-Pad, pero probemos.
       return Obx(() {
         final dueDate = controller.selectedDueDate.value;
         return Material(
-          // Para InkWell
           color: Colors.blueGrey[800],
           borderRadius: BorderRadius.circular(8),
           child: InkWell(
             onTap: () async {
-              // El showDatePicker puede necesitar un tema específico para TV
               final DateTime? picked = await showDatePicker(
                 context: context,
                 initialDate: dueDate ?? DateTime.now(),
                 firstDate: DateTime(DateTime.now().year - 1),
                 lastDate: DateTime(DateTime.now().year + 5),
-                // builder: (context, child) { // Para tematizar el DatePicker
-                //   return Theme(data: ThemeData.dark().copyWith(colorScheme: ColorScheme.dark(primary: colorScheme.primary)), child: child!);
-                // }
               );
               if (picked != null) controller.selectedDueDate.value = picked;
             },
@@ -368,11 +346,9 @@ class TaskFormScreen extends GetView<TaskController> {
       });
     }
 
-    // Móvil: GFListTile como lo tenías, pero con colores de tema
     return Obx(() {
       final dueDate = controller.selectedDueDate.value;
       return Card(
-        // Envolver en Card para un mejor aspecto
         elevation: 0.5,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -400,7 +376,7 @@ class TaskFormScreen extends GetView<TaskController> {
                   size: GFSize.SMALL,
                 )
               : null,
-          color: Colors.transparent, // El Card ya tiene el color
+          color: Colors.transparent,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         ),
       );

@@ -1,4 +1,3 @@
-// lib/data/services/app_notification_db_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
@@ -20,7 +19,6 @@ class AppNotificationDbService {
         );
   }
 
-  // Ya tienes un método similar en AuthController para guardar
   Future<void> addNotificationForUser(
     String userId,
     AppNotificationModel notification,
@@ -34,14 +32,14 @@ class AppNotificationDbService {
       debugPrint(
         "AppNotificationDbService: Error guardando notificación para $userId: $e",
       );
-      rethrow; // Para que el llamador pueda manejarlo
+      rethrow;
     }
   }
 
   Stream<List<AppNotificationModel>> getAppNotificationsStream(String userId) {
     return _userAppNotificationsRef(userId)
         .orderBy('createdAt', descending: true)
-        .limit(50) // Limitar para no cargar demasiadas al inicio
+        .limit(50)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
@@ -65,12 +63,10 @@ class AppNotificationDbService {
       batch.update(doc.reference, {'isRead': true});
     }
     if (querySnapshot.docs.isNotEmpty) {
-      // Solo hacer commit si hay algo que actualizar
       await batch.commit();
     }
   }
 
-  // Opcional: eliminar
   Future<void> deleteAppNotification(
     String userId,
     String notificationId,

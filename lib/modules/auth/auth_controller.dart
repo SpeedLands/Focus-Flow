@@ -13,7 +13,6 @@ class AuthController extends GetxController {
   final AuthProvider _authProvider = Get.find<AuthProvider>();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ... (otros observables sin cambios) ...
   final TextEditingController loginEmailController = TextEditingController();
   final TextEditingController loginPasswordController = TextEditingController();
   final RxBool isLoginLoading = false.obs;
@@ -31,6 +30,12 @@ class AuthController extends GetxController {
   final RxBool registerPasswordVisible = false.obs;
   final RxBool registerConfirmPasswordVisible = false.obs;
 
+  final TextEditingController editNameController = TextEditingController();
+  final RxBool isProfileUpdating = false.obs;
+
+  NotificationService get _notificationService =>
+      Get.find<NotificationService>();
+
   final Rx<UserData?> currentUser = Rx<UserData?>(null);
   final RxBool isAuthenticated = false.obs;
   StreamSubscription<firebase_auth.User?>? _authStateSubscription;
@@ -42,8 +47,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> updateUserDeviceToken(String? newDeviceToken) async {
-    final firebase_auth.User? firebaseUser =
-        _authProvider.currentUser; // Usar el de AuthProvider
+    final firebase_auth.User? firebaseUser = _authProvider.currentUser;
     if (firebaseUser == null ||
         newDeviceToken == null ||
         newDeviceToken.isEmpty) {
@@ -94,8 +98,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> removeUserDeviceToken(String? deviceTokenToRemove) async {
-    final firebase_auth.User? firebaseUser =
-        _authProvider.currentUser; // Usar el de AuthProvider
+    final firebase_auth.User? firebaseUser = _authProvider.currentUser;
     if (firebaseUser == null ||
         deviceTokenToRemove == null ||
         deviceTokenToRemove.isEmpty) {
@@ -118,7 +121,6 @@ class AuthController extends GetxController {
         "AuthController: Token FCM '$deviceTokenToRemove' removido exitosamente de Firestore para el usuario $userId.",
       );
     } catch (e) {
-      // No es crítico si el campo o el token no existe, así que solo logueamos el error.
       debugPrint(
         "AuthController: Error al remover el token FCM '$deviceTokenToRemove' de Firestore para $userId: $e",
       );
@@ -130,10 +132,7 @@ class AuthController extends GetxController {
   Future<void> registerWithFormValidation() async {
     if (registerFormKey.currentState?.validate() ?? false) {
       await register();
-    } else {
-      // Opcional: Mostrar un snackbar si la validación falla, aunque los campos ya muestran errores.
-      // Get.snackbar("Error", "Por favor, corrige los errores en el formulario.");
-    }
+    } else {}
   }
 
   final GlobalKey<FormState> loginFormKey = GlobalKey<FormState>();
@@ -150,19 +149,29 @@ class AuthController extends GetxController {
       firebaseUser,
     ) async {
       if (firebaseUser != null) {
-        // --- USUARIO AUTENTICADO ---
         try {
+          final bool wasAlreadyAuthenticated = isAuthenticated.value;
+
           final userData = await _authProvider.getUserData(firebaseUser.uid);
           if (userData != null) {
             currentUser.value = userData;
             isAuthenticated.value = true;
+            editNameController.text = userData.name ?? '';
 
-            // --- INICIO DE MODIFICACIÓN ---
-            // Intentar subir el token FCM del dispositivo actual
-            // NotificationService debe estar inicializado antes de este punto (ej. en main.dart o un binding inicial)
+            final String? currentDeviceToken =
+                NotificationService.instance.currentDeviceToken;
             await NotificationService.instance
                 .uploadCurrentDeviceTokenIfAvailable();
-            // --- FIN DE MODIFICACIÓN ---
+
+            if (!wasAlreadyAuthenticated && currentDeviceToken != null) {
+              debugPrint(
+                "AuthController: New login detected for user ${firebaseUser.uid} on device with token $currentDeviceToken. Checking for other devices.",
+              );
+              await _sendNewDeviceLoginNotificationToOtherDevices(
+                firebaseUser.uid,
+                currentDeviceToken,
+              );
+            }
 
             final bool isNavigatingFromNotification =
                 NotificationService.instance.isNavigatingFromNotification;
@@ -175,7 +184,7 @@ class AuthController extends GetxController {
               final authRoutes = [AppRoutes.LOGIN, AppRoutes.REGISTER];
               if (authRoutes.contains(Get.currentRoute) ||
                   Get.currentRoute.isEmpty) {
-                Get.offAllNamed(AppRoutes.HOME); // O tu ruta principal
+                Get.offAllNamed(AppRoutes.HOME);
               } else {
                 debugPrint(
                   "Usuario autenticado y ya en una ruta válida: ${Get.currentRoute}",
@@ -195,15 +204,7 @@ class AuthController extends GetxController {
           await logout();
         }
       } else {
-        // --- USUARIO NO AUTENTICADO O DESLOGUEADO ---
-        // Limpiar tokens aquí es importante si el logout no lo hizo por alguna razón
-        // o si el estado cambia a no autenticado por otra vía.
         final lastKnownToken = NotificationService.instance.currentDeviceToken;
-        if (lastKnownToken != null && currentUser.value != null) {
-          // Si había un usuario y un token
-          // No podemos estar seguros del UID aquí si currentUser.value ya es null
-          // La limpieza de tokens es más segura en el método logout() explícito.
-        }
 
         NotificationService.instance.setNavigatingFromNotification(false);
 
@@ -211,8 +212,9 @@ class AuthController extends GetxController {
         isAuthenticated.value = false;
         loginError.value = '';
         registerError.value = '';
-        clearLoginFields(); // Limpiar campos cuando se desautentica
+        clearLoginFields();
         clearRegisterFields();
+        editNameController.clear();
 
         final authRoutes = [AppRoutes.LOGIN, AppRoutes.REGISTER];
         if (!authRoutes.contains(Get.currentRoute)) {
@@ -227,7 +229,6 @@ class AuthController extends GetxController {
   }
 
   Future<void> login() async {
-    // ... (sin cambios significativos en la lógica interna, la navegación la maneja el listener)
     if (loginEmailController.text.isEmpty ||
         loginPasswordController.text.isEmpty) {
       loginError.value = "Por favor, completa todos los campos.";
@@ -247,11 +248,8 @@ class AuthController extends GetxController {
         loginEmailController.text.trim(),
         loginPasswordController.text.trim(),
       );
-      // El listener _listenToAuthStateChanges se encargará de la navegación si el login es exitoso
       if (user == null && _authProvider.currentUser == null) {
-        // Si el provider retorna null y no hay usuario en firebase (fallo)
-        loginError.value =
-            "Credenciales incorrectas o error desconocido."; // Actualiza el error local
+        loginError.value = "Credenciales incorrectas o error desconocido.";
         Get.snackbar(
           "Error de Inicio de Sesión",
           "Credenciales incorrectas o error desconocido.",
@@ -286,7 +284,6 @@ class AuthController extends GetxController {
   }
 
   Future<void> register() async {
-    // ... (sin cambios significativos en la lógica interna, la navegación la maneja el listener)
     if (registerNameController.text.isEmpty ||
         registerEmailController.text.isEmpty ||
         registerPasswordController.text.isEmpty ||
@@ -370,7 +367,6 @@ class AuthController extends GetxController {
   }
 
   Future<void> sendEmailVerification() async {
-    // ... (sin cambios)
     try {
       await _authProvider.sendEmailVerification();
       Get.snackbar(
@@ -399,7 +395,6 @@ class AuthController extends GetxController {
         if (userData != null) {
           currentUser.value = userData;
           isAuthenticated.value = true;
-          // Navegación condicional
           if (Get.currentRoute != AppRoutes.HOME &&
               Get.currentRoute.isNotEmpty) {
             Get.offAllNamed(AppRoutes.HOME);
@@ -407,7 +402,7 @@ class AuthController extends GetxController {
             Get.offAllNamed(AppRoutes.HOME);
           }
         } else {
-          await logout(); // Si está verificado pero no hay datos, desloguear
+          await logout();
         }
       } else {
         Get.snackbar(
@@ -420,24 +415,12 @@ class AuthController extends GetxController {
   }
 
   Future<void> logout() async {
-    // --- INICIO DE MODIFICACIÓN ---
     try {
-      // Primero remueve el token actual del dispositivo de la lista del usuario en Firestore
-      final currentToken = NotificationService
-          .instance
-          .currentDeviceToken; // Asume que NotificationService es un singleton
+      final currentToken = NotificationService.instance.currentDeviceToken;
       if (currentToken != null && isAuthenticated.value) {
-        // Solo si está autenticado y hay token
         await removeUserDeviceToken(currentToken);
       }
-      // --- FIN DE MODIFICACIÓN ---
-
-      await _authProvider
-          .logout(); // Esto debería disparar _listenToAuthStateChanges
-      // clearLoginFields(); // Ya no es necesario aquí si _listenToAuthStateChanges lo hace
-      // clearRegisterFields(); // Ya no es necesario aquí si _listenToAuthStateChanges lo hace
-      // No es necesario llamar a Get.offAllNamed(AppRoutes.LOGIN) aquí,
-      // _listenToAuthStateChanges se encargará de la redirección.
+      await _authProvider.logout();
     } catch (e) {
       Get.snackbar(
         "Error al cerrar sesión",
@@ -450,7 +433,6 @@ class AuthController extends GetxController {
   }
 
   Future<void> resetPassword(String email) async {
-    // ... (sin cambios)
     if (email.isEmpty || !GetUtils.isEmail(email)) {
       Get.snackbar(
         "Error",
@@ -490,12 +472,194 @@ class AuthController extends GetxController {
     }
   }
 
-  // En AuthController
+  Future<void> updateUserName(String newName) async {
+    if (newName.trim().isEmpty) {
+      Get.snackbar(
+        "Error",
+        "El nombre no puede estar vacío.",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    if (currentUser.value == null) {
+      Get.snackbar(
+        "Error",
+        "Usuario no autenticado.",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    isProfileUpdating.value = true;
+    final String userId = currentUser.value!.uid;
+    final String oldName = currentUser.value!.name ?? "Usuario";
+    final String? currentDeviceToken = _notificationService.currentDeviceToken;
+
+    try {
+      final firebaseUser = _authProvider.currentUser;
+      if (firebaseUser != null) {
+        await firebaseUser.updateDisplayName(newName.trim());
+      }
+
+      await _firestore.collection('users').doc(userId).update({
+        'name': newName.trim(),
+      });
+
+      currentUser.value = currentUser.value?.copyWith(name: newName.trim());
+      editNameController.text = newName.trim();
+
+      Get.snackbar(
+        "Éxito",
+        "Nombre actualizado correctamente.",
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      await _sendNameUpdateNotificationToOtherDevices(
+        userId,
+        newName.trim(),
+        oldName,
+        currentDeviceToken,
+      );
+    } catch (e) {
+      debugPrint("Error al actualizar nombre: $e");
+      Get.snackbar(
+        "Error",
+        "No se pudo actualizar el nombre: ${e.toString()}",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isProfileUpdating.value = false;
+    }
+  }
+
+  Future<void> _sendNameUpdateNotificationToOtherDevices(
+    String userId,
+    String newName,
+    String oldName,
+    String? currentDeviceToken,
+  ) async {
+    if (currentDeviceToken == null) {
+      debugPrint(
+        "AuthController: No current device token, cannot determine 'other' devices for name update notification.",
+      );
+      return;
+    }
+
+    List<String>? allUserTokens = await getUserFcmTokens(userId);
+    if (allUserTokens == null || allUserTokens.isEmpty) {
+      debugPrint(
+        "AuthController: User $userId has no FCM tokens, no name update notification sent.",
+      );
+      return;
+    }
+
+    final List<String> otherDeviceTokens = allUserTokens
+        .where((token) => token != currentDeviceToken && token.isNotEmpty)
+        .toList();
+
+    if (otherDeviceTokens.isEmpty) {
+      debugPrint(
+        "AuthController: No other devices found for user $userId to send name update notification.",
+      );
+      return;
+    }
+
+    final String title = "Perfil Actualizado";
+    final String body =
+        "Tu nombre ha sido cambiado de '$oldName' a '$newName'.";
+    final Map<String, String> dataPayload = {
+      'type': 'user_profile_name_updated',
+      'newName': newName,
+      'oldName': oldName,
+      'userId': userId,
+    };
+
+    debugPrint(
+      "AuthController: Sending name update notification to tokens: $otherDeviceTokens",
+    );
+
+    for (String token in otherDeviceTokens) {
+      try {
+        await _notificationService.sendNotificationToDevice(
+          targetDeviceToken: token,
+          title: title,
+          body: body,
+          data: dataPayload,
+        );
+        debugPrint(
+          "AuthController: Name update notification sent to token $token",
+        );
+      } catch (e) {
+        debugPrint(
+          "AuthController: Failed to send name update notification to token $token: $e",
+        );
+      }
+    }
+  }
+
+  Future<void> _sendNewDeviceLoginNotificationToOtherDevices(
+    String userId,
+    String currentDeviceToken,
+  ) async {
+    List<String>? allUserTokens = await getUserFcmTokens(userId);
+
+    if (allUserTokens == null || allUserTokens.isEmpty) {
+      debugPrint(
+        "AuthController: User $userId has no FCM tokens. No new device login notification to send.",
+      );
+      return;
+    }
+
+    final List<String> otherDeviceTokens = allUserTokens
+        .where((token) => token != currentDeviceToken && token.isNotEmpty)
+        .toList();
+
+    if (otherDeviceTokens.isEmpty) {
+      debugPrint(
+        "AuthController: No other previously active devices found for user $userId. No new device login notification sent.",
+      );
+      return;
+    }
+
+    final String title = "Nuevo Inicio de Sesión";
+    final String body =
+        "Tu cuenta ha sido accedida desde un nuevo dispositivo.";
+    final Map<String, String> dataPayload = {
+      'type': 'new_device_login',
+      'userId': userId,
+    };
+
+    debugPrint(
+      "AuthController: Sending new device login notification to tokens: $otherDeviceTokens",
+    );
+
+    for (String token in otherDeviceTokens) {
+      try {
+        await _notificationService.sendNotificationToDevice(
+          targetDeviceToken: token,
+          title: title,
+          body: body,
+          data: dataPayload,
+        );
+        debugPrint(
+          "AuthController: New device login notification sent to token $token",
+        );
+      } catch (e) {
+        debugPrint(
+          "AuthController: Failed to send new device login notification to token $token: $e",
+        );
+      }
+    }
+  }
+
   Future<void> addUserNotification(
     String userId,
     AppNotificationModel notification,
   ) async {
-    // final userId = _authProvider.currentUser?.uid; // Ya no lo obtenemos aquí
     if (userId.isEmpty) {
       debugPrint(
         "AuthController: User ID vacío, no se puede guardar AppNotification.",
@@ -505,7 +669,7 @@ class AuthController extends GetxController {
     try {
       await _firestore
           .collection('users')
-          .doc(userId) // Usar el userId proporcionado
+          .doc(userId)
           .collection('app_notifications')
           .add(notification.toJson());
       debugPrint("AppNotification guardada para $userId");
@@ -580,7 +744,6 @@ class AuthController extends GetxController {
     return null;
   }
 
-  // --- Métodos de UI ---
   void toggleLoginPasswordVisibility() {
     loginPasswordVisible.value = !loginPasswordVisible.value;
   }
@@ -594,7 +757,6 @@ class AuthController extends GetxController {
         !registerConfirmPasswordVisible.value;
   }
 
-  // --- Limpieza ---
   void clearLoginFields() {
     loginEmailController.clear();
     loginPasswordController.clear();
@@ -612,7 +774,6 @@ class AuthController extends GetxController {
   String _mapFirebaseAuthExceptionMessage(
     firebase_auth.FirebaseAuthException e,
   ) {
-    // ... (sin cambios)
     switch (e.code) {
       case 'user-not-found':
         return 'No se encontró un usuario con ese correo electrónico.';

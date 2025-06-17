@@ -1,20 +1,19 @@
-// lib/data/models/task_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum TaskPriority { baja, media, alta }
 
 class TaskModel {
   final String? id;
-  final String projectId; // ID del proyecto al que pertenece
+  final String projectId;
   final String name;
   final String? description;
   final bool isCompleted;
   final TaskPriority priority;
   final Timestamp? dueDate;
-  final String createdBy; // UID del usuario que creó la tarea
+  final String createdBy;
   final Timestamp createdAt;
-  final String? completedBy; // UID del usuario que completó la tarea
-  final Timestamp? completedAt; // Fecha de completado
+  final String? completedBy;
+  final Timestamp? completedAt;
   final Timestamp updatedAt;
 
   TaskModel({
@@ -84,7 +83,7 @@ class TaskModel {
         orElse: () => TaskPriority.media,
       ),
       dueDate: data['dueDate'] as Timestamp?,
-      createdBy: data['createdBy'] as String? ?? '', // Debe tener un creador
+      createdBy: data['createdBy'] as String? ?? '',
       createdAt: data['createdAt'] as Timestamp? ?? Timestamp.now(),
       completedBy: data['completedBy'] as String?,
       completedAt: data['completedAt'] as Timestamp?,
@@ -94,7 +93,7 @@ class TaskModel {
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
     return TaskModel(
-      id: json['id'] as String?, // El ID puede o no estar en el JSON
+      id: json['id'] as String?,
       projectId: json['projectId'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
@@ -103,23 +102,12 @@ class TaskModel {
         (e) => e.toString() == json['priority'],
         orElse: () => TaskPriority.media,
       ),
-      // Para Timestamps, si el JSON viene de Firestore directamente (ej. a través de `toJson()` y luego `fromJson()`),
-      // los Timestamps deberían mantenerse como objetos Timestamp.
-      // Si el JSON viene de una API externa donde las fechas son strings (ej. ISO 8601),
-      // necesitarías convertir el string a DateTime y luego a Timestamp.
-      // Aquí asumimos que ya es un Timestamp o null.
       dueDate: json['dueDate'] as Timestamp?,
-      createdBy:
-          json['createdBy'] as String? ??
-          '', // Similar a fromFirestore, considera el fallback
-      createdAt:
-          json['createdAt'] as Timestamp? ??
-          Timestamp.now(), // Similar a fromFirestore
+      createdBy: json['createdBy'] as String? ?? '',
+      createdAt: json['createdAt'] as Timestamp? ?? Timestamp.now(),
       completedBy: json['completedBy'] as String?,
       completedAt: json['completedAt'] as Timestamp?,
-      updatedAt:
-          json['updatedAt'] as Timestamp? ??
-          Timestamp.now(), // Similar a fromFirestore
+      updatedAt: json['updatedAt'] as Timestamp? ?? Timestamp.now(),
     );
   }
 

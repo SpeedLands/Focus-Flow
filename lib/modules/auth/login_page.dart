@@ -1,8 +1,7 @@
-// lib/app/modules/auth/views/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:focus_flow/modules/auth/auth_controller.dart'; // Ajusta ruta
+import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 
 class LoginScreen extends GetView<AuthController> {
@@ -10,8 +9,6 @@ class LoginScreen extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
-    // ASUME que tienes controller.deviceType.value o una lógica similar
-    // final deviceType = controller.deviceType.value;
     final screenWidth = Get.width;
     final screenHeight = Get.height;
     final isTV = screenWidth > 800 && screenHeight > 500;
@@ -26,8 +23,6 @@ class LoginScreen extends GetView<AuthController> {
       backgroundColor: isTV
           ? Colors.blueGrey[900]
           : Get.theme.scaffoldBackgroundColor,
-      // AppBar en login no es común, pero si lo tienes:
-      // appBar: AppBar(title: Text('Iniciar Sesión')),
       body: _buildFormBody(context, isTV, isTablet),
     );
   }
@@ -55,7 +50,7 @@ class LoginScreen extends GetView<AuthController> {
 
     final emailFocusNode = FocusNode();
     final passwordFocusNode = FocusNode();
-    final loginButtonFocusNode = FocusNode(); // Para el botón de login en TV
+    final loginButtonFocusNode = FocusNode();
 
     return Center(
       child: SingleChildScrollView(
@@ -63,9 +58,7 @@ class LoginScreen extends GetView<AuthController> {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: Form(
-            // Añadir Form y clave si vas a validar aquí también
-            key: controller
-                .loginFormKey, // Asume que tienes esta clave en AuthController
+            key: controller.loginFormKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -88,7 +81,6 @@ class LoginScreen extends GetView<AuthController> {
                 SizedBox(height: spacing),
 
                 _buildFormField(
-                  // Usar el helper de RegisterScreen adaptado
                   controller: controller.loginEmailController,
                   focusNode: emailFocusNode,
                   nextFocusNode: passwordFocusNode,
@@ -114,9 +106,7 @@ class LoginScreen extends GetView<AuthController> {
                   () => _buildFormField(
                     controller: controller.loginPasswordController,
                     focusNode: passwordFocusNode,
-                    nextFocusNode: isTV
-                        ? loginButtonFocusNode
-                        : null, // En TV, el siguiente es el botón
+                    nextFocusNode: isTV ? loginButtonFocusNode : null,
                     labelText: "Contraseña",
                     hintText: "Tu contraseña",
                     prefixIcon: Icons.lock_outline,
@@ -126,8 +116,7 @@ class LoginScreen extends GetView<AuthController> {
                         : TextInputAction.done,
                     onFieldSubmitted: isTV
                         ? null
-                        : (_) => controller
-                              .loginWithFormValidation(), // En móvil, login al presionar done
+                        : (_) => controller.loginWithFormValidation(),
                     isTV: isTV,
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -178,7 +167,7 @@ class LoginScreen extends GetView<AuthController> {
                     focusNode: isTV ? loginButtonFocusNode : null,
                     onPressed: controller.isLoginLoading.value
                         ? null
-                        : controller.loginWithFormValidation, // Cambiado
+                        : controller.loginWithFormValidation,
                     text: controller.isLoginLoading.value
                         ? "Ingresando..."
                         : "INGRESAR",
@@ -235,11 +224,7 @@ class LoginScreen extends GetView<AuthController> {
     );
   }
 
-  // --- BUILDER PARA PANTALLA DE WATCH (SIMPLIFICADO) ---
   Widget _buildWatchLoginScreen(BuildContext context) {
-    // Similar al registro en Watch, el login tradicional es difícil.
-    // Un PIN o autenticación delegada sería mejor.
-    // Este es un formulario simplificado.
     final emailFocusNode = FocusNode();
     final passwordFocusNode = FocusNode();
 
@@ -249,8 +234,7 @@ class LoginScreen extends GetView<AuthController> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Form(
-            // Añadir Form
-            key: controller.loginFormKey, // Usar la clave del controlador
+            key: controller.loginFormKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -344,9 +328,6 @@ class LoginScreen extends GetView<AuthController> {
     );
   }
 
-  // --- WIDGET HELPER REUTILIZABLE PARA CAMPOS DE TEXTO ---
-  // (Usar el mismo _buildFormField que definimos en RegisterScreen, asegurándose de que esté disponible
-  // o copiarlo aquí si es específico para este archivo)
   Widget _buildFormField({
     required TextEditingController controller,
     FocusNode? focusNode,
@@ -434,7 +415,6 @@ class LoginScreen extends GetView<AuthController> {
         isDense: true,
       );
     } else {
-      // Móvil/Tablet
       style = textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface);
       decoration = InputDecoration(
         labelText: labelText,
@@ -474,7 +454,6 @@ class LoginScreen extends GetView<AuthController> {
     );
   }
 
-  // --- DIÁLOGO OLVIDÉ CONTRASEÑA (ADAPTADO) ---
   void _showForgotPasswordDialog(
     BuildContext context,
     AuthController controller, {
@@ -483,8 +462,7 @@ class LoginScreen extends GetView<AuthController> {
     final TextEditingController resetEmailController = TextEditingController(
       text: controller.loginEmailController.text,
     );
-    final FocusNode resetEmailFocusNode =
-        FocusNode(); // Para el campo de texto en el diálogo
+    final FocusNode resetEmailFocusNode = FocusNode();
     final colorScheme = Get.theme.colorScheme;
 
     Get.defaultDialog(
@@ -504,9 +482,8 @@ class LoginScreen extends GetView<AuthController> {
           ),
           const SizedBox(height: 16),
           _buildFormField(
-            // Reutilizar el helper para el campo de texto del diálogo
             controller: resetEmailController,
-            focusNode: resetEmailFocusNode, // Asignar FocusNode
+            focusNode: resetEmailFocusNode,
             labelText: "Correo Electrónico",
             hintText: "tu.correo@ejemplo.com",
             prefixIcon: Icons.email_outlined,
@@ -518,7 +495,6 @@ class LoginScreen extends GetView<AuthController> {
               if (Get.isDialogOpen ?? false) Get.back();
             },
             validator: (value) {
-              // Validador para el email en el diálogo
               if (value == null || value.trim().isEmpty) {
                 return 'Correo requerido.';
               }
@@ -530,10 +506,6 @@ class LoginScreen extends GetView<AuthController> {
       ),
       confirm: GFButton(
         onPressed: () {
-          // Validar el email antes de enviar
-          // Si el _buildFormField tuviera su propio Form, podríamos validar ese Form.
-          // Por ahora, asumimos que el validador del campo se muestra si es inválido.
-          // O, idealmente, este diálogo tendría su propio Form y GlobalKey.
           if (GetUtils.isEmail(resetEmailController.text.trim())) {
             controller.resetPassword(resetEmailController.text.trim());
             Get.back();
@@ -560,10 +532,9 @@ class LoginScreen extends GetView<AuthController> {
         type: GFButtonType.outline,
         fullWidthButton: true,
         textColor: isTV ? Colors.white70 : null,
-        buttonBoxShadow: false, // Sin sombra para el botón de cancelar
+        buttonBoxShadow: false,
       ),
     );
-    // Auto-focus en el campo de email del diálogo
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (resetEmailFocusNode.canRequestFocus) {
         FocusScope.of(context).requestFocus(resetEmailFocusNode);

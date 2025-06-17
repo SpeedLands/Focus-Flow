@@ -1,8 +1,7 @@
-// lib/app/modules/projects/views/project_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:focus_flow/modules/projects/project_controller.dart'; // Ajusta ruta
+import 'package:focus_flow/modules/projects/project_controller.dart';
 
 class ProjectFormScreen extends GetView<ProjectController> {
   const ProjectFormScreen({super.key});
@@ -36,13 +35,11 @@ class ProjectFormScreen extends GetView<ProjectController> {
     final textTheme = Get.textTheme;
     final colorScheme = Get.theme.colorScheme;
 
-    // Estilos para TV
     final tvLabelStyle = textTheme.titleMedium?.copyWith(
       color: Colors.white70,
       fontWeight: FontWeight.w500,
     );
 
-    // Estilos para Móvil
     final mobileLabelStyle = textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w500,
     );
@@ -54,7 +51,6 @@ class ProjectFormScreen extends GetView<ProjectController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            // --- Campo Nombre del Proyecto ---
             _buildTextFormField(
               controller: controller.nameController,
               labelText: 'Nombre del Proyecto',
@@ -71,7 +67,6 @@ class ProjectFormScreen extends GetView<ProjectController> {
             ),
             SizedBox(height: isTV ? 30.0 : 20.0),
 
-            // --- Campo Descripción del Proyecto ---
             _buildTextFormField(
               controller: controller.descriptionController,
               labelText: 'Descripción (Opcional)',
@@ -88,7 +83,6 @@ class ProjectFormScreen extends GetView<ProjectController> {
             ),
             SizedBox(height: isTV ? 35.0 : 25.0),
 
-            // --- Selector de Color ---
             Text(
               "Color del Proyecto:",
               style: isTV ? tvLabelStyle : mobileLabelStyle,
@@ -97,7 +91,6 @@ class ProjectFormScreen extends GetView<ProjectController> {
             _buildColorSelector(isTV),
             SizedBox(height: isTV ? 35.0 : 25.0),
 
-            // --- Selector de Icono ---
             Text(
               "Icono del Proyecto:",
               style: isTV ? tvLabelStyle : mobileLabelStyle,
@@ -106,7 +99,6 @@ class ProjectFormScreen extends GetView<ProjectController> {
             _buildIconSelector(isTV),
             SizedBox(height: isTV ? 40.0 : 30.0),
 
-            // --- Botón de Guardar ---
             Obx(
               () => GFButton(
                 onPressed: controller.isSavingProject.value
@@ -137,18 +129,16 @@ class ProjectFormScreen extends GetView<ProjectController> {
                             : Icons.add_circle_outline,
                         color: isTV
                             ? (Get.isDarkMode ? Colors.black : Colors.white)
-                            : Colors.white, // Color del icono del botón
+                            : Colors.white,
                       ),
                 fullWidthButton: true,
                 size: GFSize.LARGE,
                 shape: GFButtonShape.pills,
-                color: isTV
-                    ? colorScheme.primary
-                    : GFColors.PRIMARY, // Color de fondo del botón
+                color: isTV ? colorScheme.primary : GFColors.PRIMARY,
                 textColor: isTV
                     ? (Get.isDarkMode ? Colors.black : Colors.white)
-                    : Colors.white, // Color del texto del botón
-                buttonBoxShadow: isTV, // Sombra para TV
+                    : Colors.white,
+                buttonBoxShadow: isTV,
                 focusColor: isTV
                     ? colorScheme.primary.withValues(alpha: 0.4)
                     : null,
@@ -168,7 +158,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
     required IconData prefixIcon,
     required bool isTV,
     int maxLines = 1,
-    FocusNode? focusNode, // Para manejo de foco en TV
+    FocusNode? focusNode,
     String? Function(String?)? validator,
   }) {
     final colorScheme = Get.theme.colorScheme;
@@ -224,10 +214,9 @@ class ProjectFormScreen extends GetView<ProjectController> {
 
   Widget _buildColorSelector(bool isTV) {
     final colorScheme = Get.theme.colorScheme;
-    // En TV, un ListView horizontal podría ser mejor para la navegación con D-Pad
     if (isTV) {
       return SizedBox(
-        height: 60, // Altura fija para el ListView
+        height: 60,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: controller.predefinedColors.length,
@@ -238,7 +227,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
               bool isSelected =
                   controller.selectedColor.value.toARGB32() == color.toARGB32();
               return FocusableActionDetector(
-                focusNode: FocusNode(), // Cada item necesita su FocusNode
+                focusNode: FocusNode(),
                 actions: <Type, Action<Intent>>{
                   ActivateIntent: CallbackAction<ActivateIntent>(
                     onInvoke: (_) => controller.selectedColor.value = color,
@@ -274,7 +263,6 @@ class ProjectFormScreen extends GetView<ProjectController> {
         ),
       );
     }
-    // Selector para Móvil
     return Obx(
       () => Wrap(
         spacing: 10.0,
@@ -325,17 +313,16 @@ class ProjectFormScreen extends GetView<ProjectController> {
         ? Colors.grey.shade400
         : Colors.grey.shade700;
 
-    // En TV, un GridView podría ser más fácil de navegar con D-Pad
     if (isTV) {
       return GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: controller.predefinedIcons.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 5, // Ajusta según el número de iconos
+          crossAxisCount: 5,
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
-          childAspectRatio: 1, // Iconos cuadrados
+          childAspectRatio: 1,
         ),
         itemBuilder: (context, index) {
           final iconMap = controller.predefinedIcons[index];
@@ -376,7 +363,6 @@ class ProjectFormScreen extends GetView<ProjectController> {
       );
     }
 
-    // Selector para Móvil
     return Obx(
       () => Wrap(
         spacing: 12.0,

@@ -1,4 +1,3 @@
-// lib/app/modules/notifications/views/notification_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/modules/notifications/notifications_controller.dart';
@@ -24,7 +23,6 @@ class NotificationListScreen extends GetView<NotificationController> {
                     child: Text(
                       "Marcar Todas Leídas",
                       style: TextStyle(
-                        // Usar color primario del tema para consistencia
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
@@ -59,17 +57,12 @@ class NotificationListScreen extends GetView<NotificationController> {
         }
         return ListView.separated(
           itemCount: controller.appNotifications.length,
-          separatorBuilder: (context, index) => const Divider(
-            height: 1,
-            indent: 72,
-            endIndent: 16,
-          ), // El indent alinea con el texto
+          separatorBuilder: (context, index) =>
+              const Divider(height: 1, indent: 72, endIndent: 16),
           itemBuilder: (context, index) {
             final notification = controller.appNotifications[index];
             return Dismissible(
-              key: Key(
-                notification.id ?? 'notification_$index',
-              ), // Key única, fallback si id es null
+              key: Key(notification.id ?? 'notification_$index'),
               direction: DismissDirection.endToStart,
               onDismissed: (direction) {
                 if (notification.id != null) {
@@ -113,7 +106,7 @@ class NotificationListScreen extends GetView<NotificationController> {
         ? Colors.blueGrey.shade700.withValues(alpha: 0.3)
         : Colors.blue.shade50.withValues(alpha: 0.8);
     final Color readColor =
-        Theme.of(context).cardTheme.color ?? // Usar color de tarjeta como base
+        Theme.of(context).cardTheme.color ??
         (isDark ? Colors.grey.shade800 : Colors.white);
 
     IconData itemIcon = Icons.notifications_active_outlined;
@@ -176,41 +169,30 @@ class NotificationListScreen extends GetView<NotificationController> {
       case AppNotificationType.projectDeletionApproved:
         itemIcon = Icons.delete_sweep_outlined;
         iconBgColor = Colors.black54.withValues(alpha: 0.1);
-        iconColor = Colors.black87; // un poco más oscuro para mejor contraste
+        iconColor = Colors.black87;
         break;
       case AppNotificationType.projectDeletionRejected:
-        itemIcon = Icons
-            .unpublished_outlined; // icono que sugiere rechazo o no publicado
+        itemIcon = Icons.unpublished_outlined;
         iconBgColor = Colors.brown.withValues(alpha: 0.1);
         iconColor = Colors.brown;
         break;
-      // Si no hay iconName o el tipo no está en el switch, se usan los valores por defecto inicializados.
     }
 
     bool showActionButtons = false;
     final String? currentUserId = _authController.currentUser.value?.uid;
-    final data = notification
-        .data; // Para evitar '!' múltiples veces y facilitar la lectura
+    final data = notification.data;
 
     if (notification.type == AppNotificationType.taskModificationRequest &&
         !notification.isRead &&
         data != null &&
-        data.containsKey(
-          'requesterId',
-        ) && // Verificación de existencia de la clave
-        data.containsKey(
-          'adminUserIdForProject',
-        ) && // Verificación de existencia de la clave
+        data.containsKey('requesterId') &&
+        data.containsKey('adminUserIdForProject') &&
         currentUserId != null &&
         data['requesterId'] != currentUserId &&
         (data['adminUserIdForProject'] == currentUserId ||
-            data['projectOwnerId'] ==
-                currentUserId) // Considerar también projectOwnerId si aplica
-        ) {
+            data['projectOwnerId'] == currentUserId)) {
       showActionButtons = true;
     }
-    // Podrías añadir lógica similar para 'projectInvitation' u otros tipos que requieran acciones
-    // if (notification.type == AppNotificationType.projectInvitation && !notification.isRead) { ... }
 
     return Material(
       color: notification.isRead ? readColor : unreadColor,
@@ -226,11 +208,10 @@ class NotificationListScreen extends GetView<NotificationController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Stack(
-                    alignment: Alignment
-                        .center, // Alinea el icono en el centro del CircleAvatar
+                    alignment: Alignment.center,
                     children: [
                       CircleAvatar(
-                        radius: 24, // Radio ligeramente mayor para el avatar
+                        radius: 24,
                         backgroundColor: iconBgColor,
                         child: Icon(itemIcon, color: iconColor, size: 24),
                       ),
@@ -239,8 +220,8 @@ class NotificationListScreen extends GetView<NotificationController> {
                           top: 0,
                           right: 0,
                           child: Container(
-                            width: 10, // Tamaño del punto
-                            height: 10, // Tamaño del punto
+                            width: 10,
+                            height: 10,
                             decoration: BoxDecoration(
                               color: Colors.redAccent.shade200,
                               shape: BoxShape.circle,
@@ -249,8 +230,7 @@ class NotificationListScreen extends GetView<NotificationController> {
                                     Theme.of(context).cardTheme.color ??
                                     (isDark
                                         ? Colors.grey.shade800
-                                        : Colors
-                                              .white), // Borde para contraste con el fondo del item
+                                        : Colors.white),
                                 width: 1.5,
                               ),
                             ),
@@ -294,10 +274,9 @@ class NotificationListScreen extends GetView<NotificationController> {
                         const SizedBox(height: 6),
                         Text(
                           DateFormat(
-                                'dd MMM yyyy, HH:mm',
-                                Get.locale?.toString(),
-                              ) // Usar locale de GetX si está configurado
-                              .format(notification.createdAt.toDate()),
+                            'dd MMM yyyy, HH:mm',
+                            Get.locale?.toString(),
+                          ).format(notification.createdAt.toDate()),
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey[isDark ? 500 : 600],
@@ -310,13 +289,9 @@ class NotificationListScreen extends GetView<NotificationController> {
               ),
               if (showActionButtons)
                 Padding(
-                  padding: const EdgeInsets.only(
-                    top: 12.0,
-                    left: 56.0,
-                  ), // 24(radio*2) + 8 (padding Stack) + 16 (SizedBox) + 8 (más padding) = ~56
+                  padding: const EdgeInsets.only(top: 12.0, left: 56.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment
-                        .start, // O MainAxisAlignment.end si prefieres los botones a la derecha
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
                       GFButton(
                         onPressed: () => controller

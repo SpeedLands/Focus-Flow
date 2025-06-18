@@ -1,3 +1,4 @@
+import 'package:focus_flow/data/services/notification_service.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:focus_flow/data/providers/auth_provider.dart';
@@ -14,5 +15,6 @@ class AuthBinding extends Bindings {
     );
 
     Get.lazyPut<AuthController>(() => AuthController(), fenix: true);
+    Get.lazyPut<NotificationService>(() => NotificationService.instance);
   }
 }

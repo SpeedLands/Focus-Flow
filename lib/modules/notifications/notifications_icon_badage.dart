@@ -12,7 +12,7 @@ class NotificationIconBadge extends StatelessWidget {
     try {
       notificationController = Get.find<NotificationController>();
     } catch (e) {
-      print(
+      debugPrint(
         "NotificationIconBadge: NotificationController no encontrado, intentando ponerlo...",
       );
 

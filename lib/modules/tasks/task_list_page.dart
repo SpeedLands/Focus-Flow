@@ -190,11 +190,12 @@ class TasksListScreen extends GetView<TaskController> {
         ],
       ),
       body: Obx(() {
-        if (controller.isLoadingTasks.value && controller.tasks.isEmpty)
+        if (controller.isLoadingTasks.value && controller.tasks.isEmpty) {
           return const Center(
             child: GFLoader(type: GFLoaderType.circle, size: GFSize.SMALL),
           );
-        if (controller.taskListError.value.isNotEmpty)
+        }
+        if (controller.taskListError.value.isNotEmpty) {
           return Center(
             child: Text(
               controller.taskListError.value,
@@ -202,6 +203,7 @@ class TasksListScreen extends GetView<TaskController> {
               textAlign: TextAlign.center,
             ),
           );
+        }
         final tasksToDisplay = controller.tasks
             .where((t) => !t.isCompleted)
             .toList();
@@ -350,7 +352,7 @@ class TasksListScreen extends GetView<TaskController> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(isTV ? 12 : 8),
-        border: Border.all(color: borderColor!),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,7 +391,7 @@ class TasksListScreen extends GetView<TaskController> {
                 child: Text(
                   "No hay solicitudes pendientes.",
                   style: TextStyle(
-                    color: textColor.withOpacity(0.7),
+                    color: textColor.withValues(alpha: 0.7),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -446,14 +448,14 @@ class TasksListScreen extends GetView<TaskController> {
                         Text(
                           "De: $requesterName",
                           style: TextStyle(
-                            color: textColor.withOpacity(0.8),
+                            color: textColor.withValues(alpha: 0.8),
                             fontSize: isTV ? 15 : 13,
                           ),
                         ),
                         Text(
                           "Acción: $typeOfRequest",
                           style: TextStyle(
-                            color: textColor.withOpacity(0.8),
+                            color: textColor.withValues(alpha: 0.8),
                             fontSize: isTV ? 15 : 13,
                           ),
                         ),
@@ -593,7 +595,7 @@ class TasksListScreen extends GetView<TaskController> {
       color: task.isCompleted
           ? (isDark ? Colors.grey[800] : Colors.grey[200])
           : (isDark
-                ? colorScheme.surfaceContainerHighest.withOpacity(0.5)
+                ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
                 : colorScheme.surface),
       child: InkWell(
         onTap: () {
@@ -662,7 +664,9 @@ class TasksListScreen extends GetView<TaskController> {
                             fontSize: 13,
                             color: task.isCompleted
                                 ? Colors.grey[500]
-                                : colorScheme.onSurfaceVariant.withOpacity(0.8),
+                                : colorScheme.onSurfaceVariant.withValues(
+                                    alpha: 0.8,
+                                  ),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -678,7 +682,7 @@ class TasksListScreen extends GetView<TaskController> {
                               size: 13,
                               color: task.isCompleted
                                   ? Colors.grey[500]
-                                  : priorityColor.withOpacity(0.9),
+                                  : priorityColor.withValues(alpha: 0.9),
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -687,7 +691,7 @@ class TasksListScreen extends GetView<TaskController> {
                                 fontSize: 12,
                                 color: task.isCompleted
                                     ? Colors.grey[500]
-                                    : priorityColor.withOpacity(0.9),
+                                    : priorityColor.withValues(alpha: 0.9),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -746,7 +750,7 @@ class TasksListScreen extends GetView<TaskController> {
                   value: task.isCompleted,
                   onChanged: (val) => controller.toggleTaskCompletion(task),
                   activeColor: GFColors.SUCCESS,
-                  focusColor: priorityColor.withOpacity(0.4),
+                  focusColor: priorityColor.withValues(alpha: 0.4),
                   checkColor: Colors.black87,
                   side: BorderSide(
                     color: task.isCompleted ? Colors.grey[600]! : priorityColor,
@@ -1023,7 +1027,9 @@ class TasksListScreen extends GetView<TaskController> {
           child: ListTile(
             leading: Icon(
               Icons.edit_outlined,
-              color: isTV ? GFColors.INFO.withOpacity(0.7) : GFColors.INFO,
+              color: isTV
+                  ? GFColors.INFO.withValues(alpha: 0.7)
+                  : GFColors.INFO,
             ),
             title: Text('Editar Tarea', style: TextStyle(color: textColor)),
             dense: !isTV,
@@ -1039,7 +1045,9 @@ class TasksListScreen extends GetView<TaskController> {
           child: ListTile(
             leading: Icon(
               Icons.delete_outline,
-              color: isTV ? GFColors.DANGER.withOpacity(0.7) : GFColors.DANGER,
+              color: isTV
+                  ? GFColors.DANGER.withValues(alpha: 0.7)
+                  : GFColors.DANGER,
             ),
             title: Text(
               isAdmin ? 'Eliminar Tarea' : 'Solicitar Eliminar',
@@ -1050,7 +1058,7 @@ class TasksListScreen extends GetView<TaskController> {
         ),
       );
     }
-    if (items.isEmpty)
+    if (items.isEmpty) {
       return [
         PopupMenuItem<String>(
           enabled: false,
@@ -1062,6 +1070,7 @@ class TasksListScreen extends GetView<TaskController> {
           ),
         ),
       ];
+    }
     return items;
   }
 

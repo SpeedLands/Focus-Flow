@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
@@ -20,20 +21,20 @@ class NotificationController extends GetxController {
 
   @override
   void onInit() {
-    print("[GETX_CONTROLLER] NotificationController - onInit() CALLED");
+    debugPrint("[GETX_CONTROLLER] NotificationController - onInit() CALLED");
     super.onInit();
 
     _authEverWorker = ever(_authController.currentUser, (firebaseUser) {
-      print(
+      debugPrint(
         "[NotificationController] Auth state changed. User: ${firebaseUser?.uid}",
       );
       if (firebaseUser != null) {
-        print(
+        debugPrint(
           "[NotificationController] User is authenticated (uid: ${firebaseUser.uid}). Binding notifications stream.",
         );
         _bindAppNotificationsStream(firebaseUser.uid);
       } else {
-        print(
+        debugPrint(
           "[NotificationController] User is not authenticated. Clearing notifications.",
         );
         _clearAndResetNotifications();
@@ -42,12 +43,12 @@ class NotificationController extends GetxController {
 
     final initialUser = _authController.currentUser.value;
     if (initialUser != null) {
-      print(
+      debugPrint(
         "[NotificationController] onInit - User ALREADY authenticated (uid: ${initialUser.uid}). Binding stream.",
       );
       _bindAppNotificationsStream(initialUser.uid);
     } else {
-      print(
+      debugPrint(
         "[NotificationController] onInit - User NOT authenticated initially. Waiting for auth state change.",
       );
       isLoadingNotifications.value = false;
@@ -56,7 +57,7 @@ class NotificationController extends GetxController {
   }
 
   void _bindAppNotificationsStream(String userId) {
-    print(
+    debugPrint(
       "[NotificationController] _bindAppNotificationsStream - Binding for userId: $userId",
     );
     isLoadingNotifications.value = true;
@@ -64,7 +65,7 @@ class NotificationController extends GetxController {
       _notificationDbService
           .getAppNotificationsStream(userId)
           .map((notifications) {
-            print(
+            debugPrint(
               "NotificationController: Stream emitted ${notifications.length} notifications for $userId.",
             );
             unreadNotificationCount.value = notifications
@@ -74,10 +75,10 @@ class NotificationController extends GetxController {
             return notifications;
           })
           .handleError((error, stackTrace) {
-            print(
+            debugPrint(
               "NotificationController: ERROR in stream of AppNotifications for $userId: $error",
             );
-            print("NotificationController: StackTrace: $stackTrace");
+            debugPrint("NotificationController: StackTrace: $stackTrace");
             isLoadingNotifications.value = false;
             unreadNotificationCount.value = 0;
             appNotifications.clear();
@@ -87,7 +88,7 @@ class NotificationController extends GetxController {
   }
 
   void _clearAndResetNotifications() {
-    print(
+    debugPrint(
       "[NotificationController] Clearing local notifications and resetting state.",
     );
     appNotifications.clear();
@@ -98,7 +99,9 @@ class NotificationController extends GetxController {
   Future<void> markAsRead(String notificationId) async {
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
-      print("[NotificationController] markAsRead - User not authenticated.");
+      debugPrint(
+        "[NotificationController] markAsRead - User not authenticated.",
+      );
       return;
     }
     try {
@@ -117,7 +120,7 @@ class NotificationController extends GetxController {
   Future<void> deleteNotification(String notificationId) async {
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
-      print(
+      debugPrint(
         "[NotificationController] deleteNotification - User not authenticated.",
       );
       return;
@@ -142,7 +145,9 @@ class NotificationController extends GetxController {
   Future<void> markAllAsRead() async {
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
-      print("[NotificationController] markAllAsRead - User not authenticated.");
+      debugPrint(
+        "[NotificationController] markAllAsRead - User not authenticated.",
+      );
       return;
     }
     try {
@@ -176,7 +181,7 @@ class NotificationController extends GetxController {
 
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
-      print(
+      debugPrint(
         "[NotificationController] acceptTaskModificationRequest - User not authenticated.",
       );
       Get.snackbar("Error", "Usuario no autenticado.");
@@ -194,7 +199,7 @@ class NotificationController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      print("Error en acceptTaskModificationRequest: $e");
+      debugPrint("Error en acceptTaskModificationRequest: $e");
       Get.snackbar("Error", "No se pudo aceptar la solicitud: ${e.toString()}");
     }
   }
@@ -216,7 +221,7 @@ class NotificationController extends GetxController {
 
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
-      print(
+      debugPrint(
         "[NotificationController] rejectTaskModificationRequest - User not authenticated.",
       );
       Get.snackbar("Error", "Usuario no autenticado.");
@@ -233,7 +238,7 @@ class NotificationController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      print("Error en rejectTaskModificationRequest: $e");
+      debugPrint("Error en rejectTaskModificationRequest: $e");
       Get.snackbar(
         "Error",
         "No se pudo rechazar la solicitud: ${e.toString()}",
@@ -387,7 +392,7 @@ class NotificationController extends GetxController {
         notification.routeToNavigate!.isNotEmpty) {
       if (notification.routeToNavigate == AppRoutes.VERIFY_EMAIL &&
           AppRoutes.VERIFY_EMAIL.isEmpty) {
-        print(
+        debugPrint(
           "Advertencia: Se intenta navegar a una ruta vacía (VERIFY_EMAIL). Esto podría no funcionar con Get.toNamed().",
         );
       }
@@ -405,7 +410,7 @@ class NotificationController extends GetxController {
 
   @override
   void onClose() {
-    print("[GETX_CONTROLLER] NotificationController - onClose() CALLED");
+    debugPrint("[GETX_CONTROLLER] NotificationController - onClose() CALLED");
     _authEverWorker.dispose();
     super.onClose();
   }

@@ -158,20 +158,18 @@ class AuthController extends GetxController {
             isAuthenticated.value = true;
             editNameController.text = userData.name ?? '';
 
-            final String? currentDeviceToken =
-                NotificationService.instance.currentDeviceToken;
             await NotificationService.instance
                 .uploadCurrentDeviceTokenIfAvailable();
 
-            if (!wasAlreadyAuthenticated && currentDeviceToken != null) {
-              debugPrint(
-                "AuthController: New login detected for user ${firebaseUser.uid} on device with token $currentDeviceToken. Checking for other devices.",
-              );
-              await _sendNewDeviceLoginNotificationToOtherDevices(
-                firebaseUser.uid,
-                currentDeviceToken,
-              );
-            }
+            // if (!wasAlreadyAuthenticated && currentDeviceToken != null) {
+            //   debugPrint(
+            //     "AuthController: New login detected for user ${firebaseUser.uid} on device with token $currentDeviceToken. Checking for other devices.",
+            //   );
+            //   // await _sendNewDeviceLoginNotificationToOtherDevices(
+            //   //   firebaseUser.uid,
+            //   //   currentDeviceToken,
+            //   // );
+            // }
 
             final bool isNavigatingFromNotification =
                 NotificationService.instance.isNavigatingFromNotification;
@@ -256,6 +254,13 @@ class AuthController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,
+        );
+      } else {
+        final String? currentDeviceToken =
+            NotificationService.instance.currentDeviceToken;
+        await _sendNewDeviceLoginNotificationToOtherDevices(
+          user!.uid,
+          currentDeviceToken!,
         );
       }
     } on firebase_auth.FirebaseAuthException catch (e) {

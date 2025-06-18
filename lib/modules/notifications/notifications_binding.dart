@@ -5,12 +5,8 @@ import 'package:get/get.dart';
 class NotificationBinding extends Bindings {
   @override
   void dependencies() {
-    print("[GETX_BINDING] NotificationBinding - dependencies() CALLED");
     Get.lazyPut<AppNotificationDbService>(() => AppNotificationDbService());
     Get.lazyPut<NotificationController>(() {
-      print(
-        "[GETX_BINDING] NotificationBinding - CREATING NotificationController",
-      );
       return NotificationController();
     });
   }

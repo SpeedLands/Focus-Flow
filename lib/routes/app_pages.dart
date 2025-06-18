@@ -23,7 +23,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.LOGIN,
       page: () => LoginScreen(),
-      binding: AuthBinding(),
+      bindings: [AuthBinding()],
     ),
     GetPage(
       name: AppRoutes.REGISTER,

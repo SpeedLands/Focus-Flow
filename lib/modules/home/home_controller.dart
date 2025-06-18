@@ -33,7 +33,9 @@ class HomeController extends GetxController {
         .onForegroundMessageReceived
         .listen(
           (RemoteMessage message) {
-            print("HomeController: Notificación en primer plano recibida!");
+            debugPrint(
+              "HomeController: Notificación en primer plano recibida!",
+            );
             String? title = message.notification?.title;
             String? body = message.notification?.body;
             final Map<String, dynamic> data = message.data;
@@ -69,7 +71,7 @@ class HomeController extends GetxController {
                 onConfirm: () {
                   Get.back();
                   if (canNavigate) {
-                    print(
+                    debugPrint(
                       "HomeController: Navegando desde diálogo a: $routeToNavigate con datos: ${message.data}",
                     );
                     Get.toNamed(routeToNavigate, arguments: message.data);
@@ -80,7 +82,7 @@ class HomeController extends GetxController {
             }
           },
           onError: (error) {
-            print(
+            debugPrint(
               "HomeController: Error en el stream de notificaciones en primer plano: $error",
             );
           },

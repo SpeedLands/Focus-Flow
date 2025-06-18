@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:focus_flow/modules/projects/project_controller.dart';
@@ -13,18 +14,20 @@ class ProjectFormScreen extends GetView<ProjectController> {
 
     return Scaffold(
       backgroundColor: isTV ? Colors.blueGrey[900] : null,
-      appBar: AppBar(
+      appBar: GFAppBar(
         title: Obx(
-          () => Text(
-            controller.isEditing ? 'Editar Proyecto' : 'Nuevo Proyecto',
-            style: TextStyle(color: isTV ? Colors.white : null),
+          () => GFTypography(
+            text: controller.isEditing ? 'Editar Proyecto' : 'Nuevo Proyecto',
+            type: GFTypographyType.typo1,
+            textColor: GFColors.WHITE,
+            showDivider: false,
           ),
         ),
-        leading: IconButton(
+        leading: GFIconButton(
           icon: Icon(Icons.arrow_back_ios, color: isTV ? Colors.white : null),
-          onPressed: () => Get.back(),
+          onPressed: () => Get.offAllNamed(AppRoutes.PROJECTS_LIST),
         ),
-        backgroundColor: isTV ? Colors.blueGrey[800] : null,
+        backgroundColor: GFColors.PRIMARY,
         elevation: isTV ? 0 : null,
       ),
       body: _buildFormBody(context, isTV),

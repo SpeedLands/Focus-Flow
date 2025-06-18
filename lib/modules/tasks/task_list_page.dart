@@ -1,12 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/modules/tasks/tasks_controller.dart';
 import 'package:focus_flow/data/models/task_model.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:intl/intl.dart';
 
-class TasksListScreen extends GetView<TaskController> {
+class TasksListScreen extends StatefulWidget {
   const TasksListScreen({super.key});
+
+  @override
+  State<TasksListScreen> createState() => _TasksListScreenState();
+}
+
+class _TasksListScreenState extends State<TasksListScreen>
+    with SingleTickerProviderStateMixin {
+  TabController? _tabController;
+
+  // 5. Acceder al TaskController de GetX (se usará en initState y build)
+  late final TaskController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Accedemos al controller aquí para usarlo en el resto del estado
+    controller = Get.find<TaskController>();
+
+    // 6. Inicializar TabController
+    _tabController = TabController(length: 2, vsync: this);
+
+    // Mantenemos la lógica de carga de tareas
+    final Map<String, dynamic> args = Get.arguments ?? {};
+    final String projectId = args['projectId'] ?? '';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (controller.currentProjectId.value != projectId ||
+          (controller.tasks.isEmpty &&
+              !controller.isLoadingTasks.value &&
+              controller.taskListError.value.isEmpty)) {
+        controller.loadTasksForProject(projectId);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,13 +81,13 @@ class TasksListScreen extends GetView<TaskController> {
     String projectName, {
     required bool isTV,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: GFAppBar(
+        backgroundColor: GFColors.PRIMARY,
         title: Text(projectName),
         leading: GFIconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Get.back(),
+          onPressed: () => Get.offAllNamed(AppRoutes.PROJECTS_LIST),
           type: GFButtonType.transparent,
         ),
         actions: [
@@ -103,49 +137,39 @@ class TasksListScreen extends GetView<TaskController> {
                 return _buildEmptyState(context, projectId, isTV: isTV);
               }
 
-              return DefaultTabController(
+              return GFTabs(
                 length: 2,
-                child: Column(
-                  children: [
-                    Material(
-                      color:
-                          Theme.of(context).appBarTheme.backgroundColor ??
-                          colorScheme.surface,
-                      elevation: 1,
-                      child: TabBar(
-                        indicatorColor: GFColors.PRIMARY,
-                        labelColor: GFColors.PRIMARY,
-                        unselectedLabelColor: Colors.grey[600],
-                        tabs: [
-                          Tab(text: "PENDIENTES (${pendingTasks.length})"),
-                          Tab(text: "COMPLETADAS (${completedTasks.length})"),
-                        ],
-                      ),
+                tabBarColor: GFColors.INFO,
+                indicatorColor: GFColors.PRIMARY,
+                labelColor: GFColors.WHITE,
+                tabs: <Widget>[
+                  Tab(child: Text("PENDIENTES (${pendingTasks.length})")),
+                  Tab(child: Text("COMPLETADAS (${completedTasks.length})")),
+                ],
+                tabBarView: GFTabBarView(
+                  controller: _tabController,
+                  children: <Widget>[
+                    _buildTasksListView(
+                      context,
+                      pendingTasks,
+                      "No hay tareas pendientes.",
+                      projectId,
+                      projectName,
+                      isTV: isTV,
+                      isCompletedTab: false,
                     ),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          _buildTasksListView(
-                            context,
-                            pendingTasks,
-                            "No hay tareas pendientes.",
-                            projectId,
-                            isTV: isTV,
-                            isCompletedTab: false,
-                          ),
-                          _buildTasksListView(
-                            context,
-                            completedTasks,
-                            "No hay tareas completadas.",
-                            projectId,
-                            isTV: isTV,
-                            isCompletedTab: true,
-                          ),
-                        ],
-                      ),
+                    _buildTasksListView(
+                      context,
+                      completedTasks,
+                      "No hay tareas completadas.",
+                      projectId,
+                      projectName,
+                      isTV: isTV,
+                      isCompletedTab: true,
                     ),
                   ],
                 ),
+                controller: _tabController!,
               );
             }),
           ),
@@ -523,7 +547,8 @@ class TasksListScreen extends GetView<TaskController> {
     BuildContext context,
     List<TaskModel> tasks,
     String emptyMessage,
-    String projectId, {
+    String projectId,
+    String projectName, {
     required bool isTV,
     required bool isCompletedTab,
   }) {
@@ -555,8 +580,10 @@ class TasksListScreen extends GetView<TaskController> {
                 Padding(
                   padding: const EdgeInsets.only(top: 20.0),
                   child: GFButton(
-                    onPressed: () =>
-                        controller.navigateToAddTask(projectId: projectId),
+                    onPressed: () => controller.navigateToAddTask(
+                      projectId: projectId,
+                      projectName: projectName,
+                    ),
                     text: "Añadir Tarea",
                     icon: const Icon(Icons.add, color: Colors.white),
                   ),

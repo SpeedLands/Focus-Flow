@@ -43,7 +43,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.PROJECT_FORM,
       page: () => ProjectFormScreen(),
-      bindings: [AuthBinding(), ProjectBinding()],
+      bindings: [AuthBinding(), ProjectBinding(), NotificationBinding()],
     ),
     GetPage(
       name: AppRoutes.TASKS_LIST,
@@ -65,6 +65,10 @@ class AppPages {
         ProjectBinding(),
       ],
     ),
-    GetPage(name: AppRoutes.USER_SETTINGS, page: () => UserSettingsScreen()),
+    GetPage(
+      name: AppRoutes.USER_SETTINGS,
+      page: () => UserSettingsScreen(),
+      bindings: [AuthBinding()],
+    ),
   ];
 }

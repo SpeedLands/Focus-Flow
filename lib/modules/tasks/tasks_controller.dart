@@ -160,8 +160,9 @@ class TaskController extends GetxController {
     }
   }
 
-  void navigateToAddTask({String? projectId}) {
+  void navigateToAddTask({String? projectId, String? projectName}) {
     final targetProjectId = projectId ?? currentProjectId.value;
+    final targetProjectName = projectName;
     if (targetProjectId.isEmpty) {
       Get.snackbar(
         "Error",
@@ -176,7 +177,13 @@ class TaskController extends GetxController {
     }
     currentEditingTask.value = null;
     _resetTaskFormFields();
-    Get.toNamed(AppRoutes.TASK_FORM, arguments: {'projectId': targetProjectId});
+    Get.toNamed(
+      AppRoutes.TASK_FORM,
+      arguments: {
+        'projectId': targetProjectId,
+        'projectName': targetProjectName,
+      },
+    );
   }
 
   void navigateToEditTask(TaskModel task) {

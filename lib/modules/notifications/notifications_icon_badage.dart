@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getwidget/getwidget.dart';
 import 'package:focus_flow/modules/notifications/notifications_controller.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 
@@ -13,52 +14,47 @@ class NotificationIconBadge extends StatelessWidget {
       notificationController = Get.find<NotificationController>();
     } catch (e) {
       debugPrint(
-        "NotificationIconBadge: NotificationController no encontrado, intentando ponerlo...",
+        "NotificationIconBadge: NotificationController no encontrado.",
       );
 
-      return IconButton(
+      return GFIconButton(
         icon: const Icon(Icons.notifications_off_outlined, color: Colors.grey),
-        tooltip: "Notificaciones (Error de controlador)",
         onPressed: () {
           Get.snackbar("Error", "Controlador de notificaciones no disponible.");
         },
+        tooltip: "Notificaciones (Error de controlador)",
+        type: GFButtonType.transparent,
       );
     }
 
+    final iconColor = IconTheme.of(context).color;
+
     return Obx(() {
       int unreadCount = notificationController.unreadNotificationCount.value;
-      return Stack(
-        children: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            tooltip: "Notificaciones",
-            onPressed: () {
-              Get.toNamed(AppRoutes.NOTIFICATIONS_LIST);
-            },
-          ),
-          if (unreadCount > 0)
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  borderRadius: BorderRadius.circular(8),
+
+      return GFIconBadge(
+        position: GFBadgePosition(top: 5, end: 5),
+        counterChild: unreadCount > 0
+            ? GFBadge(
+                color: Colors.redAccent,
+                textColor: Colors.white,
+                shape: GFBadgeShape.pills,
+                size: GFSize.SMALL,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
                 ),
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                child: Text(
-                  unreadCount > 9 ? '9+' : unreadCount.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-        ],
+                child: Text(unreadCount > 9 ? '9+' : unreadCount.toString()),
+              )
+            : const SizedBox.shrink(),
+        child: GFIconButton(
+          onPressed: () {
+            Get.toNamed(AppRoutes.NOTIFICATIONS_LIST);
+          },
+          icon: Icon(Icons.notifications_outlined, color: iconColor),
+          tooltip: "Notificaciones",
+          type: GFButtonType.transparent,
+        ),
       );
     });
   }

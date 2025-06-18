@@ -314,15 +314,17 @@ class HomeScreen extends GetView<HomeController> {
   }
 
   Widget _buildMobileHomeScreen(BuildContext context) {
-    final titleStyle = Get.textTheme.headlineMedium?.copyWith(
-      fontWeight: FontWeight.bold,
-    );
-    final bodyStyle = Get.textTheme.bodyLarge;
     final padding = const EdgeInsets.all(20.0);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("FocusFlow Home"),
+      appBar: GFAppBar(
+        backgroundColor: GFColors.PRIMARY,
+        title: const GFTypography(
+          text: "FocusFlow Home",
+          type: GFTypographyType.typo1,
+          showDivider: false,
+          textColor: GFColors.WHITE,
+        ),
         elevation: 2.0,
         actions: [NotificationIconBadge(), GoToSettingsButton()],
       ),
@@ -331,11 +333,18 @@ class HomeScreen extends GetView<HomeController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Obx(() => Text(controller.greeting, style: titleStyle)),
+            Obx(
+              () => GFTypography(
+                text: controller.greeting,
+                type: GFTypographyType.typo1,
+                showDivider: false,
+              ),
+            ),
             const SizedBox(height: 10),
-            Text(
-              "Organiza tus proyectos y maximiza tu productividad.",
-              style: bodyStyle,
+            GFTypography(
+              text: "Organiza tus proyectos y maximiza tu productividad.",
+              type: GFTypographyType.typo4,
+              showDivider: false,
             ),
             const SizedBox(height: 30),
 

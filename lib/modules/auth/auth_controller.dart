@@ -150,7 +150,7 @@ class AuthController extends GetxController {
     ) async {
       if (firebaseUser != null) {
         try {
-          final bool wasAlreadyAuthenticated = isAuthenticated.value;
+          // final bool wasAlreadyAuthenticated = isAuthenticated.value;
 
           final userData = await _authProvider.getUserData(firebaseUser.uid);
           if (userData != null) {
@@ -202,7 +202,7 @@ class AuthController extends GetxController {
           await logout();
         }
       } else {
-        final lastKnownToken = NotificationService.instance.currentDeviceToken;
+        // final lastKnownToken = NotificationService.instance.currentDeviceToken;
 
         NotificationService.instance.setNavigatingFromNotification(false);
 

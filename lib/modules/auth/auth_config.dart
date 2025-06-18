@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:get/get.dart';
+import 'package:getwidget/getwidget.dart';
+import 'package:focus_flow/routes/app_routes.dart';
 
 class UserSettingsScreen extends StatelessWidget {
   UserSettingsScreen({super.key});
@@ -20,16 +22,17 @@ class UserSettingsScreen extends StatelessWidget {
     });
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: GFAppBar(
         title: const Text("Configuración de Perfil"),
-        leading: IconButton(
+        backgroundColor: GFColors.PRIMARY,
+        leading: GFIconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
+          onPressed: () => Get.offAllNamed(AppRoutes.HOME),
         ),
       ),
       body: Obx(() {
         if (authController.currentUser.value == null) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: GFLoader(type: GFLoaderType.circle));
         }
 
         return Padding(
@@ -78,27 +81,7 @@ class UserSettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 Obx(
-                  () => ElevatedButton.icon(
-                    icon: authController.isProfileUpdating.value
-                        ? Container(
-                            width: 20,
-                            height: 20,
-                            padding: const EdgeInsets.all(2.0),
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Icon(Icons.save_alt_outlined),
-                    label: Text(
-                      authController.isProfileUpdating.value
-                          ? "Guardando..."
-                          : "Guardar Nombre",
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      textStyle: const TextStyle(fontSize: 16),
-                    ),
+                  () => GFButton(
                     onPressed: authController.isProfileUpdating.value
                         ? null
                         : () {
@@ -108,17 +91,33 @@ class UserSettingsScreen extends StatelessWidget {
                               );
                             }
                           },
+                    text: authController.isProfileUpdating.value
+                        ? "Guardando..."
+                        : "Guardar Nombre",
+                    icon: authController.isProfileUpdating.value
+                        ? const GFLoader(
+                            type: GFLoaderType.circle,
+                            size: GFSize.SMALL,
+                            loaderColorOne: Colors.white,
+                            loaderColorTwo: Colors.white70,
+                            loaderColorThree: Colors.white38,
+                          )
+                        : const Icon(
+                            Icons.save_alt_outlined,
+                            color: Colors.white,
+                          ),
+                    type: GFButtonType.solid,
+                    color: GFColors.SUCCESS,
+                    fullWidthButton: true,
+                    size: GFSize.LARGE,
+                    textStyle: const TextStyle(fontSize: 16),
                   ),
                 ),
                 const SizedBox(height: 40),
                 const Divider(),
                 const SizedBox(height: 20),
-                TextButton.icon(
-                  icon: const Icon(Icons.logout, color: Colors.redAccent),
-                  label: const Text(
-                    "Cerrar Sesión",
-                    style: TextStyle(color: Colors.redAccent),
-                  ),
+
+                GFButton(
                   onPressed: () async {
                     Get.defaultDialog(
                       title: "Confirmar Cierre de Sesión",
@@ -132,6 +131,10 @@ class UserSettingsScreen extends StatelessWidget {
                       },
                     );
                   },
+                  text: "Cerrar Sesión",
+                  icon: Icon(Icons.logout, color: GFColors.WHITE),
+                  type: GFButtonType.solid,
+                  color: GFColors.DANGER,
                 ),
               ],
             ),

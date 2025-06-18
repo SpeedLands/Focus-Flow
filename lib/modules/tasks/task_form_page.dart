@@ -4,6 +4,7 @@ import 'package:focus_flow/modules/tasks/tasks_controller.dart';
 import 'package:focus_flow/data/models/task_model.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:intl/intl.dart';
+import 'package:focus_flow/routes/app_routes.dart';
 
 class TaskFormScreen extends GetView<TaskController> {
   const TaskFormScreen({super.key});
@@ -15,6 +16,7 @@ class TaskFormScreen extends GetView<TaskController> {
     final isEditing = controller.isEditingTask;
     final Map<String, dynamic> args = Get.arguments ?? {};
     final String? initialProjectId = args['projectId'];
+    final String? projectName = args['projectName'] ?? 'Tareas';
     if (!isEditing &&
         initialProjectId != null &&
         controller.currentProjectId.value != initialProjectId) {
@@ -26,6 +28,7 @@ class TaskFormScreen extends GetView<TaskController> {
     return Scaffold(
       backgroundColor: isTV ? Colors.blueGrey[900] : null,
       appBar: GFAppBar(
+        backgroundColor: GFColors.PRIMARY,
         title: Text(
           isEditing ? "Editar Tarea" : "Nueva Tarea",
           style: TextStyle(color: isTV ? Colors.white : Colors.white),
@@ -35,13 +38,15 @@ class TaskFormScreen extends GetView<TaskController> {
             Icons.arrow_back_ios,
             color: isTV ? Colors.white : Colors.white,
           ),
-          onPressed: () => Get.back(),
+          onPressed: () => Get.offAllNamed(
+            AppRoutes.TASKS_LIST,
+            arguments: {
+              'projectId': initialProjectId,
+              'projectName': projectName,
+            },
+          ),
           type: GFButtonType.transparent,
         ),
-        backgroundColor: isTV
-            ? Colors.blueGrey[800]
-            : (Get.theme.appBarTheme.backgroundColor ??
-                  Get.theme.colorScheme.primary),
         elevation: isTV ? 0 : null,
       ),
       body: _buildFormBody(context, isTV),
@@ -272,29 +277,42 @@ class TaskFormScreen extends GetView<TaskController> {
     }
 
     return Obx(
-      () => GFDropdown<TaskPriority>(
-        padding: const EdgeInsets.all(0),
-        borderRadius: BorderRadius.circular(8),
-        border: BorderSide(color: colorScheme.outline, width: 1),
-        dropdownButtonColor: colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.5,
-        ),
-        value: controller.selectedPriority.value,
-        style: TextStyle(color: colorScheme.onSurface),
-        icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
-        dropdownColor: colorScheme.surfaceContainer,
-        onChanged: (TaskPriority? newValue) {
-          if (newValue != null) controller.selectedPriority.value = newValue;
-        },
-        items: controller.taskPriorities.map((priority) {
-          return DropdownMenuItem<TaskPriority>(
-            value: priority,
-            child: Text(
-              priority.toString().split('.').last.capitalizeFirst ??
-                  priority.toString(),
+      () => SizedBox(
+        height: 50,
+        width: Get.width,
+        child: DropdownButtonHideUnderline(
+          child: GFDropdown<TaskPriority>(
+            padding: const EdgeInsets.all(15),
+            borderRadius: BorderRadius.circular(10),
+            elevation: 0,
+            border: BorderSide(color: Colors.black12, width: 1),
+            dropdownButtonColor: GFColors.WHITE,
+            value: controller.selectedPriority.value,
+            style: TextStyle(color: colorScheme.onSurface),
+            icon: Icon(
+              Icons.arrow_drop_down,
+              color: colorScheme.onSurfaceVariant,
             ),
-          );
-        }).toList(),
+            dropdownColor: colorScheme.surfaceContainer,
+            isExpanded: true,
+            isDense: false,
+            onChanged: (TaskPriority? newValue) {
+              if (newValue != null) {
+                controller.selectedPriority.value = newValue;
+              }
+            },
+            items: controller.taskPriorities.map((priority) {
+              return DropdownMenuItem<TaskPriority>(
+                value: priority,
+                child: Text(
+                  priority.toString().split('.').last.capitalizeFirst ??
+                      priority.toString(),
+                ),
+              );
+            }).toList(),
+            itemHeight: 50,
+          ),
+        ),
       ),
     );
   }

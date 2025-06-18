@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:focus_flow/data/models/app_notification_model.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
@@ -27,14 +26,20 @@ class ProjectsScreen extends GetView<ProjectController> {
 
   Widget _buildMobileProjectsScreen(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Mis Proyectos"),
-        leading: IconButton(
+      appBar: GFAppBar(
+        backgroundColor: GFColors.PRIMARY,
+        title: const GFTypography(
+          text: "Mis Proyectos",
+          type: GFTypographyType.typo1,
+          textColor: GFColors.WHITE,
+          showDivider: false,
+        ),
+        leading: GFIconButton(
           icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Get.back(),
+          onPressed: () => Get.offAllNamed(AppRoutes.HOME),
         ),
         actions: [
-          IconButton(
+          GFIconButton(
             icon: const Icon(Icons.group_add_outlined),
             tooltip: "Unirse con Código",
             onPressed: () => _showJoinWithCodeDialog(context),
@@ -75,11 +80,11 @@ class ProjectsScreen extends GetView<ProjectController> {
           ],
         );
       }),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: GFIconButton(
         onPressed: controller.navigateToAddProject,
-        label: const Text("Nuevo Proyecto"),
         icon: const Icon(Icons.add),
-        backgroundColor: GFColors.PRIMARY,
+        tooltip: "Nuevo Proyecto",
+        shape: GFIconButtonShape.pills,
       ),
     );
   }

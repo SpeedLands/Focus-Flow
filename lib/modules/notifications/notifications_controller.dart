@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:focus_flow/data/providers/notification_provider.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
-import 'package:focus_flow/data/services/app_notification_db_service.dart';
 import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:focus_flow/modules/tasks/tasks_controller.dart';
 
 class NotificationController extends GetxController {
-  final AppNotificationDbService _notificationDbService =
-      Get.find<AppNotificationDbService>();
+  final NotificationProvider _notificationProvider =
+      Get.find<NotificationProvider>();
   final AuthController _authController = Get.find<AuthController>();
 
   final RxList<AppNotificationModel> appNotifications =
@@ -62,7 +62,7 @@ class NotificationController extends GetxController {
     );
     isLoadingNotifications.value = true;
     appNotifications.bindStream(
-      _notificationDbService
+      _notificationProvider
           .getAppNotificationsStream(userId)
           .map((notifications) {
             debugPrint(
@@ -105,7 +105,7 @@ class NotificationController extends GetxController {
       return;
     }
     try {
-      await _notificationDbService.markNotificationAsRead(
+      await _notificationProvider.markNotificationAsRead(
         userId,
         notificationId,
       );
@@ -126,10 +126,7 @@ class NotificationController extends GetxController {
       return;
     }
     try {
-      await _notificationDbService.deleteAppNotification(
-        userId,
-        notificationId,
-      );
+      await _notificationProvider.deleteAppNotification(userId, notificationId);
       Get.snackbar(
         "Notificación Eliminada",
         "La notificación ha sido eliminada.",
@@ -151,7 +148,7 @@ class NotificationController extends GetxController {
       return;
     }
     try {
-      await _notificationDbService.markAllNotificationsAsRead(userId);
+      await _notificationProvider.markAllNotificationsAsRead(userId);
       Get.snackbar(
         "Notificaciones Leídas",
         "Todas las notificaciones han sido marcadas como leídas.",

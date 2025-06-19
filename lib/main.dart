@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:focus_flow/data/services/notification_service.dart';
+import 'package:focus_flow/data/services/messaging_service.dart';
 import 'package:focus_flow/firebase_options.dart';
 import 'package:focus_flow/routes/app_pages.dart';
 import 'package:focus_flow/routes/app_routes.dart';
@@ -14,8 +14,13 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
-  await NotificationService.instance.initialize();
+
+  // Solicita permisos FCM antes de lanzar la app
+  final messagingService = MessagingService();
+  await messagingService.requestPermission();
+
   runApp(
     GetMaterialApp(
       initialRoute: AppRoutes.LOGIN,

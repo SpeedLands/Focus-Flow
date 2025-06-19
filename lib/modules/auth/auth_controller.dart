@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
-import 'package:focus_flow/data/services/notification_service.dart';
+import 'package:focus_flow/data/providers/notification_provider.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:focus_flow/data/models/user_model.dart';
@@ -11,7 +11,8 @@ import 'package:focus_flow/routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final AuthProvider _authProvider = Get.find<AuthProvider>();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationProvider _notificationProvider =
+      Get.find<NotificationProvider>();
 
   final TextEditingController loginEmailController = TextEditingController();
   final TextEditingController loginPasswordController = TextEditingController();
@@ -33,9 +34,6 @@ class AuthController extends GetxController {
   final TextEditingController editNameController = TextEditingController();
   final RxBool isProfileUpdating = false.obs;
 
-  NotificationService get _notificationService =>
-      Get.find<NotificationService>();
-
   final Rx<UserData?> currentUser = Rx<UserData?>(null);
   final RxBool isAuthenticated = false.obs;
   StreamSubscription<firebase_auth.User?>? _authStateSubscription;
@@ -46,85 +44,14 @@ class AuthController extends GetxController {
     _listenToAuthStateChanges();
   }
 
-  Future<void> updateUserDeviceToken(String? newDeviceToken) async {
-    final firebase_auth.User? firebaseUser = _authProvider.currentUser;
-    if (firebaseUser == null ||
-        newDeviceToken == null ||
-        newDeviceToken.isEmpty) {
-      debugPrint(
-        "AuthController: Usuario no logueado o token nulo, no se guardará el token FCM.",
-      );
-      return;
-    }
-
-    final String userId = firebaseUser.uid;
-    final userDocRef = _firestore.collection('users').doc(userId);
-
-    debugPrint(
-      "AuthController: Actualizando token FCM ('$newDeviceToken') para el usuario: $userId",
-    );
-    try {
-      await userDocRef.update({
-        'fcmTokens': FieldValue.arrayUnion([newDeviceToken]),
-        'lastTokenUpdate': FieldValue.serverTimestamp(),
-      });
-      debugPrint(
-        "AuthController: Token FCM añadido/actualizado exitosamente en Firestore para el usuario $userId.",
-      );
-    } catch (e) {
-      if (e is FirebaseException && e.code == 'not-found') {
-        debugPrint(
-          "AuthController: El documento del usuario o el campo fcmTokens no existe. Creando/actualizando con set merge.",
-        );
-        try {
-          await userDocRef.set({
-            'fcmTokens': [newDeviceToken],
-            'lastTokenUpdate': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-          debugPrint(
-            "AuthController: Campo fcmTokens creado y token añadido para el usuario $userId.",
-          );
-        } catch (e2) {
-          debugPrint(
-            "AuthController: Error al crear/actualizar fcmTokens con set merge para $userId: $e2",
-          );
-        }
-      } else {
-        debugPrint(
-          "AuthController: Error al actualizar el token FCM en Firestore para $userId: $e",
-        );
-      }
-    }
+  Future<void> updateUserDeviceToken(String userId) async {
+    await _notificationProvider.saveDeviceFcmTokenForUser(userId);
   }
 
-  Future<void> removeUserDeviceToken(String? deviceTokenToRemove) async {
-    final firebase_auth.User? firebaseUser = _authProvider.currentUser;
-    if (firebaseUser == null ||
-        deviceTokenToRemove == null ||
-        deviceTokenToRemove.isEmpty) {
-      debugPrint(
-        "AuthController: Usuario no logueado o token a eliminar nulo, no se removerá el token FCM.",
-      );
-      return;
-    }
-    final String userId = firebaseUser.uid;
-    final userDocRef = _firestore.collection('users').doc(userId);
-
-    debugPrint(
-      "AuthController: Intentando remover el token FCM ('$deviceTokenToRemove') del usuario: $userId",
+  Future<void> removeUserDeviceToken(String deviceTokenToRemove) async {
+    _notificationProvider.removeCurrentDeviceFcmTokenForUser(
+      deviceTokenToRemove,
     );
-    try {
-      await userDocRef.update({
-        'fcmTokens': FieldValue.arrayRemove([deviceTokenToRemove]),
-      });
-      debugPrint(
-        "AuthController: Token FCM '$deviceTokenToRemove' removido exitosamente de Firestore para el usuario $userId.",
-      );
-    } catch (e) {
-      debugPrint(
-        "AuthController: Error al remover el token FCM '$deviceTokenToRemove' de Firestore para $userId: $e",
-      );
-    }
   }
 
   final GlobalKey<FormState> registerFormKey = GlobalKey<FormState>();
@@ -150,29 +77,16 @@ class AuthController extends GetxController {
     ) async {
       if (firebaseUser != null) {
         try {
-          // final bool wasAlreadyAuthenticated = isAuthenticated.value;
-
           final userData = await _authProvider.getUserData(firebaseUser.uid);
           if (userData != null) {
             currentUser.value = userData;
             isAuthenticated.value = true;
             editNameController.text = userData.name ?? '';
 
-            await NotificationService.instance
-                .uploadCurrentDeviceTokenIfAvailable();
-
-            // if (!wasAlreadyAuthenticated && currentDeviceToken != null) {
-            //   debugPrint(
-            //     "AuthController: New login detected for user ${firebaseUser.uid} on device with token $currentDeviceToken. Checking for other devices.",
-            //   );
-            //   // await _sendNewDeviceLoginNotificationToOtherDevices(
-            //   //   firebaseUser.uid,
-            //   //   currentDeviceToken,
-            //   // );
-            // }
+            await updateUserDeviceToken(currentUser.value!.uid);
 
             final bool isNavigatingFromNotification =
-                NotificationService.instance.isNavigatingFromNotification;
+                _notificationProvider.isNavigatingFromNotification;
 
             if (isNavigatingFromNotification) {
               debugPrint(
@@ -202,9 +116,7 @@ class AuthController extends GetxController {
           await logout();
         }
       } else {
-        // final lastKnownToken = NotificationService.instance.currentDeviceToken;
-
-        NotificationService.instance.setNavigatingFromNotification(false);
+        _notificationProvider.isNavigatingFromNotification = false;
 
         currentUser.value = null;
         isAuthenticated.value = false;
@@ -254,13 +166,6 @@ class AuthController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,
-        );
-      } else {
-        final String? currentDeviceToken =
-            NotificationService.instance.currentDeviceToken;
-        await _sendNewDeviceLoginNotificationToOtherDevices(
-          user!.uid,
-          currentDeviceToken!,
         );
       }
     } on firebase_auth.FirebaseAuthException catch (e) {
@@ -371,57 +276,9 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> sendEmailVerification() async {
-    try {
-      await _authProvider.sendEmailVerification();
-      Get.snackbar(
-        "Correo Enviado",
-        "Se ha reenviado el correo de verificación.",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } catch (e) {
-      Get.snackbar(
-        "Error",
-        "No se pudo reenviar el correo: ${e.toString()}",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
-  }
-
-  Future<void> checkEmailVerificationStatus() async {
-    if (_authProvider.currentUser != null) {
-      await _authProvider.currentUser!.reload();
-      if (await _authProvider.isCurrentUserEmailVerified()) {
-        final userData = await _authProvider.getUserData(
-          _authProvider.currentUser!.uid,
-        );
-        if (userData != null) {
-          currentUser.value = userData;
-          isAuthenticated.value = true;
-          if (Get.currentRoute != AppRoutes.HOME &&
-              Get.currentRoute.isNotEmpty) {
-            Get.offAllNamed(AppRoutes.HOME);
-          } else if (Get.currentRoute.isEmpty) {
-            Get.offAllNamed(AppRoutes.HOME);
-          }
-        } else {
-          await logout();
-        }
-      } else {
-        Get.snackbar(
-          "Verificación Pendiente",
-          "Tu correo electrónico aún no ha sido verificado.",
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    }
-  }
-
   Future<void> logout() async {
     try {
-      final currentToken = NotificationService.instance.currentDeviceToken;
+      final currentToken = await _notificationProvider.getDeviceFcmToken();
       if (currentToken != null && isAuthenticated.value) {
         await removeUserDeviceToken(currentToken);
       }
@@ -496,257 +353,7 @@ class AuthController extends GetxController {
       );
       return;
     }
-
-    isProfileUpdating.value = true;
-    final String userId = currentUser.value!.uid;
-    final String oldName = currentUser.value!.name ?? "Usuario";
-    final String? currentDeviceToken = _notificationService.currentDeviceToken;
-
-    try {
-      final firebaseUser = _authProvider.currentUser;
-      if (firebaseUser != null) {
-        await firebaseUser.updateDisplayName(newName.trim());
-      }
-
-      await _firestore.collection('users').doc(userId).update({
-        'name': newName.trim(),
-      });
-
-      currentUser.value = currentUser.value?.copyWith(name: newName.trim());
-      editNameController.text = newName.trim();
-
-      Get.snackbar(
-        "Éxito",
-        "Nombre actualizado correctamente.",
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-
-      await _sendNameUpdateNotificationToOtherDevices(
-        userId,
-        newName.trim(),
-        oldName,
-        currentDeviceToken,
-      );
-    } catch (e) {
-      debugPrint("Error al actualizar nombre: $e");
-      Get.snackbar(
-        "Error",
-        "No se pudo actualizar el nombre: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isProfileUpdating.value = false;
-    }
-  }
-
-  Future<void> _sendNameUpdateNotificationToOtherDevices(
-    String userId,
-    String newName,
-    String oldName,
-    String? currentDeviceToken,
-  ) async {
-    if (currentDeviceToken == null) {
-      debugPrint(
-        "AuthController: No current device token, cannot determine 'other' devices for name update notification.",
-      );
-      return;
-    }
-
-    List<String>? allUserTokens = await getUserFcmTokens(userId);
-    if (allUserTokens == null || allUserTokens.isEmpty) {
-      debugPrint(
-        "AuthController: User $userId has no FCM tokens, no name update notification sent.",
-      );
-      return;
-    }
-
-    final List<String> otherDeviceTokens = allUserTokens
-        .where((token) => token != currentDeviceToken && token.isNotEmpty)
-        .toList();
-
-    if (otherDeviceTokens.isEmpty) {
-      debugPrint(
-        "AuthController: No other devices found for user $userId to send name update notification.",
-      );
-      return;
-    }
-
-    final String title = "Perfil Actualizado";
-    final String body =
-        "Tu nombre ha sido cambiado de '$oldName' a '$newName'.";
-    final Map<String, String> dataPayload = {
-      'type': 'user_profile_name_updated',
-      'newName': newName,
-      'oldName': oldName,
-      'userId': userId,
-    };
-
-    debugPrint(
-      "AuthController: Sending name update notification to tokens: $otherDeviceTokens",
-    );
-
-    for (String token in otherDeviceTokens) {
-      try {
-        await _notificationService.sendNotificationToDevice(
-          targetDeviceToken: token,
-          title: title,
-          body: body,
-          data: dataPayload,
-        );
-        debugPrint(
-          "AuthController: Name update notification sent to token $token",
-        );
-      } catch (e) {
-        debugPrint(
-          "AuthController: Failed to send name update notification to token $token: $e",
-        );
-      }
-    }
-  }
-
-  Future<void> _sendNewDeviceLoginNotificationToOtherDevices(
-    String userId,
-    String currentDeviceToken,
-  ) async {
-    List<String>? allUserTokens = await getUserFcmTokens(userId);
-
-    if (allUserTokens == null || allUserTokens.isEmpty) {
-      debugPrint(
-        "AuthController: User $userId has no FCM tokens. No new device login notification to send.",
-      );
-      return;
-    }
-
-    final List<String> otherDeviceTokens = allUserTokens
-        .where((token) => token != currentDeviceToken && token.isNotEmpty)
-        .toList();
-
-    if (otherDeviceTokens.isEmpty) {
-      debugPrint(
-        "AuthController: No other previously active devices found for user $userId. No new device login notification sent.",
-      );
-      return;
-    }
-
-    final String title = "Nuevo Inicio de Sesión";
-    final String body =
-        "Tu cuenta ha sido accedida desde un nuevo dispositivo.";
-    final Map<String, String> dataPayload = {
-      'type': 'new_device_login',
-      'userId': userId,
-    };
-
-    debugPrint(
-      "AuthController: Sending new device login notification to tokens: $otherDeviceTokens",
-    );
-
-    for (String token in otherDeviceTokens) {
-      try {
-        await _notificationService.sendNotificationToDevice(
-          targetDeviceToken: token,
-          title: title,
-          body: body,
-          data: dataPayload,
-        );
-        debugPrint(
-          "AuthController: New device login notification sent to token $token",
-        );
-      } catch (e) {
-        debugPrint(
-          "AuthController: Failed to send new device login notification to token $token: $e",
-        );
-      }
-    }
-  }
-
-  Future<void> addUserNotification(
-    String userId,
-    AppNotificationModel notification,
-  ) async {
-    if (userId.isEmpty) {
-      debugPrint(
-        "AuthController: User ID vacío, no se puede guardar AppNotification.",
-      );
-      return;
-    }
-    try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('app_notifications')
-          .add(notification.toJson());
-      debugPrint("AppNotification guardada para $userId");
-    } catch (e) {
-      debugPrint("Error guardando AppNotification para $userId: $e");
-    }
-  }
-
-  Future<List<String>?> getUserFcmTokens(String memberId) async {
-    try {
-      final userDoc = await _firestore.collection('users').doc(memberId).get();
-      if (userDoc.exists) {
-        final data = userDoc.data();
-        if (data != null && data.containsKey('fcmTokens')) {
-          final fcmTokens = List<String>.from(data['fcmTokens'] ?? []);
-          debugPrint("Tokens FCM del usuario $memberId: $fcmTokens");
-          return fcmTokens;
-        } else {
-          debugPrint("El usuario $memberId no tiene tokens FCM registrados.");
-        }
-      } else {
-        debugPrint("No se encontró el documento del usuario $memberId.");
-      }
-    } catch (e) {
-      debugPrint("Error al obtener los tokens FCM del usuario $memberId: $e");
-    }
-    return null;
-  }
-
-  Future<List<String>?> getUserFcmTokensByEmail(String email) async {
-    try {
-      final querySnapshot = await _firestore
-          .collection('users')
-          .where('email', isEqualTo: email)
-          .get();
-      if (querySnapshot.docs.isNotEmpty) {
-        final userDoc = querySnapshot.docs.first;
-        final data = userDoc.data();
-        if (data.containsKey('fcmTokens')) {
-          final fcmTokens = List<String>.from(data['fcmTokens'] ?? []);
-          debugPrint("Tokens FCM del usuario con email $email: $fcmTokens");
-          return fcmTokens;
-        } else {
-          debugPrint(
-            "El usuario con email $email no tiene tokens FCM registrados.",
-          );
-        }
-      } else {
-        debugPrint("No se encontró un usuario con el email $email.");
-      }
-    } catch (e) {
-      debugPrint(
-        "Error al obtener los tokens FCM del usuario con email $email: $e",
-      );
-    }
-    return null;
-  }
-
-  Future<UserData?> getUserDataByEmail(String email) async {
-    try {
-      final querySnapshot = await _firestore
-          .collection('users')
-          .where('email', isEqualTo: email.trim().toLowerCase())
-          .limit(1)
-          .get();
-      if (querySnapshot.docs.isNotEmpty) {
-        return UserData.fromFirestore(querySnapshot.docs.first);
-      }
-    } catch (e) {
-      debugPrint("Error al obtener UserData por email $email: $e");
-    }
-    return null;
+    _authProvider.updateUserName(newName);
   }
 
   void toggleLoginPasswordVisibility() {

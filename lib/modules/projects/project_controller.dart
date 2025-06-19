@@ -2,24 +2,27 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
-import 'package:focus_flow/data/services/notification_service.dart';
+import 'package:focus_flow/data/providers/notification_provider.dart';
+import 'package:focus_flow/data/providers/project_invitation_provider.dart';
+import 'package:focus_flow/data/providers/project_provider.dart';
+import 'package:focus_flow/data/providers/task_provider.dart';
 import 'package:focus_flow/modules/notifications/notifications_controller.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/data/models/project_model.dart';
 import 'package:focus_flow/data/models/project_invitation_model.dart';
-import 'package:focus_flow/data/services/project_service.dart';
 import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:focus_flow/routes/app_routes.dart';
-import 'package:focus_flow/data/services/task_service.dart';
 
 class ProjectController extends GetxController {
-  final ProjectService _projectService = Get.find<ProjectService>();
+  final ProjectProvider _projectProvider = Get.find<ProjectProvider>();
+  final ProjectInvitationProvider _projectInvitationProvider =
+      Get.find<ProjectInvitationProvider>();
   final AuthController _authController = Get.find<AuthController>();
-  final NotificationService _notificationService =
-      Get.find<NotificationService>();
+  final NotificationProvider _notificationProvider =
+      Get.find<NotificationProvider>();
   final NotificationController _notificationController =
       Get.find<NotificationController>();
-  final TaskService _taskService = Get.find<TaskService>();
+  final TaskProvider _taskProvider = Get.find<TaskProvider>();
 
   late Worker _authEverWorker;
 
@@ -163,7 +166,7 @@ class ProjectController extends GetxController {
     );
 
     projects.bindStream(
-      _projectService
+      _projectProvider
           .getProjectsStream()
           .map((projectList) {
             isLoadingProjects.value = false;
@@ -196,8 +199,8 @@ class ProjectController extends GetxController {
       "[ProjectController] _bindProjectInvitationsStream - Binding invitations stream.",
     );
     projectInvitations.bindStream(
-      _projectService
-          .getProjectInvitationsStream()
+      _projectInvitationProvider
+          .getInvitationsStream()
           .map((invitations) {
             isLoadingInvitations.value = false;
             return invitations;
@@ -316,7 +319,7 @@ class ProjectController extends GetxController {
             colorHex: ProjectModel.colorToHex(selectedColor.value),
             iconName: selectedIconName.value,
           );
-          await _projectService.updateProjectDetails(projectToUpdate);
+          await _projectProvider.updateProject(projectToUpdate);
           Get.snackbar(
             "Éxito",
             "Proyecto actualizado correctamente.",
@@ -335,7 +338,7 @@ class ProjectController extends GetxController {
             userRoles: [],
             createdAt: Timestamp.now(),
           );
-          await _projectService.addProject(newProjectData);
+          await _projectProvider.addProject(newProjectData);
           Get.snackbar(
             "Éxito",
             "Proyecto creado correctamente.",
@@ -418,12 +421,12 @@ class ProjectController extends GetxController {
       debugPrint(
         "[ProjectController] Eliminando tareas para el proyecto ${project.id}...",
       );
-      await _taskService.deleteAllTasksForProject(project.id!);
+      await _taskProvider.deleteAllTasksForProject(project.id!);
       debugPrint(
         "[ProjectController] Tareas eliminadas. Eliminando proyecto ${project.id}...",
       );
 
-      await _projectService.deleteProject(project.id!);
+      await _projectProvider.deleteProject(project.id!);
       debugPrint("[ProjectController] Proyecto ${project.id} eliminado.");
 
       final pendingRequestsForThisProject = pendingProjectDeletionRequests
@@ -498,7 +501,7 @@ class ProjectController extends GetxController {
     );
 
     try {
-      await _authController.addUserNotification(
+      await _notificationProvider.addUserNotification(
         project.adminUserId,
         appNotification,
       );
@@ -506,7 +509,7 @@ class ProjectController extends GetxController {
         "[ProjectController] Notificación de solicitud guardada para admin ${project.adminUserId}",
       );
 
-      List<String>? adminTokens = await _authController.getUserFcmTokens(
+      List<String>? adminTokens = await _notificationProvider.getUserFcmTokens(
         project.adminUserId,
       );
       if (adminTokens != null && adminTokens.isNotEmpty) {
@@ -518,7 +521,7 @@ class ProjectController extends GetxController {
           'body': "Revisa la solicitud de eliminación para '${project.name}'.",
         };
         for (String token in adminTokens) {
-          await _notificationService.sendNotificationToDevice(
+          await _notificationProvider.sendNotificationToDevice(
             targetDeviceToken: token,
             title: title,
             body: pushDataPayload['body']!,
@@ -611,7 +614,7 @@ class ProjectController extends GetxController {
 
     ProjectModel? projectToVerify;
     try {
-      projectToVerify = await _projectService.getProjectById(projectId);
+      projectToVerify = await _projectProvider.getProjectById(projectId);
       if (projectToVerify == null ||
           projectToVerify.adminUserId != adminUser.uid) {
         Get.snackbar(
@@ -633,11 +636,11 @@ class ProjectController extends GetxController {
       debugPrint(
         "[ProjectController] Aprobando eliminación para proyecto $projectId...",
       );
-      await _taskService.deleteAllTasksForProject(projectId);
+      await _taskProvider.deleteAllTasksForProject(projectId);
       debugPrint(
         "[ProjectController] Tareas eliminadas. Eliminando proyecto $projectId...",
       );
-      await _projectService.deleteProject(projectId);
+      await _projectProvider.deleteProject(projectId);
       debugPrint(
         "[ProjectController] Proyecto $projectId eliminado por aprobación.",
       );
@@ -748,14 +751,13 @@ class ProjectController extends GetxController {
       createdAt: Timestamp.now(),
     );
 
-    await _authController.addUserNotification(
+    await _notificationProvider.addUserNotification(
       requesterId,
       feedbackNotification,
     );
 
-    List<String>? requesterTokens = await _authController.getUserFcmTokens(
-      requesterId,
-    );
+    List<String>? requesterTokens = await _notificationProvider
+        .getUserFcmTokens(requesterId);
     if (requesterTokens != null && requesterTokens.isNotEmpty) {
       Map<String, String> pushDataPayload = {
         'type': isApproved
@@ -766,7 +768,7 @@ class ProjectController extends GetxController {
         'screen': AppRoutes.PROJECTS_LIST,
       };
       for (String token in requesterTokens) {
-        _notificationService.sendNotificationToDevice(
+        _notificationProvider.sendNotificationToDevice(
           targetDeviceToken: token,
           title: title,
           body: body,
@@ -801,8 +803,9 @@ class ProjectController extends GetxController {
       return;
     }
     try {
-      await _projectService.inviteUserToProject(
+      await _projectInvitationProvider.inviteUser(
         projectId,
+        project!.name,
         inviteEmailController.text.trim(),
       );
       inviteEmailController.clear();
@@ -828,7 +831,7 @@ class ProjectController extends GetxController {
       return;
     }
     try {
-      final code = await _projectService.generateAccessCode(projectId);
+      final code = await _projectProvider.generateAccessCode(projectId);
       generatedAccessCode.value = code;
       Get.snackbar(
         "Código Generado",
@@ -853,7 +856,7 @@ class ProjectController extends GetxController {
       return;
     }
     try {
-      final success = await _projectService.joinProjectWithCode(
+      final success = await _projectProvider.joinProjectWithCode(
         accessCodeController.text.trim(),
       );
       if (success) {
@@ -879,7 +882,7 @@ class ProjectController extends GetxController {
       return;
     }
     try {
-      await _projectService.acceptProjectInvitation(invitationId);
+      await _projectInvitationProvider.acceptInvitation(invitationId);
       Get.snackbar(
         "Invitación Aceptada",
         "Ahora eres miembro del proyecto.",
@@ -903,7 +906,7 @@ class ProjectController extends GetxController {
       return;
     }
     try {
-      await _projectService.declineProjectInvitation(invitationId);
+      await _projectInvitationProvider.declineInvitation(invitationId);
       Get.snackbar(
         "Invitación Declinada",
         "Has rechazado la invitación.",
@@ -936,7 +939,7 @@ class ProjectController extends GetxController {
       onConfirm: () async {
         Get.back();
         try {
-          await _projectService.leaveProject(projectId);
+          await _projectProvider.leaveProject(projectId);
           Get.snackbar(
             "Has Abandonado el Proyecto",
             "",
@@ -988,10 +991,10 @@ class ProjectController extends GetxController {
       onConfirm: () async {
         Get.back();
         try {
-          await _projectService.removeMemberFromProject(
-            projectId,
-            memberIdToRemove,
-          );
+          // await _projectProvider.(
+          //   projectId,
+          //   memberIdToRemove,
+          // );
           Get.snackbar(
             "Miembro Removido",
             "'$memberName' ha sido removido del proyecto.",

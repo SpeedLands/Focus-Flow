@@ -2,22 +2,22 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
+import 'package:focus_flow/data/providers/notification_provider.dart';
+import 'package:focus_flow/data/providers/project_provider.dart';
+import 'package:focus_flow/data/providers/task_provider.dart';
 import 'package:focus_flow/modules/notifications/notifications_controller.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/data/models/task_model.dart';
 import 'package:focus_flow/data/models/project_model.dart';
-import 'package:focus_flow/data/services/task_service.dart';
-import 'package:focus_flow/data/services/project_service.dart';
-import 'package:focus_flow/data/services/notification_service.dart';
 import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 
 class TaskController extends GetxController {
-  final TaskService _taskService = Get.find<TaskService>();
+  final TaskProvider _taskService = Get.find<TaskProvider>();
   final AuthController _authController = Get.find<AuthController>();
-  final NotificationService _notificationService =
-      Get.find<NotificationService>();
-  final ProjectService _projectService = Get.find<ProjectService>();
+  final NotificationProvider _notificationProvider =
+      Get.find<NotificationProvider>();
+  final ProjectProvider _projectService = Get.find<ProjectProvider>();
   final NotificationController _notificationController =
       Get.find<NotificationController>();
 
@@ -275,7 +275,7 @@ class TaskController extends GetxController {
           projectId: projIdForSave,
           action: "creada",
           taskName: taskData.name,
-          taskId: docRef!.id,
+          taskId: docRef!,
         );
       }
       _resetTaskFormFields();
@@ -390,13 +390,16 @@ class TaskController extends GetxController {
     for (String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
-        await _authController.addUserNotification(memberId, appNotification);
+        await _notificationProvider.addUserNotification(
+          memberId,
+          appNotification,
+        );
       }
     }
 
     if (project.adminUserId != currentUserId &&
         !project.userRoles.any((r) => r.startsWith(project.adminUserId))) {
-      await _authController.addUserNotification(
+      await _notificationProvider.addUserNotification(
         project.adminUserId,
         appNotification,
       );
@@ -407,7 +410,7 @@ class TaskController extends GetxController {
         "AppNotification de solicitud de $requestType guardada para admin ${project.adminUserId}",
       );
 
-      List<String>? adminTokens = await _authController.getUserFcmTokens(
+      List<String>? adminTokens = await _notificationProvider.getUserFcmTokens(
         project.adminUserId,
       );
       if (adminTokens != null && adminTokens.isNotEmpty) {
@@ -419,7 +422,7 @@ class TaskController extends GetxController {
           'body': body,
         };
         for (String token in adminTokens) {
-          await _notificationService.sendNotificationToDevice(
+          await _notificationProvider.sendNotificationToDevice(
             targetDeviceToken: token,
             title: title,
             body: "Tienes una nueva solicitud de tarea para revisar.",
@@ -611,14 +614,13 @@ class TaskController extends GetxController {
       createdAt: Timestamp.now(),
     );
 
-    await _authController.addUserNotification(
+    await _notificationProvider.addUserNotification(
       requesterId,
       feedbackNotification,
     );
 
-    List<String>? requesterTokens = await _authController.getUserFcmTokens(
-      requesterId,
-    );
+    List<String>? requesterTokens = await _notificationProvider
+        .getUserFcmTokens(requesterId);
     if (requesterTokens != null && requesterTokens.isNotEmpty) {
       Map<String, String> pushDataPayload = {
         'type': isApproved ? 'task_request_approved' : 'task_request_rejected',
@@ -626,7 +628,7 @@ class TaskController extends GetxController {
         'body': body,
       };
       for (String token in requesterTokens) {
-        _notificationService.sendNotificationToDevice(
+        _notificationProvider.sendNotificationToDevice(
           targetDeviceToken: token,
           title: title,
           body: body,
@@ -713,12 +715,15 @@ class TaskController extends GetxController {
     for (String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
-        await _authController.addUserNotification(memberId, appNotif);
+        await _notificationProvider.addUserNotification(memberId, appNotif);
       }
     }
     if (project.adminUserId != currentUserId &&
         !project.userRoles.any((r) => r.startsWith(project!.adminUserId))) {
-      await _authController.addUserNotification(project.adminUserId, appNotif);
+      await _notificationProvider.addUserNotification(
+        project.adminUserId,
+        appNotif,
+      );
     }
 
     if (targetTokens.isNotEmpty) {
@@ -732,7 +737,7 @@ class TaskController extends GetxController {
         'body': body,
       };
       for (String token in targetTokens) {
-        await _notificationService.sendNotificationToDevice(
+        await _notificationProvider.sendNotificationToDevice(
           targetDeviceToken: token,
           title: title,
           body: body,
@@ -748,7 +753,7 @@ class TaskController extends GetxController {
   ) async {
     List<String> targetTokens = [];
     if (project.adminUserId != currentUserId) {
-      List<String>? adminTokens = await _authController.getUserFcmTokens(
+      List<String>? adminTokens = await _notificationProvider.getUserFcmTokens(
         project.adminUserId,
       );
       if (adminTokens != null) targetTokens.addAll(adminTokens);
@@ -756,9 +761,8 @@ class TaskController extends GetxController {
     for (String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId && memberId != project.adminUserId) {
-        List<String>? memberTokens = await _authController.getUserFcmTokens(
-          memberId,
-        );
+        List<String>? memberTokens = await _notificationProvider
+            .getUserFcmTokens(memberId);
         if (memberTokens != null) targetTokens.addAll(memberTokens);
       }
     }
@@ -842,12 +846,15 @@ class TaskController extends GetxController {
     for (String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
-        await _authController.addUserNotification(memberId, appNotif);
+        await _notificationProvider.addUserNotification(memberId, appNotif);
       }
     }
     if (project.adminUserId != currentUserId &&
         !project.userRoles.any((r) => r.startsWith(project!.adminUserId))) {
-      await _authController.addUserNotification(project.adminUserId, appNotif);
+      await _notificationProvider.addUserNotification(
+        project.adminUserId,
+        appNotif,
+      );
     }
 
     if (targetTokens.isEmpty) {
@@ -870,7 +877,7 @@ class TaskController extends GetxController {
     if (taskId.isNotEmpty) notificationDataPayload['taskId'] = taskId;
 
     for (String token in targetTokens) {
-      await _notificationService.sendNotificationToDevice(
+      await _notificationProvider.sendNotificationToDevice(
         targetDeviceToken: token,
         title: title,
         body: body,

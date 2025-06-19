@@ -2,14 +2,15 @@ import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:focus_flow/data/services/notification_service.dart';
+import 'package:focus_flow/data/providers/notification_provider.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:focus_flow/data/models/user_model.dart';
 
 class HomeController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
-  final NotificationService _notificationService = NotificationService.instance;
+  final NotificationProvider _notificationProvider =
+      Get.find<NotificationProvider>();
   StreamSubscription<RemoteMessage>? _foregroundNotificationSubscription;
 
   final Rx<UserData?> userData = Rx<UserData?>(null);
@@ -29,7 +30,7 @@ class HomeController extends GetxController {
   }
 
   void _listenToForegroundNotifications() {
-    _foregroundNotificationSubscription = _notificationService
+    _foregroundNotificationSubscription = _notificationProvider
         .onForegroundMessageReceived
         .listen(
           (RemoteMessage message) {

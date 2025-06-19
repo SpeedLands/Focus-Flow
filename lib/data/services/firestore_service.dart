@@ -42,13 +42,61 @@ class FirestoreService {
     }
   }
 
+  Future<String?> addDocumentToSubcollection({
+    required String parentCollectionName,
+    required String subCollectionName,
+    required Map<String, dynamic> data,
+    required String documentId,
+  }) async {
+    if (parentCollectionName.isEmpty ||
+        subCollectionName.isEmpty ||
+        documentId.isEmpty) {
+      debugPrint(
+        "Error: Nombres de colección/subcolección o ID de documento no pueden estar vacíos.",
+      );
+      return null;
+    }
+    if (data.isEmpty) {
+      debugPrint("Error: Los datos para el documento no pueden estar vacíos.");
+      return null;
+    }
+
+    try {
+      final CollectionReference subCollectionRef = FirebaseFirestore.instance
+          .collection(parentCollectionName)
+          .doc(documentId)
+          .collection(subCollectionName);
+
+      final DocumentReference docRef = await subCollectionRef.add(data);
+
+      debugPrint(
+        "Documento añadido con ID: ${docRef.id} a la subcolección '$parentCollectionName/$documentId/$subCollectionName'",
+      );
+      return docRef.id;
+    } on FirebaseException catch (e, stackTrace) {
+      debugPrint(
+        "Error de Firebase al agregar documento a '$parentCollectionName/$documentId/$subCollectionName': ${e.message} (Código: ${e.code})\nStackTrace: $stackTrace",
+      );
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint(
+        "Error inesperado al agregar documento a '$parentCollectionName/$documentId/$subCollectionName': $e\nStackTrace: $stackTrace",
+      );
+      return null;
+    }
+  }
+
   Future<void> setDocument(
     String documentId,
     String collection,
     Map<String, dynamic> data,
+    SetOptions? options,
   ) async {
     try {
-      await _firestore.collection(collection).doc(documentId).set(data);
+      await _firestore
+          .collection(collection)
+          .doc(documentId)
+          .set(data, options);
     } catch (e) {
       debugPrint("Error estableciendo documento: $e");
       return;
@@ -60,6 +108,34 @@ class FirestoreService {
       return await _firestore.collection(collection).doc(docId).get();
     } catch (e) {
       debugPrint("Error obteniendo documento: $e");
+      return null;
+    }
+  }
+
+  Future<List<QueryDocumentSnapshot>?> getDocumentsWhere({
+    required String collectionName,
+    required String field,
+    required dynamic isEqualToValue,
+    int? limit,
+  }) async {
+    try {
+      Query query = _firestore
+          .collection(collectionName)
+          .where(field, isEqualTo: isEqualToValue);
+      if (limit != null && limit > 0) {
+        query = query.limit(limit);
+      }
+      final querySnapshot = await query.get();
+      return querySnapshot.docs;
+    } on FirebaseException catch (e, stackTrace) {
+      debugPrint(
+        "FirebaseException en getDocumentsWhere ($collectionName where $field == $isEqualToValue): ${e.message} (Code: ${e.code})\nStackTrace: $stackTrace",
+      );
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint(
+        "Error inesperado en getDocumentsWhere ($collectionName where $field == $isEqualToValue): $e\nStackTrace: $stackTrace",
+      );
       return null;
     }
   }

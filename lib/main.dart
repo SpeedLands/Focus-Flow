@@ -1,25 +1,22 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_flow/data/services/messaging_service.dart';
+import 'package:focus_flow/data/services/notifications_service.dart';
 import 'package:focus_flow/firebase_options.dart';
 import 'package:focus_flow/routes/app_pages.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 
-Future<void> _backgroundMessageHandler(RemoteMessage message) async {
-  debugPrint("Handling a background message: ${message.messageId}");
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
-
   // Solicita permisos FCM antes de lanzar la app
   final messagingService = MessagingService();
   await messagingService.requestPermission();
+  messagingService.setupMessageHandlers();
+
+  NotificationsService().initializeNotifications();
 
   runApp(
     GetMaterialApp(

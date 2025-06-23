@@ -1,16 +1,14 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:focus_flow/data/models/app_notification_model.dart';
 import 'package:focus_flow/data/providers/notification_provider.dart';
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:focus_flow/data/models/user_model.dart';
-import 'package:focus_flow/data/providers/auth_provider.dart';
+import 'package:focus_flow/data/providers/auth_app_provider.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 
 class AuthController extends GetxController {
-  final AuthProvider _authProvider = Get.find<AuthProvider>();
+  final AuthProviderApp _authProvider = Get.find<AuthProviderApp>();
   final NotificationProvider _notificationProvider =
       Get.find<NotificationProvider>();
 
@@ -36,7 +34,7 @@ class AuthController extends GetxController {
 
   final Rx<UserData?> currentUser = Rx<UserData?>(null);
   final RxBool isAuthenticated = false.obs;
-  StreamSubscription<firebase_auth.User?>? _authStateSubscription;
+  StreamSubscription<User?>? _authStateSubscription;
 
   @override
   void onInit() {
@@ -45,13 +43,11 @@ class AuthController extends GetxController {
   }
 
   Future<void> updateUserDeviceToken(String userId) async {
-    await _notificationProvider.saveDeviceFcmTokenForUser(userId);
+    await _notificationProvider.saveCurrentDeviceToken(userId);
   }
 
   Future<void> removeUserDeviceToken(String deviceTokenToRemove) async {
-    _notificationProvider.removeCurrentDeviceFcmTokenForUser(
-      deviceTokenToRemove,
-    );
+    _notificationProvider.removeCurrentDeviceToken(deviceTokenToRemove);
   }
 
   final GlobalKey<FormState> registerFormKey = GlobalKey<FormState>();
@@ -85,23 +81,17 @@ class AuthController extends GetxController {
 
             await updateUserDeviceToken(currentUser.value!.uid);
 
-            final bool isNavigatingFromNotification =
-                _notificationProvider.isNavigatingFromNotification;
+            // final bool isNavigatingFromNotification =
+            //     _notificationProvider.isNavigatingFromNotification;
 
-            if (isNavigatingFromNotification) {
-              debugPrint(
-                "AuthController: Navegación por notificación en curso, omitiendo redirección a HOME.",
-              );
+            final authRoutes = [AppRoutes.LOGIN, AppRoutes.REGISTER];
+            if (authRoutes.contains(Get.currentRoute) ||
+                Get.currentRoute.isEmpty) {
+              Get.offAllNamed(AppRoutes.HOME);
             } else {
-              final authRoutes = [AppRoutes.LOGIN, AppRoutes.REGISTER];
-              if (authRoutes.contains(Get.currentRoute) ||
-                  Get.currentRoute.isEmpty) {
-                Get.offAllNamed(AppRoutes.HOME);
-              } else {
-                debugPrint(
-                  "Usuario autenticado y ya en una ruta válida: ${Get.currentRoute}",
-                );
-              }
+              debugPrint(
+                "Usuario autenticado y ya en una ruta válida: ${Get.currentRoute}",
+              );
             }
           } else {
             debugPrint(
@@ -116,8 +106,6 @@ class AuthController extends GetxController {
           await logout();
         }
       } else {
-        _notificationProvider.isNavigatingFromNotification = false;
-
         currentUser.value = null;
         isAuthenticated.value = false;
         loginError.value = '';
@@ -168,7 +156,7 @@ class AuthController extends GetxController {
           colorText: Colors.white,
         );
       }
-    } on firebase_auth.FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e) {
       loginError.value = _mapFirebaseAuthExceptionMessage(e);
       Get.snackbar(
         "Error de Inicio de Sesión",
@@ -251,7 +239,7 @@ class AuthController extends GetxController {
           colorText: Colors.white,
         );
       }
-    } on firebase_auth.FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e) {
       registerError.value = _mapFirebaseAuthExceptionMessage(e);
       Get.snackbar(
         "Error de Registro",
@@ -278,7 +266,7 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     try {
-      final currentToken = await _notificationProvider.getDeviceFcmToken();
+      final currentToken = await _notificationProvider.getCurrentDeviceToken();
       if (currentToken != null && isAuthenticated.value) {
         await removeUserDeviceToken(currentToken);
       }
@@ -313,7 +301,7 @@ class AuthController extends GetxController {
         "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.",
         snackPosition: SnackPosition.BOTTOM,
       );
-    } on firebase_auth.FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e) {
       Get.snackbar(
         "Error",
         _mapFirebaseAuthExceptionMessage(e),
@@ -383,9 +371,7 @@ class AuthController extends GetxController {
     registerError.value = '';
   }
 
-  String _mapFirebaseAuthExceptionMessage(
-    firebase_auth.FirebaseAuthException e,
-  ) {
+  String _mapFirebaseAuthExceptionMessage(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
         return 'No se encontró un usuario con ese correo electrónico.';

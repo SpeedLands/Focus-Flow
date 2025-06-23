@@ -3,20 +3,20 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focus_flow/data/models/project_model.dart';
 import 'package:focus_flow/data/services/firestore_service.dart';
-import 'package:focus_flow/data/providers/auth_provider.dart';
+import 'package:focus_flow/data/providers/auth_app_provider.dart';
 
 class ProjectProvider {
   final FirestoreService _firestoreService;
-  final AuthProvider _authProvider;
+  final AuthProviderApp _authProviderApp;
 
   final String _collectionName = "projects";
 
-  ProjectProvider(this._firestoreService, this._authProvider);
+  ProjectProvider(this._firestoreService, this._authProviderApp);
 
   String _userRoleString(String userId, String role) => '$userId:$role';
 
   Future<String?> addProject(ProjectModel project) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return null;
 
     final now = Timestamp.now();
@@ -58,7 +58,7 @@ class ProjectProvider {
   }
 
   Stream<List<ProjectModel>> getProjectsStream() {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return const Stream.empty();
 
     final adminRole = _userRoleString(currentUser.uid, "admin");
@@ -89,7 +89,7 @@ class ProjectProvider {
   }
 
   Future<String> generateAccessCode(String projectId) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return "";
 
     final doc = await getProjectById(projectId);
@@ -113,43 +113,64 @@ class ProjectProvider {
     return code;
   }
 
-  Future<bool> joinProjectWithCode(String accessCode) async {
-    final currentUser = _authProvider.currentUser;
-    if (currentUser == null || accessCode.trim().isEmpty) return false;
+  Future<ProjectModel?> joinProjectWithCode(String accessCode) async {
+    final currentUser = _authProviderApp.currentUser;
+
+    if (currentUser == null) {
+      throw Exception("Usuario no autenticado. Inicia sesión para unirte.");
+    }
+    if (accessCode.trim().isEmpty) {
+      throw Exception("Por favor, ingresa un código de acceso.");
+    }
 
     final results = await _firestoreService.getDocumentsWhere(
       collectionName: _collectionName,
       field: 'accessCode',
-      isEqualToValue: accessCode.toUpperCase(),
+      isEqualToValue: accessCode.trim().toUpperCase(),
       limit: 1,
     );
 
     if (results == null || results.isEmpty) {
-      throw Exception("Código inválido.");
+      throw Exception("Código de acceso inválido o el proyecto no existe.");
     }
 
     final doc = results.first;
-    final project = ProjectModel.fromFirestore(
+    ProjectModel project = ProjectModel.fromFirestore(
       doc as DocumentSnapshot<Map<String, dynamic>>,
     );
 
-    final userRole = _userRoleString(currentUser.uid, "member");
-    if (project.userRoles.contains(userRole)) {
-      return true;
+    final userRoleToAdd = _userRoleString(currentUser.uid, "member");
+
+    if (project.adminUserId == currentUser.uid) {
+      return project;
     }
 
-    return await _firestoreService.updateDocument(
+    if (project.userRoles.any(
+      (role) => role.startsWith('${currentUser.uid}:'),
+    )) {
+      return project;
+    }
+
+    final bool updateSuccess = await _firestoreService.updateDocument(
       _collectionName,
       project.id!,
       {
-        'userRoles': FieldValue.arrayUnion([userRole]),
+        'userRoles': FieldValue.arrayUnion([userRoleToAdd]),
         'updatedAt': Timestamp.now(),
       },
     );
+
+    if (updateSuccess) {
+      List<String> updatedUserRoles = List<String>.from(project.userRoles);
+      updatedUserRoles.add(userRoleToAdd);
+      return project.copyWith(userRoles: updatedUserRoles);
+    } else {
+      throw Exception("No se pudo unir al proyecto. Inténtalo de nuevo.");
+    }
   }
 
   Future<void> leaveProject(String projectId) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return;
 
     final doc = await getProjectById(projectId);

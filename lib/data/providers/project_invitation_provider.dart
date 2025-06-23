@@ -1,14 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:focus_flow/data/providers/notification_provider.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 import 'package:focus_flow/data/models/project_invitation_model.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
-import 'package:focus_flow/data/providers/auth_provider.dart';
+import 'package:focus_flow/data/providers/auth_app_provider.dart';
 import 'package:focus_flow/data/services/firestore_service.dart';
 
 class ProjectInvitationProvider {
   final FirestoreService _firestoreService;
-  final AuthProvider _authProvider;
+  final AuthProviderApp _authProviderApp;
   final NotificationProvider _notificationProvider;
 
   final String _invitesCollection = "projectInvitations";
@@ -16,12 +17,12 @@ class ProjectInvitationProvider {
 
   ProjectInvitationProvider(
     this._firestoreService,
-    this._authProvider,
+    this._authProviderApp,
     this._notificationProvider,
   );
 
   Stream<List<ProjectInvitationModel>> getInvitationsStream() {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return const Stream.empty();
 
     final email = currentUser.email!.toLowerCase();
@@ -54,12 +55,36 @@ class ProjectInvitationProvider {
         );
   }
 
+  Future<ProjectInvitationModel?> getInvitationById(String id) async {
+    try {
+      final docSnap = await _firestoreService.getDocument(
+        _invitesCollection,
+        id,
+      );
+      if (docSnap != null && docSnap.exists) {
+        return ProjectInvitationModel.fromFirestore(
+          docSnap as DocumentSnapshot<Map<String, dynamic>>,
+        );
+      } else {
+        debugPrint(
+          "[ProjectInvitationProvider] Invitación con id '$id' no encontrada.",
+        );
+        return null;
+      }
+    } catch (e) {
+      debugPrint(
+        "[ProjectInvitationProvider] Error al obtener invitación por ID '$id': $e",
+      );
+      return null;
+    }
+  }
+
   Future<void> inviteUser(
     String projectId,
     String projectName,
     String invitedEmail,
   ) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) throw Exception("No autenticado");
 
     final projectDoc = await _firestoreService.getDocument(
@@ -95,6 +120,7 @@ class ProjectInvitationProvider {
       type: AppNotificationType.projectInvitation,
       routeToNavigate: AppRoutes.PROJECTS_LIST,
       data: {
+        'type': 'project_invitation',
         'invitationId': invitationId,
         'projectId': projectId,
         'projectName': projectName,
@@ -105,17 +131,20 @@ class ProjectInvitationProvider {
     );
 
     // Agregar la notificación y enviar FCM
-    final dataUser = await _authProvider.getUserDataByEmail(cleanEmail);
+    final dataUser = await _authProviderApp.getUserDataByEmail(cleanEmail);
     if (dataUser != null) {
-      await _notificationProvider.addUserNotification(dataUser.uid, appNotif);
+      await _notificationProvider.saveNotification(
+        userId: dataUser.uid,
+        notification: appNotif,
+      );
 
-      final tokens = await _notificationProvider.getUserFcmTokensByEmail(
+      final tokens = await _notificationProvider.getUserTokensByEmail(
         cleanEmail,
       );
       if (tokens != null && tokens.isNotEmpty) {
         for (final t in tokens) {
-          await _notificationProvider.sendNotificationToDevice(
-            targetDeviceToken: t,
+          await _notificationProvider.sendNotificationToToken(
+            token: t,
             title: appNotif.title,
             body: appNotif.body,
             data: appNotif.data!.map((k, v) => MapEntry(k, v.toString())),
@@ -126,15 +155,16 @@ class ProjectInvitationProvider {
   }
 
   Future<void> acceptInvitation(String invitationId) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) throw Exception("No autenticado");
 
     final docSnap = await _firestoreService.getDocument(
       _invitesCollection,
       invitationId,
     );
-    if (docSnap == null || !docSnap.exists)
+    if (docSnap == null || !docSnap.exists) {
       throw Exception("Invitación no existe");
+    }
 
     final inv = ProjectInvitationModel.fromFirestore(
       docSnap as DocumentSnapshot<Map<String, dynamic>>,
@@ -165,7 +195,7 @@ class ProjectInvitationProvider {
   }
 
   Future<void> removeMember(String projectId, String memberIdToRemove) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) throw Exception("No autenticado");
 
     final projectDoc = await _firestoreService.getDocument(

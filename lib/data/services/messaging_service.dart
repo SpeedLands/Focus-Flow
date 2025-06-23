@@ -1,5 +1,21 @@
+import 'dart:convert';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:focus_flow/data/services/notifications_service.dart';
+
+Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
+  final notification = message.notification;
+  if (notification != null) {
+    await NotificationsService().showNotificationWithActions(
+      title: notification.title ?? 'Notificación',
+      body: notification.body ?? '',
+      channelId: 'general_background',
+      channelName: 'Mensajes en segundo plano',
+      channelDescription: 'Notificaciones recibidas en segundo plano',
+    );
+  }
+}
 
 class MessagingService {
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
@@ -8,70 +24,102 @@ class MessagingService {
       ? 'BL65ppqoGPtjysI0oq2oenSLny_yUfYAcBE3Ww9Bo9HW3fTzPlBBpahW4dGJQXNSFIQEO9zmI6fA2bVaQFU2-Yk'
       : null;
 
-  Future<String> getToken() async {
-    String? token = await firebaseMessaging.getToken(vapidKey: vapidKey);
-    return token!;
+  Future<String?> getToken() async {
+    try {
+      return await firebaseMessaging.getToken(vapidKey: vapidKey);
+    } catch (e) {
+      debugPrint("Error obteniendo token FCM: $e");
+      return null;
+    }
   }
 
   Future<void> requestPermission() async {
     try {
       NotificationSettings settings = await firebaseMessaging.requestPermission(
         alert: true,
-        announcement: false,
         badge: true,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
         sound: true,
       );
-      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        debugPrint('Permiso de notificación FCM otorgado por el usuario.');
-      } else if (settings.authorizationStatus ==
-          AuthorizationStatus.provisional) {
-        debugPrint(
-          'Permiso de notificación FCM provisional otorgado por el usuario.',
-        );
-      } else {
-        debugPrint(
-          'El usuario ha rechazado o no ha aceptado el permiso de notificación FCM.',
-        );
+
+      switch (settings.authorizationStatus) {
+        case AuthorizationStatus.authorized:
+          debugPrint('✅ Permiso FCM autorizado');
+          break;
+        case AuthorizationStatus.provisional:
+          debugPrint('⚠️ Permiso FCM provisional otorgado');
+          break;
+        case AuthorizationStatus.denied:
+          debugPrint('❌ Permiso FCM denegado');
+          break;
+        default:
+          debugPrint('🔍 Estado de permiso FCM desconocido');
       }
     } catch (e) {
-      debugPrint("Error solicitando permisos de notificación: $e");
+      debugPrint("Error solicitando permiso FCM: $e");
     }
   }
 
   void setupMessageHandlers() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {});
+    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {});
-    if (defaultTargetPlatform != TargetPlatform.windows) {
-      firebaseMessaging.getInitialMessage().then((RemoteMessage? message) {
-        if (message != null) {}
-      });
-    }
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _handleNotificationTap(message, isBackgroundOpen: true);
+    });
 
-    // FirebaseMessaging.onBackgroundMessage();
+    firebaseMessaging.getInitialMessage().then((RemoteMessage? message) {
+      if (message != null) {
+        _handleNotificationTap(message, isTerminatedOpen: true);
+      }
+    });
+
+    FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
   }
 
-  Future<void> _handleReceivedFcmMessage(
+  void _handleForegroundMessage(RemoteMessage message) {
+    final notification = message.notification;
+    final data = message.data;
+
+    if (notification != null) {
+      final type = data['type'];
+      final payload = jsonEncode(data);
+
+      if (type == 'project_invitation') {
+        // Mostrar con botones
+        NotificationsService().showNotificationWithActions(
+          title: notification.title ?? "Notificación",
+          body: notification.body ?? "",
+          channelId: 'general_foreground',
+          channelName: 'Mensajes en foreground',
+          channelDescription:
+              'Notificaciones recibidas mientras la app está activa',
+          payload: payload,
+        );
+      } else {
+        // Mostrar sin botones
+        NotificationsService().showBasicNotification(
+          title: notification.title ?? "Notificación",
+          body: notification.body ?? "",
+          channelId: 'general_foreground',
+          channelName: 'Mensajes en foreground',
+          channelDescription:
+              'Notificaciones recibidas mientras la app está activa',
+          payload: payload,
+        );
+      }
+    }
+  }
+
+  Future<void> _handleNotificationTap(
     RemoteMessage message, {
     bool isBackgroundOpen = false,
     bool isTerminatedOpen = false,
   }) async {
-    final Map<String, dynamic> data = message.data;
-    String? routeToNavigate = data['screen'] as String?;
-
-    if ((isBackgroundOpen || isTerminatedOpen) && routeToNavigate != null) {
-      debugPrint(
-        "_handleReceivedFcmMessage: Navegando a $routeToNavigate con datos: $data",
-      );
-      // setNavigatingFromNotification(true);
+    final data = message.data;
+    final String? screen = data['screen'];
+    if (screen != null) {
+      debugPrint("📲 Navegando a $screen con datos: $data");
       await Future.delayed(const Duration(milliseconds: 600));
-      // Get.toNamed(routeToNavigate, arguments: data);
-      Future.delayed(const Duration(seconds: 3), () {
-        // setNavigatingFromNotification(false);
-      });
+      // Aquí deberías hacer la navegación real con tu sistema de rutas (ej: Get.toNamed)
     }
   }
 }

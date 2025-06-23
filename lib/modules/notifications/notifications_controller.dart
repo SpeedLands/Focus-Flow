@@ -63,7 +63,7 @@ class NotificationController extends GetxController {
     isLoadingNotifications.value = true;
     appNotifications.bindStream(
       _notificationProvider
-          .getAppNotificationsStream(userId)
+          .getUserNotifications(userId)
           .map((notifications) {
             debugPrint(
               "NotificationController: Stream emitted ${notifications.length} notifications for $userId.",
@@ -105,10 +105,7 @@ class NotificationController extends GetxController {
       return;
     }
     try {
-      await _notificationProvider.markNotificationAsRead(
-        userId,
-        notificationId,
-      );
+      await _notificationProvider.markAsRead(userId, notificationId);
     } catch (e) {
       Get.snackbar(
         "Error",
@@ -126,7 +123,7 @@ class NotificationController extends GetxController {
       return;
     }
     try {
-      await _notificationProvider.deleteAppNotification(userId, notificationId);
+      await _notificationProvider.deleteNotification(userId, notificationId);
       Get.snackbar(
         "Notificación Eliminada",
         "La notificación ha sido eliminada.",
@@ -148,7 +145,7 @@ class NotificationController extends GetxController {
       return;
     }
     try {
-      await _notificationProvider.markAllNotificationsAsRead(userId);
+      await _notificationProvider.markAllAsRead(userId);
       Get.snackbar(
         "Notificaciones Leídas",
         "Todas las notificaciones han sido marcadas como leídas.",

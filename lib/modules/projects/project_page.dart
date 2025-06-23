@@ -740,87 +740,117 @@ class ProjectsScreen extends GetView<ProjectController> {
   Widget _buildWatchProjectsScreen(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text(
-          "Proyectos",
-          style: TextStyle(fontSize: 16, color: Colors.white),
-        ),
-        backgroundColor: Colors.grey[900],
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, size: 18, color: Colors.white),
-          onPressed: () => Get.back(),
-        ),
-        actions: [
-          GFIconButton(
-            icon: const Icon(Icons.add, size: 20, color: Colors.white),
-            onPressed: controller.navigateToAddProject,
-            type: GFButtonType.transparent,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          child: Column(
+            children: [
+              // Encabezado
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => Get.back(),
+                  ),
+                  const Text(
+                    "Proyectos",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Lista de proyectos
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoadingProjects.value &&
+                      controller.projects.isEmpty) {
+                    return const Center(
+                      child: GFLoader(
+                        type: GFLoaderType.circle,
+                        size: GFSize.SMALL,
+                      ),
+                    );
+                  }
+                  if (controller.projectListError.value.isNotEmpty &&
+                      controller.projects.isEmpty) {
+                    return Center(
+                      child: Text(
+                        controller.projectListError.value,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 10,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+                  if (controller.projects.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        "No hay proyectos.",
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: controller.projects.length,
+                    itemBuilder: (context, index) {
+                      final project = controller.projects[index];
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        tileColor: Colors.grey[850],
+                        leading: CircleAvatar(
+                          backgroundColor: project.projectColor.withAlpha(70),
+                          child: Icon(
+                            controller.getIconDataByName(project.iconName),
+                            color: project.projectColor,
+                            size: 16,
+                          ),
+                        ),
+                        title: Text(
+                          project.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        onTap: () {
+                          Get.toNamed(
+                            AppRoutes.TASKS_LIST,
+                            arguments: {
+                              'projectId': project.id,
+                              'projectName': project.name,
+                            },
+                          );
+                        },
+                      );
+                    },
+                  );
+                }),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      body: Obx(() {
-        if (controller.isLoadingProjects.value && controller.projects.isEmpty) {
-          return const Center(
-            child: GFLoader(type: GFLoaderType.circle, size: GFSize.SMALL),
-          );
-        }
-        if (controller.projectListError.value.isNotEmpty &&
-            controller.projects.isEmpty) {
-          return Center(
-            child: Text(
-              controller.projectListError.value,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 10),
-              textAlign: TextAlign.center,
-            ),
-          );
-        }
-        if (controller.projects.isEmpty &&
-            !controller.isLoadingProjects.value) {
-          return const Center(
-            child: Text(
-              "No hay proyectos.",
-              style: TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          );
-        }
-        return ListView.builder(
-          itemCount: controller.projects.length,
-          itemBuilder: (context, index) {
-            final project = controller.projects[index];
-            return GFListTile(
-              color: Colors.grey[850],
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 5),
-              radius: 8,
-              avatar: GFAvatar(
-                size: GFSize.SMALL,
-                backgroundColor: project.projectColor.withAlpha(70),
-                child: Icon(
-                  controller.getIconDataByName(project.iconName),
-                  color: project.projectColor,
-                  size: 16,
-                ),
-              ),
-              title: Text(
-                project.name,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              onTap: () {
-                Get.toNamed(
-                  AppRoutes.TASKS_LIST,
-                  arguments: {
-                    'projectId': project.id,
-                    'projectName': project.name,
-                  },
-                );
-              },
-            );
-          },
-        );
-      }),
     );
   }
 

@@ -5,50 +5,49 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 
 class HttpService {
+  static const _scope = ['https://www.googleapis.com/auth/firebase.messaging'];
+  static const _serviceAccountPath = 'assets/serviceAccountKey.json';
+
   Future<String> getAccessToken() async {
     try {
-      final serviceAccountJsonString = await rootBundle.loadString(
-        'assets/serviceAccountKey.json',
+      final jsonKey = await rootBundle.loadString(_serviceAccountPath);
+      final credentials = ServiceAccountCredentials.fromJson(
+        json.decode(jsonKey),
       );
-      final Map<String, dynamic> serviceAccountData = json.decode(
-        serviceAccountJsonString,
-      );
-      final accountCredentials = ServiceAccountCredentials.fromJson(
-        serviceAccountData,
-      );
-      const scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
       final client = http.Client();
+
       try {
         final accessCredentials =
             await obtainAccessCredentialsViaServiceAccount(
-              accountCredentials,
-              scopes,
+              credentials,
+              _scope,
               client,
             );
-        String accessToken = accessCredentials.accessToken.data;
-        return accessToken;
+        return accessCredentials.accessToken.data;
       } catch (e) {
-        debugPrint('Error obteniendo AccessToken vía ServiceAccount: $e');
+        debugPrint('❌ Error obteniendo token FCM: $e');
         return '';
       } finally {
         client.close();
       }
     } catch (e) {
-      debugPrint('Error cargando o parseando serviceAccountKey.json: $e');
+      debugPrint('❌ Error cargando serviceAccountKey.json: $e');
       return '';
     }
   }
 
-  Future<bool> sendFcmRequest(
-    Map<String, dynamic> body,
-    String projectId,
-    String accessToken,
-  ) async {
-    final String url =
-        'https://fcm.googleapis.com/v1/projects/$projectId/messages:send';
+  Future<bool> sendFcmRequest({
+    required Map<String, dynamic> body,
+    required String accessToken,
+    required String projectId,
+  }) async {
+    final url = Uri.parse(
+      'https://fcm.googleapis.com/v1/projects/$projectId/messages:send',
+    );
+
     try {
       final response = await http.post(
-        Uri.parse(url),
+        url,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $accessToken',
@@ -57,12 +56,16 @@ class HttpService {
       );
 
       if (response.statusCode == 200) {
+        debugPrint('✅ Notificación enviada: ${response.body}');
         return true;
       } else {
+        debugPrint(
+          '⚠️ Falla al enviar: ${response.statusCode} - ${response.body}',
+        );
         return false;
       }
     } catch (e) {
-      debugPrint('Excepción al enviar la solicitud FCM: $e');
+      debugPrint('❌ Excepción al enviar FCM: $e');
       return false;
     }
   }
@@ -75,12 +78,19 @@ class HttpService {
     required String accessToken,
     required String projectId,
   }) async {
-    final Map<String, dynamic> messagePayload = {
+    final message = {
       'message': {
         'token': targetDeviceToken,
         'notification': {'title': title, 'body': body},
         if (data != null) 'data': data,
-        'android': {},
+        'android': {
+          'priority': 'high',
+          'notification': {
+            'sound': 'default',
+            "icon": "ic_stat_notification",
+            'channel_id': 'high_importance_channel',
+          },
+        },
         'apns': {
           'payload': {
             'aps': {
@@ -96,6 +106,10 @@ class HttpService {
       },
     };
 
-    return await sendFcmRequest(messagePayload, projectId, accessToken);
+    return await sendFcmRequest(
+      body: message,
+      accessToken: accessToken,
+      projectId: projectId,
+    );
   }
 }

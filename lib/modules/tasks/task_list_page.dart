@@ -193,70 +193,129 @@ class _TasksListScreenState extends State<TasksListScreen>
   ) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text(
-          projectName,
-          style: const TextStyle(fontSize: 15, color: Colors.white),
-        ),
-        backgroundColor: Colors.grey[900],
-        centerTitle: true,
-        leading: GFIconButton(
-          icon: const Icon(Icons.arrow_back_ios, size: 18, color: Colors.white),
-          onPressed: () => Get.back(),
-          type: GFButtonType.transparent,
-        ),
-        actions: [
-          GFIconButton(
-            icon: const Icon(Icons.add, size: 20, color: Colors.white),
-            onPressed: () => controller.navigateToAddTask(projectId: projectId),
-            type: GFButtonType.transparent,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          child: Column(
+            children: [
+              // Encabezado simple
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => Get.back(),
+                  ),
+                  Expanded(
+                    child: Text(
+                      projectName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 40), // Espaciador en vez del botón +
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Lista de tareas o estado
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoadingTasks.value &&
+                      controller.tasks.isEmpty) {
+                    return const Center(
+                      child: GFLoader(
+                        type: GFLoaderType.circle,
+                        size: GFSize.SMALL,
+                      ),
+                    );
+                  }
+                  if (controller.taskListError.value.isNotEmpty) {
+                    return Center(
+                      child: Text(
+                        controller.taskListError.value,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 10,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+
+                  final tasksToDisplay = controller.tasks
+                      .where((t) => !t.isCompleted)
+                      .toList();
+
+                  if (tasksToDisplay.isEmpty) {
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.greenAccent,
+                            size: 36,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "¡Todo Hecho!",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: tasksToDisplay.length,
+                    itemBuilder: (ctx, index) {
+                      final task = tasksToDisplay[index];
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                        tileColor: Colors.grey[850],
+                        title: Text(
+                          task.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.check,
+                            color: Colors.greenAccent,
+                            size: 18,
+                          ),
+                          onPressed: () =>
+                              controller.toggleTaskCompletion(task),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      body: Obx(() {
-        if (controller.isLoadingTasks.value && controller.tasks.isEmpty) {
-          return const Center(
-            child: GFLoader(type: GFLoaderType.circle, size: GFSize.SMALL),
-          );
-        }
-        if (controller.taskListError.value.isNotEmpty) {
-          return Center(
-            child: Text(
-              controller.taskListError.value,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 10),
-              textAlign: TextAlign.center,
-            ),
-          );
-        }
-        final tasksToDisplay = controller.tasks
-            .where((t) => !t.isCompleted)
-            .toList();
-        if (tasksToDisplay.isEmpty) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.check_circle_outline,
-                  color: Colors.greenAccent,
-                  size: 40,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  "¡Todo Hecho!",
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-              ],
-            ),
-          );
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 3),
-          itemCount: tasksToDisplay.length,
-          itemBuilder: (ctx, index) =>
-              _buildTaskItemWatch(context, tasksToDisplay[index]),
-        );
-      }),
     );
   }
 

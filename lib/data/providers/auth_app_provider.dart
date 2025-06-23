@@ -6,12 +6,12 @@ import "package:focus_flow/data/models/user_model.dart";
 import "package:firebase_auth/firebase_auth.dart";
 import "package:focus_flow/data/services/firestore_service.dart";
 
-class AuthProvider {
+class AuthProviderApp {
   final AuthService _authService;
   final FirestoreService _firestoreService;
   final NotificationProvider _notificationProvider;
 
-  AuthProvider(
+  AuthProviderApp(
     this._authService,
     this._firestoreService,
     this._notificationProvider,
@@ -86,10 +86,10 @@ class AuthProvider {
 
     try {
       final String? currentDeviceToken = await _notificationProvider
-          .getDeviceFcmToken();
+          .getCurrentDeviceToken();
 
       List<String>? allUserTokens = await _notificationProvider
-          .getUserFcmTokens(userId);
+          .getUserTokensById(userId);
 
       if (allUserTokens == null || allUserTokens.isEmpty) {
         debugPrint(
@@ -129,8 +129,8 @@ class AuthProvider {
 
       for (String token in otherDeviceTokens) {
         try {
-          bool sent = await _notificationProvider.sendNotificationToDevice(
-            targetDeviceToken: token,
+          bool sent = await _notificationProvider.sendNotificationToToken(
+            token: token,
             title: notificationTitle,
             body: notificationBody,
             data: dataPayload,
@@ -185,9 +185,9 @@ class AuthProvider {
     User? firebaseUser = userCredential?.user;
     if (firebaseUser != null) {
       String? currentDeviceToken = await _notificationProvider
-          .getDeviceFcmToken();
+          .getCurrentDeviceToken();
       List<String>? allUserTokens = await _notificationProvider
-          .getUserFcmTokens(firebaseUser.uid);
+          .getUserTokensById(firebaseUser.uid);
       final List<String> otherDeviceTokens =
           allUserTokens
               ?.where(
@@ -204,8 +204,8 @@ class AuthProvider {
       };
       for (String token in otherDeviceTokens) {
         try {
-          await _notificationProvider.sendNotificationToDevice(
-            targetDeviceToken: token,
+          await _notificationProvider.sendNotificationToToken(
+            token: token,
             title: title,
             body: body,
             data: dataPayload,

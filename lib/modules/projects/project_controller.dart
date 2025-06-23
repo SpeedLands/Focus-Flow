@@ -501,15 +501,15 @@ class ProjectController extends GetxController {
     );
 
     try {
-      await _notificationProvider.addUserNotification(
-        project.adminUserId,
-        appNotification,
+      await _notificationProvider.saveNotification(
+        userId: project.adminUserId,
+        notification: appNotification,
       );
       debugPrint(
         "[ProjectController] Notificación de solicitud guardada para admin ${project.adminUserId}",
       );
 
-      List<String>? adminTokens = await _notificationProvider.getUserFcmTokens(
+      List<String>? adminTokens = await _notificationProvider.getUserTokensById(
         project.adminUserId,
       );
       if (adminTokens != null && adminTokens.isNotEmpty) {
@@ -521,8 +521,8 @@ class ProjectController extends GetxController {
           'body': "Revisa la solicitud de eliminación para '${project.name}'.",
         };
         for (String token in adminTokens) {
-          await _notificationProvider.sendNotificationToDevice(
-            targetDeviceToken: token,
+          await _notificationProvider.sendNotificationToToken(
+            token: token,
             title: title,
             body: pushDataPayload['body']!,
             data: pushDataPayload,
@@ -751,13 +751,13 @@ class ProjectController extends GetxController {
       createdAt: Timestamp.now(),
     );
 
-    await _notificationProvider.addUserNotification(
-      requesterId,
-      feedbackNotification,
+    await _notificationProvider.saveNotification(
+      userId: requesterId,
+      notification: feedbackNotification,
     );
 
     List<String>? requesterTokens = await _notificationProvider
-        .getUserFcmTokens(requesterId);
+        .getUserTokensById(requesterId);
     if (requesterTokens != null && requesterTokens.isNotEmpty) {
       Map<String, String> pushDataPayload = {
         'type': isApproved
@@ -768,8 +768,8 @@ class ProjectController extends GetxController {
         'screen': AppRoutes.PROJECTS_LIST,
       };
       for (String token in requesterTokens) {
-        _notificationProvider.sendNotificationToDevice(
-          targetDeviceToken: token,
+        _notificationProvider.sendNotificationToToken(
+          token: token,
           title: title,
           body: body,
           data: pushDataPayload,
@@ -844,7 +844,8 @@ class ProjectController extends GetxController {
   }
 
   Future<void> performJoinProjectWithCode() async {
-    if (_authController.currentUser.value == null) {
+    final currentUser = _authController.currentUser.value;
+    if (currentUser == null) {
       Get.snackbar(
         "Autenticación Requerida",
         "Debes iniciar sesión para unirte a un proyecto.",
@@ -855,26 +856,90 @@ class ProjectController extends GetxController {
       Get.snackbar("Error", "Por favor, ingresa un código de acceso.");
       return;
     }
+
+    isSavingProject.value = true;
+
     try {
-      final success = await _projectProvider.joinProjectWithCode(
-        accessCodeController.text.trim(),
-      );
-      if (success) {
+      final ProjectModel? joinedProject = await _projectProvider
+          .joinProjectWithCode(accessCodeController.text.trim());
+
+      if (joinedProject != null) {
         Get.snackbar(
           "Éxito",
-          "Te has unido al proyecto.",
+          "Te has unido al proyecto '${joinedProject.name}'.",
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
         accessCodeController.clear();
+
+        if (joinedProject.adminUserId != currentUser.uid) {
+          List<String>? adminTokens = await _notificationProvider
+              .getUserTokensById(joinedProject.adminUserId);
+
+          if (adminTokens != null && adminTokens.isNotEmpty) {
+            String joiningUserName = currentUser.name ?? currentUser.email;
+            String title = "Nuevo Miembro en Proyecto";
+            String body =
+                "$joiningUserName se ha unido a tu proyecto '${joinedProject.name}' mediante código de acceso.";
+
+            Map<String, String> pushDataPayload = {
+              'type': 'new_member_joined_via_code',
+              'projectId': joinedProject.id!,
+              'projectName': joinedProject.name,
+              'joiningUserId': currentUser.uid,
+              'joiningUserName': joiningUserName,
+            };
+
+            final AppNotificationModel adminNotification = AppNotificationModel(
+              title: title,
+              body: body,
+              type: AppNotificationType.projectDeletionApproved,
+              data: pushDataPayload,
+              createdAt: Timestamp.now(),
+              isRead: false,
+            );
+            await _notificationProvider.saveNotification(
+              userId: joinedProject.adminUserId,
+              notification: adminNotification,
+            );
+
+            for (String token in adminTokens) {
+              await _notificationProvider.sendNotificationToToken(
+                token: token,
+                title: title,
+                body: body,
+                data: pushDataPayload,
+              );
+            }
+            debugPrint(
+              "[ProjectController] Notificación de nuevo miembro enviada al admin ${joinedProject.adminUserId}",
+            );
+          }
+        }
+      } else {
+        Get.snackbar(
+          "Error al Unirse",
+          "Código de acceso inválido o no se pudo unir al proyecto.",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
       }
     } catch (e) {
-      Get.snackbar("Error al Unirse", e.toString());
+      Get.snackbar(
+        "Error al Unirse",
+        "Ocurrió un error: ${e.toString()}",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      debugPrint("[ProjectController] Error al unirse con código: $e");
+    } finally {
+      isSavingProject.value = false;
     }
   }
 
   Future<void> performAcceptInvitation(String invitationId) async {
-    if (_authController.currentUser.value == null) {
+    final currentUser = _authController.currentUser.value;
+    if (currentUser == null) {
       Get.snackbar(
         "Autenticación Requerida",
         "Debes iniciar sesión para aceptar invitaciones.",
@@ -882,6 +947,13 @@ class ProjectController extends GetxController {
       return;
     }
     try {
+      ProjectInvitationModel? invitation = await _projectInvitationProvider
+          .getInvitationById(invitationId);
+      if (invitation == null) {
+        Get.snackbar("Error", "Invitación no encontrada.");
+        return;
+      }
+
       await _projectInvitationProvider.acceptInvitation(invitationId);
       Get.snackbar(
         "Invitación Aceptada",
@@ -889,6 +961,54 @@ class ProjectController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
+
+      ProjectModel? project = await _projectProvider.getProjectById(
+        invitation.projectId,
+      );
+      if (project != null && project.adminUserId != currentUser.uid) {
+        List<String>? adminTokens = await _notificationProvider
+            .getUserTokensById(project.adminUserId);
+        if (adminTokens != null && adminTokens.isNotEmpty) {
+          String userName = currentUser.name ?? currentUser.email;
+          String title = "Invitación Aceptada";
+          String body =
+              "$userName ha aceptado tu invitación para unirse al proyecto '${project.name}'.";
+          Map<String, String> pushDataPayload = {
+            'type': 'invitation_accepted',
+            'projectId': project.id!,
+            'projectName': project.name,
+            'userId': currentUser.uid,
+            'userName': userName,
+            'screen': AppRoutes.PROJECTS_LIST,
+          };
+
+          final AppNotificationModel adminNotification = AppNotificationModel(
+            title: title,
+            body: body,
+            type: AppNotificationType.projectDeletionApproved,
+            data: pushDataPayload,
+            createdAt: Timestamp.now(),
+            isRead: false,
+            routeToNavigate: AppRoutes.PROJECTS_LIST,
+          );
+          await _notificationProvider.saveNotification(
+            userId: project.adminUserId,
+            notification: adminNotification,
+          );
+
+          for (String token in adminTokens) {
+            await _notificationProvider.sendNotificationToToken(
+              token: token,
+              title: title,
+              body: body,
+              data: pushDataPayload,
+            );
+          }
+          debugPrint(
+            "[ProjectController] Notificación de aceptación de invitación enviada al admin ${project.adminUserId}",
+          );
+        }
+      }
     } catch (e) {
       Get.snackbar(
         "Error",
@@ -898,7 +1018,8 @@ class ProjectController extends GetxController {
   }
 
   Future<void> performDeclineInvitation(String invitationId) async {
-    if (_authController.currentUser.value == null) {
+    final currentUser = _authController.currentUser.value;
+    if (currentUser == null) {
       Get.snackbar(
         "Autenticación Requerida",
         "Debes iniciar sesión para declinar invitaciones.",
@@ -906,6 +1027,13 @@ class ProjectController extends GetxController {
       return;
     }
     try {
+      ProjectInvitationModel? invitation = await _projectInvitationProvider
+          .getInvitationById(invitationId);
+      if (invitation == null) {
+        Get.snackbar("Error", "Invitación no encontrada.");
+        return;
+      }
+
       await _projectInvitationProvider.declineInvitation(invitationId);
       Get.snackbar(
         "Invitación Declinada",
@@ -913,6 +1041,52 @@ class ProjectController extends GetxController {
         backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
+
+      ProjectModel? project = await _projectProvider.getProjectById(
+        invitation.projectId,
+      );
+      if (project != null && project.adminUserId != currentUser.uid) {
+        List<String>? adminTokens = await _notificationProvider
+            .getUserTokensById(project.adminUserId);
+        if (adminTokens != null && adminTokens.isNotEmpty) {
+          String userName = currentUser.name ?? currentUser.email;
+          String title = "Invitación Rechazada";
+          String body =
+              "$userName ha rechazado tu invitación para unirse al proyecto '${project.name}'.";
+          Map<String, String> pushDataPayload = {
+            'type': 'invitation_rejected',
+            'projectId': project.id!,
+            'projectName': project.name,
+            'userId': currentUser.uid,
+            'userName': userName,
+          };
+
+          final AppNotificationModel adminNotification = AppNotificationModel(
+            title: title,
+            body: body,
+            type: AppNotificationType.projectDeletionRejected,
+            data: pushDataPayload,
+            createdAt: Timestamp.now(),
+            isRead: false,
+          );
+          await _notificationProvider.saveNotification(
+            userId: project.adminUserId,
+            notification: adminNotification,
+          );
+
+          for (String token in adminTokens) {
+            await _notificationProvider.sendNotificationToToken(
+              token: token,
+              title: title,
+              body: body,
+              data: pushDataPayload,
+            );
+          }
+          debugPrint(
+            "[ProjectController] Notificación de rechazo de invitación enviada al admin ${project.adminUserId}",
+          );
+        }
+      }
     } catch (e) {
       Get.snackbar(
         "Error",
@@ -991,10 +1165,6 @@ class ProjectController extends GetxController {
       onConfirm: () async {
         Get.back();
         try {
-          // await _projectProvider.(
-          //   projectId,
-          //   memberIdToRemove,
-          // );
           Get.snackbar(
             "Miembro Removido",
             "'$memberName' ha sido removido del proyecto.",

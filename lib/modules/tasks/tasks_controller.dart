@@ -390,18 +390,18 @@ class TaskController extends GetxController {
     for (String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
-        await _notificationProvider.addUserNotification(
-          memberId,
-          appNotification,
+        await _notificationProvider.saveNotification(
+          userId: memberId,
+          notification: appNotification,
         );
       }
     }
 
     if (project.adminUserId != currentUserId &&
         !project.userRoles.any((r) => r.startsWith(project.adminUserId))) {
-      await _notificationProvider.addUserNotification(
-        project.adminUserId,
-        appNotification,
+      await _notificationProvider.saveNotification(
+        userId: project.adminUserId,
+        notification: appNotification,
       );
     }
 
@@ -410,7 +410,7 @@ class TaskController extends GetxController {
         "AppNotification de solicitud de $requestType guardada para admin ${project.adminUserId}",
       );
 
-      List<String>? adminTokens = await _notificationProvider.getUserFcmTokens(
+      List<String>? adminTokens = await _notificationProvider.getUserTokensById(
         project.adminUserId,
       );
       if (adminTokens != null && adminTokens.isNotEmpty) {
@@ -422,8 +422,8 @@ class TaskController extends GetxController {
           'body': body,
         };
         for (String token in adminTokens) {
-          await _notificationProvider.sendNotificationToDevice(
-            targetDeviceToken: token,
+          await _notificationProvider.sendNotificationToToken(
+            token: token,
             title: title,
             body: "Tienes una nueva solicitud de tarea para revisar.",
             data: pushDataPayload,
@@ -614,13 +614,13 @@ class TaskController extends GetxController {
       createdAt: Timestamp.now(),
     );
 
-    await _notificationProvider.addUserNotification(
-      requesterId,
-      feedbackNotification,
+    await _notificationProvider.saveNotification(
+      userId: requesterId,
+      notification: feedbackNotification,
     );
 
     List<String>? requesterTokens = await _notificationProvider
-        .getUserFcmTokens(requesterId);
+        .getUserTokensById(requesterId);
     if (requesterTokens != null && requesterTokens.isNotEmpty) {
       Map<String, String> pushDataPayload = {
         'type': isApproved ? 'task_request_approved' : 'task_request_rejected',
@@ -628,8 +628,8 @@ class TaskController extends GetxController {
         'body': body,
       };
       for (String token in requesterTokens) {
-        _notificationProvider.sendNotificationToDevice(
-          targetDeviceToken: token,
+        _notificationProvider.sendNotificationToToken(
+          token: token,
           title: title,
           body: body,
           data: pushDataPayload,
@@ -715,14 +715,17 @@ class TaskController extends GetxController {
     for (String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
-        await _notificationProvider.addUserNotification(memberId, appNotif);
+        await _notificationProvider.saveNotification(
+          userId: memberId,
+          notification: appNotif,
+        );
       }
     }
     if (project.adminUserId != currentUserId &&
         !project.userRoles.any((r) => r.startsWith(project!.adminUserId))) {
-      await _notificationProvider.addUserNotification(
-        project.adminUserId,
-        appNotif,
+      await _notificationProvider.saveNotification(
+        userId: project.adminUserId,
+        notification: appNotif,
       );
     }
 
@@ -737,8 +740,8 @@ class TaskController extends GetxController {
         'body': body,
       };
       for (String token in targetTokens) {
-        await _notificationProvider.sendNotificationToDevice(
-          targetDeviceToken: token,
+        await _notificationProvider.sendNotificationToToken(
+          token: token,
           title: title,
           body: body,
           data: notificationDataPayload,
@@ -753,7 +756,7 @@ class TaskController extends GetxController {
   ) async {
     List<String> targetTokens = [];
     if (project.adminUserId != currentUserId) {
-      List<String>? adminTokens = await _notificationProvider.getUserFcmTokens(
+      List<String>? adminTokens = await _notificationProvider.getUserTokensById(
         project.adminUserId,
       );
       if (adminTokens != null) targetTokens.addAll(adminTokens);
@@ -762,7 +765,7 @@ class TaskController extends GetxController {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId && memberId != project.adminUserId) {
         List<String>? memberTokens = await _notificationProvider
-            .getUserFcmTokens(memberId);
+            .getUserTokensById(memberId);
         if (memberTokens != null) targetTokens.addAll(memberTokens);
       }
     }
@@ -846,14 +849,17 @@ class TaskController extends GetxController {
     for (String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
-        await _notificationProvider.addUserNotification(memberId, appNotif);
+        await _notificationProvider.saveNotification(
+          userId: memberId,
+          notification: appNotif,
+        );
       }
     }
     if (project.adminUserId != currentUserId &&
         !project.userRoles.any((r) => r.startsWith(project!.adminUserId))) {
-      await _notificationProvider.addUserNotification(
-        project.adminUserId,
-        appNotif,
+      await _notificationProvider.saveNotification(
+        userId: project.adminUserId,
+        notification: appNotif,
       );
     }
 
@@ -877,8 +883,8 @@ class TaskController extends GetxController {
     if (taskId.isNotEmpty) notificationDataPayload['taskId'] = taskId;
 
     for (String token in targetTokens) {
-      await _notificationProvider.sendNotificationToDevice(
-        targetDeviceToken: token,
+      await _notificationProvider.sendNotificationToToken(
+        token: token,
         title: title,
         body: body,
         data: notificationDataPayload,

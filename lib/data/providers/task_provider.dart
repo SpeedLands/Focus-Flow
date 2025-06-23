@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focus_flow/data/models/task_model.dart';
 import 'package:focus_flow/data/models/project_model.dart';
-import 'package:focus_flow/data/providers/auth_provider.dart';
+import 'package:focus_flow/data/providers/auth_app_provider.dart';
 import 'package:focus_flow/data/services/firestore_service.dart';
 
 class TaskProvider {
   final FirestoreService _firestoreService;
-  final AuthProvider _authProvider;
+  final AuthProviderApp _authProviderApp;
 
-  TaskProvider(this._firestoreService, this._authProvider);
+  TaskProvider(this._firestoreService, this._authProviderApp);
 
   String get _projectsCollection => "projects";
   String get _tasksSubcollection => "tasks";
@@ -33,7 +33,7 @@ class TaskProvider {
   }
 
   Future<String?> addTask(String projectId, TaskModel task) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null || projectId.isEmpty) return null;
 
     final project = await _getProject(projectId);
@@ -57,7 +57,7 @@ class TaskProvider {
   }
 
   Stream<List<TaskModel>> getTasksStream(String projectId) {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null || projectId.isEmpty) return Stream.value([]);
 
     return _firestoreService
@@ -77,7 +77,7 @@ class TaskProvider {
   }
 
   Future<void> updateTaskDetails(TaskModel task) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null || task.id == null) return;
 
     final project = await _getProject(task.projectId);
@@ -99,7 +99,7 @@ class TaskProvider {
     String taskId,
     bool isCompleted,
   ) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return;
 
     final project = await _getProject(projectId);
@@ -122,7 +122,7 @@ class TaskProvider {
   }
 
   Future<void> deleteTask(String projectId, String taskId) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return;
 
     final project = await _getProject(projectId);
@@ -166,7 +166,7 @@ class TaskProvider {
   }
 
   Future<TaskModel?> getTaskById(String projectId, String taskId) async {
-    final currentUser = _authProvider.currentUser;
+    final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return null;
 
     final project = await _getProject(projectId);

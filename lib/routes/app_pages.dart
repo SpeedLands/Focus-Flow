@@ -6,6 +6,10 @@ import 'package:focus_flow/modules/home/home_binding.dart';
 import 'package:focus_flow/modules/home/home_page.dart';
 import 'package:focus_flow/modules/notifications/notifications_binding.dart';
 import 'package:focus_flow/modules/notifications/notifications_page.dart';
+import 'package:focus_flow/modules/pomodoro/pomodoro_form.dart';
+import 'package:focus_flow/modules/pomodoro/pomodoro_page.dart';
+import 'package:focus_flow/modules/pomodoro/pomodoro_binidng.dart';
+import 'package:focus_flow/modules/pomodoro/pomodoro_timer.dart';
 import 'package:focus_flow/modules/projects/project_binding.dart';
 import 'package:focus_flow/modules/projects/project_form_page.dart';
 import 'package:focus_flow/modules/projects/project_page.dart';
@@ -69,6 +73,21 @@ class AppPages {
       name: AppRoutes.USER_SETTINGS,
       page: () => UserSettingsScreen(),
       bindings: [AuthBinding()],
+    ),
+    GetPage(
+      name: AppRoutes.POMODORO_LIST,
+      page: () => PomodoroConfigListView(),
+      bindings: [AuthBinding(), PomodoroBinidng()],
+    ),
+    GetPage(
+      name: AppRoutes.POMODORO_FORM,
+      page: () => PomodoroConfigFormScreen(),
+      bindings: [AuthBinding(), PomodoroBinidng()],
+    ),
+    GetPage(
+      name: AppRoutes.POMODORO_TIMER,
+      page: () => PomodoroTimerScreen(),
+      bindings: [AuthBinding(), PomodoroBinidng()],
     ),
   ];
 }

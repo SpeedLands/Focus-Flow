@@ -29,54 +29,78 @@ class HomeScreen extends GetView<HomeController> {
 
   Widget _buildWatchHomeScreen(BuildContext context) {
     final titleStyle = Get.textTheme.titleMedium?.copyWith(color: Colors.white);
-    Get.textTheme.bodySmall?.copyWith(color: Colors.grey[400]);
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Obx(
-                () => Text(
-                  controller.greeting.split(',').first,
-                  style: titleStyle?.copyWith(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        child: ListView(
+          children: [
+            Column(
+              children: [
+                Obx(
+                  () => Text(
+                    controller.greeting.split(',').first,
+                    style: titleStyle?.copyWith(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-              Obx(
-                () => Text(
-                  controller.userData.value?.name?.split(' ').first ?? "",
-                  style: titleStyle,
-                  textAlign: TextAlign.center,
+                Obx(
+                  () => Text(
+                    controller.userData.value?.name?.split(' ').first ?? "",
+                    style: titleStyle,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 25),
+              ],
+            ),
+            const SizedBox(height: 20),
 
-              const SizedBox(height: 12),
-              _buildWatchAction(
-                context: context,
-                text: "Iniciar Pomodoro",
-                icon: Icons.timer_outlined,
-                color: GFColors.WARNING,
-                onTap: () {
-                  Get.snackbar("Watch", "Pomodoro (próximamente)");
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildWatchAction(
-                context: context,
-                text: "Salir",
-                icon: Icons.exit_to_app,
-                color: GFColors.DANGER,
-                onTap: () => _showLogoutDialog(context),
-                isDestructive: true,
-              ),
-            ],
-          ),
+            _buildWatchAction(
+              context: context,
+              text: "Iniciar Pomodoro",
+              icon: Icons.timer_outlined,
+              color: GFColors.WARNING,
+              onTap: () => Get.toNamed(AppRoutes.POMODORO_LIST),
+            ),
+            const SizedBox(height: 10),
+
+            _buildWatchAction(
+              context: context,
+              text: "Mis Proyectos",
+              icon: Icons.folder_open,
+              color: GFColors.PRIMARY,
+              onTap: () => Get.toNamed(AppRoutes.PROJECTS_LIST),
+            ),
+            const SizedBox(height: 10),
+
+            _buildWatchAction(
+              context: context,
+              text: "Notificaciones",
+              icon: Icons.notifications_outlined,
+              color: GFColors.INFO,
+              onTap: () => Get.toNamed(AppRoutes.NOTIFICATIONS_LIST),
+            ),
+            const SizedBox(height: 10),
+
+            _buildWatchAction(
+              context: context,
+              text: "Mi Perfil",
+              icon: Icons.settings_outlined,
+              color: Colors.teal,
+              onTap: () => Get.toNamed(AppRoutes.USER_SETTINGS),
+            ),
+            const SizedBox(height: 10),
+
+            _buildWatchAction(
+              context: context,
+              text: "Salir",
+              icon: Icons.exit_to_app,
+              color: GFColors.DANGER,
+              onTap: controller.logout,
+              isDestructive: true,
+            ),
+          ],
         ),
       ),
     );
@@ -363,11 +387,7 @@ class HomeScreen extends GetView<HomeController> {
               icon: Icons.timer_outlined,
               color: GFColors.WARNING,
               onTap: () {
-                Get.snackbar(
-                  "Próximamente",
-                  "El temporizador Pomodoro estará aquí.",
-                  snackPosition: SnackPosition.BOTTOM,
-                );
+                Get.offAllNamed(AppRoutes.POMODORO_LIST);
               },
               isTV: false,
             ),

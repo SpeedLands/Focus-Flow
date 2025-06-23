@@ -10,8 +10,7 @@ class NotificationListScreen extends GetView<NotificationController> {
   const NotificationListScreen({super.key});
   AuthController get _authController => Get.find<AuthController>();
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildMobileTasksScreen(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Notificaciones"),
@@ -95,6 +94,146 @@ class NotificationListScreen extends GetView<NotificationController> {
         );
       }),
     );
+  }
+
+  Widget _buildTvTasksScreen(BuildContext context) {
+    return Scaffold();
+  }
+
+  Widget _buildWatchTasksScreen(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          child: Column(
+            children: [
+              const Text(
+                "Notificaciones",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoadingNotifications.value &&
+                      controller.appNotifications.isEmpty) {
+                    return const Center(
+                      child: GFLoader(
+                        type: GFLoaderType.circle,
+                        size: GFSize.SMALL,
+                      ),
+                    );
+                  }
+
+                  if (controller.appNotifications.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        "Sin notificaciones",
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: controller.appNotifications.length,
+                    itemBuilder: (context, index) {
+                      final n = controller.appNotifications[index];
+                      final icon = _iconForNotificationType(n.type);
+                      final time = DateFormat.Hm().format(n.createdAt.toDate());
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: n.isRead ? Colors.grey[850] : Colors.grey[800],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(icon, color: Colors.white, size: 20),
+                          title: Text(
+                            n.title,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            "$time · ${n.body}",
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.white70,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () => controller.navigateFromNotification(n),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _iconForNotificationType(AppNotificationType type) {
+    switch (type) {
+      case AppNotificationType.projectInvitation:
+        return Icons.group_add_outlined;
+      case AppNotificationType.taskAssigned:
+        return Icons.assignment_ind_outlined;
+      case AppNotificationType.taskCompleted:
+        return Icons.check_circle_outline;
+      case AppNotificationType.projectUpdate:
+        return Icons.campaign_outlined;
+      case AppNotificationType.pomodoroEnd:
+        return Icons.timer_outlined;
+      case AppNotificationType.taskModificationRequest:
+        return Icons.pending_actions_outlined;
+      case AppNotificationType.taskModificationApproved:
+        return Icons.thumb_up_alt_outlined;
+      case AppNotificationType.taskModificationRejected:
+        return Icons.thumb_down_alt_outlined;
+      case AppNotificationType.projectDeletionRequest:
+        return Icons.delete_forever_outlined;
+      case AppNotificationType.projectDeletionApproved:
+        return Icons.delete_sweep_outlined;
+      case AppNotificationType.projectDeletionRejected:
+        return Icons.unpublished_outlined;
+      default:
+        return Icons.notifications_outlined;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = Get.width;
+    final isTV = screenWidth > 800 && Get.height > 500;
+    final isWatch = screenWidth < 300;
+
+    if (isWatch) {
+      return _buildWatchTasksScreen(context);
+    } else if (isTV) {
+      return _buildTvTasksScreen(context);
+    } else {
+      return _buildMobileTasksScreen(context);
+    }
   }
 
   Widget _buildNotificationItem(

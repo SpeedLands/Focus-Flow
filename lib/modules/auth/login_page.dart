@@ -11,7 +11,7 @@ class LoginScreen extends GetView<AuthController> {
   Widget build(BuildContext context) {
     final screenWidth = Get.width;
     final screenHeight = Get.height;
-    final isTV = screenWidth > 800 && screenHeight > 500;
+    final isTV = false;
     final isWatch = screenWidth < 320;
     final isTablet = Get.mediaQuery.size.shortestSide >= 600 && !isTV;
 

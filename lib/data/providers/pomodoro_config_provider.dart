@@ -33,7 +33,6 @@ class PomodoroProvider {
         data: cfg.toJson(),
       );
     } catch (e) {
-      print('Error adding config: $e');
       return null;
     }
   }
@@ -48,7 +47,6 @@ class PomodoroProvider {
       );
       return true;
     } catch (e) {
-      print('Error updating config: $e');
       return false;
     }
   }
@@ -58,7 +56,6 @@ class PomodoroProvider {
       await _fs.deleteDocument('$parent/$uid/$sub', cfgId);
       return true;
     } catch (e) {
-      print('Error deleting config: $e');
       return false;
     }
   }

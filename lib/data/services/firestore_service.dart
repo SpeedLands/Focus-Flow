@@ -42,6 +42,12 @@ class FirestoreService {
     }
   }
 
+  CollectionReference<Map<String, dynamic>> getCollectionReference(
+    String collectionName,
+  ) {
+    return _firestore.collection(collectionName);
+  }
+
   Future<String?> addDocumentToSubcollection({
     required String parentCollectionName,
     required String subCollectionName,

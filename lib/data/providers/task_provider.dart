@@ -76,6 +76,22 @@ class TaskProvider {
         );
   }
 
+  Future<int> getPendingTasksCount(String projectId) async {
+    final currentUser = _authProviderApp.currentUser;
+    if (currentUser == null || projectId.isEmpty) return 0;
+
+    // Usamos .count() para una consulta eficiente sin descargar los documentos
+    final aggregateQuery = await _firestoreService
+        .getCollectionReference(
+          '$_projectsCollection/$projectId/$_tasksSubcollection',
+        )
+        .where('isCompleted', isEqualTo: false)
+        .count()
+        .get();
+
+    return aggregateQuery.count ?? 0;
+  }
+
   Future<void> updateTaskDetails(TaskModel task) async {
     final currentUser = _authProviderApp.currentUser;
     if (currentUser == null || task.id == null) return;

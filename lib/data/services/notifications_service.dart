@@ -2,17 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-// import 'package:focus_flow/data/providers/auth_app_provider.dart';
-// import 'package:focus_flow/data/providers/notification_provider.dart';
-// import 'package:focus_flow/data/providers/project_invitation_provider.dart';
-// import 'package:focus_flow/data/providers/project_provider.dart';
-// import 'package:focus_flow/data/providers/task_provider.dart';
-// import 'package:focus_flow/data/services/auth_service.dart';
-// import 'package:focus_flow/data/services/firestore_service.dart';
-// import 'package:focus_flow/data/services/http_service.dart';
-// import 'package:focus_flow/data/services/messaging_service.dart';
-// import 'package:focus_flow/modules/projects/project_controller.dart';
-// import 'package:get/get.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 
@@ -45,21 +34,16 @@ class NotificationsService {
 
     await createNotificationChannel();
 
-    tz.initializeTimeZones(); // Necesario para programación
+    tz.initializeTimeZones();
   }
 
   void _onNotificationResponse(NotificationResponse response) {
     final payload = response.payload;
     debugPrint('Payload recibido: $payload');
-    // Manejar aquí la lógica de botones o redirecciones
     if (response.actionId == 'accept') {
-      // lógica para aceptar invitación
       debugPrint('aceptar $response');
     } else if (response.actionId == 'decline') {
-      // lógica para rechazar invitación
-    } else {
-      // acción por defecto (tap)
-    }
+    } else {}
   }
 
   void handleBackgroundAction(NotificationResponse response) {
@@ -72,75 +56,17 @@ class NotificationsService {
       if (payload != null) {
         final data = jsonDecode(response.payload!);
         final type = data['type'];
-        if (type == 'project_invitation') {
-          // final projectId = data['projectId'];
-          // final invitationId = data['invitationId'];
-          // final projectName = data['projectName'];
-          // final invitedBy = data['invitedBy'];
-
-          // final authService = AuthService();
-          // final firestore = FirestoreService();
-          // final httpService = HttpService();
-          // final messagingService = MessagingService();
-          // final notification = NotificationProvider(
-          //   firestore,
-          //   httpService,
-          //   messagingService,
-          // );
-          // final auth = AuthProviderApp(
-          //   authService,
-          //   firestore,
-          //   notification,
-          // ); // <- también sin Get
-
-          // final projectInvitationProvider = ProjectInvitationProvider(
-          //   firestore,
-          //   auth,
-          //   notification,
-          // );
-
-          // projectInvitationProvider.acceptInvitation(invitationId);
-        }
+        if (type == 'project_invitation') {}
       }
-      // Ejecutar lógica para aceptar
     } else if (actionId == 'decline') {
       debugPrint('🔴 Acción en BG: Rechazar');
       if (payload != null) {
         final data = jsonDecode(response.payload!);
         final type = data['type'];
-        if (type == 'project_invitation') {
-          // final projectId = data['projectId'];
-          // final invitationId = data['invitationId'];
-          // final projectName = data['projectName'];
-          // final invitedBy = data['invitedBy'];
-          // final authService = AuthService();
-          // final firestore = FirestoreService();
-          // final httpService = HttpService();
-          // final messagingService = MessagingService();
-          // final notification = NotificationProvider(
-          //   firestore,
-          //   httpService,
-          //   messagingService,
-          // );
-          // final auth = AuthProviderApp(
-          //   authService,
-          //   firestore,
-          //   notification,
-          // ); // <- también sin Get
-
-          // final projectInvitationProvider = ProjectInvitationProvider(
-          //   firestore,
-          //   auth,
-          //   notification,
-          // );
-
-          // projectInvitationProvider.declineInvitation(invitationId);
-        }
+        if (type == 'project_invitation') {}
       }
-      // Ejecutar lógica para rechazar
     } else {
       debugPrint('🟡 Acción en BG: Tap sin botón');
-      // Acción default
     }
   }
 
@@ -242,8 +168,8 @@ class NotificationsService {
 
   Future<void> createNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // ID del canal
-      'Notificaciones importantes', // Nombre visible
+      'high_importance_channel',
+      'Notificaciones importantes',
       description: 'Este canal se usa para notificaciones críticas',
       importance: Importance.max,
     );

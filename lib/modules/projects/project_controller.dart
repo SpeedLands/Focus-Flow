@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
 import 'package:focus_flow/data/providers/notification_provider.dart';
 import 'package:focus_flow/data/providers/project_invitation_provider.dart';
@@ -24,8 +25,6 @@ class ProjectController extends GetxController {
       Get.find<NotificationController>();
   final TaskProvider _taskProvider = Get.find<TaskProvider>();
 
-  late Worker _authEverWorker;
-
   final RxList<ProjectModel> projects = <ProjectModel>[].obs;
   final RxBool isLoadingProjects = true.obs;
   final RxString projectListError = ''.obs;
@@ -39,6 +38,17 @@ class ProjectController extends GetxController {
   bool get isEditing => currentEditingProject.value != null;
   final RxBool isSavingProject = false.obs;
 
+  bool get isInitialLoading =>
+      isLoadingProjects.value &&
+      projects.isEmpty &&
+      isLoadingDeletionRequests.value &&
+      pendingProjectDeletionRequests.isEmpty &&
+      isLoadingInvitations.value &&
+      projectInvitations.isEmpty;
+
+  // NUEVO: Getter para simplificar la condición de error
+  bool get hasError => projectListError.value.isNotEmpty && projects.isEmpty;
+
   final RxString currentProjectRole = ''.obs;
   final RxList<ProjectInvitationModel> projectInvitations =
       <ProjectInvitationModel>[].obs;
@@ -46,6 +56,14 @@ class ProjectController extends GetxController {
   final TextEditingController inviteEmailController = TextEditingController();
   final TextEditingController accessCodeController = TextEditingController();
   final RxString generatedAccessCode = ''.obs;
+
+  final Rx<ProjectModel?> selectedProjectForTv = Rx<ProjectModel?>(null);
+  final RxInt selectedTvDetailViewIndex = 0.obs;
+  final RxBool isLoadingTvDetails = false.obs;
+  final RxList<Map<String, dynamic>> projectTaskStats =
+      <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> recentActivity =
+      <Map<String, dynamic>>[].obs;
 
   final RxList<AppNotificationModel> pendingProjectDeletionRequests =
       <AppNotificationModel>[].obs;
@@ -90,33 +108,18 @@ class ProjectController extends GetxController {
     super.onInit();
     debugPrint("[ProjectController] onInit CALLED");
 
-    _authEverWorker = ever(_authController.currentUser, (firebaseUser) {
-      debugPrint(
-        "[ProjectController] Auth state changed. User: ${firebaseUser?.uid}",
-      );
+    ever(_authController.currentUser, (firebaseUser) {
       if (firebaseUser != null) {
-        debugPrint(
-          "[ProjectController] User is authenticated. Initializing project data.",
-        );
         _initializeProjectRelatedData(firebaseUser.uid);
       } else {
-        debugPrint(
-          "[ProjectController] User is NOT authenticated. Clearing project data.",
-        );
         _clearAllProjectDataAndStreams();
       }
     });
 
     final initialUser = _authController.currentUser.value;
     if (initialUser != null) {
-      debugPrint(
-        "[ProjectController] onInit - User ALREADY authenticated (uid: ${initialUser.uid}). Initializing data.",
-      );
       _initializeProjectRelatedData(initialUser.uid);
     } else {
-      debugPrint(
-        "[ProjectController] onInit - User NOT authenticated initially. Waiting for auth state change.",
-      );
       _clearAllProjectDataAndStreams();
     }
   }
@@ -128,7 +131,6 @@ class ProjectController extends GetxController {
   }
 
   void _clearAllProjectDataAndStreams() {
-    debugPrint("[ProjectController] Clearing all project data and streams.");
     projects.clear();
     isLoadingProjects.value = false;
     projectListError.value =
@@ -158,6 +160,41 @@ class ProjectController extends GetxController {
     }
   }
 
+  void showInviteUserDialog(BuildContext context, String projectId) {
+    inviteEmailController.clear();
+    Get.defaultDialog(
+      title: "Invitar Usuario al Proyecto",
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            "Ingresa el correo electrónico del usuario que quieres invitar.",
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: inviteEmailController,
+            decoration: const InputDecoration(
+              labelText: "Email del Invitado",
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+            keyboardType: TextInputType.emailAddress,
+            autofocus: true,
+            onFieldSubmitted: (_) => performInviteUser(projectId),
+          ),
+        ],
+      ),
+      confirm: ElevatedButton(
+        onPressed: () => performInviteUser(projectId),
+        child: const Text("ENVIAR INVITACIÓN"),
+      ),
+      cancel: ElevatedButton(
+        onPressed: () => Get.back(),
+        child: const Text("CANCELAR"),
+      ),
+    );
+  }
+
   void _bindProjectsStream() {
     isLoadingProjects.value = true;
     projectListError.value = '';
@@ -170,7 +207,12 @@ class ProjectController extends GetxController {
           .getProjectsStream()
           .map((projectList) {
             isLoadingProjects.value = false;
-            if (projectList.isNotEmpty) projectListError.value = '';
+            if (projectList.isNotEmpty) {
+              projectListError.value = '';
+              if (selectedProjectForTv.value == null) {
+                selectProjectForTv(projectList.first);
+              }
+            }
             if (currentEditingProject.value != null) {
               final updatedProject = projectList.firstWhereOrNull(
                 (p) => p.id == currentEditingProject.value!.id,
@@ -191,6 +233,116 @@ class ProjectController extends GetxController {
             return <ProjectModel>[];
           }),
     );
+  }
+
+  void showAccessCodeDialog() {
+    Get.defaultDialog(
+      title: "Código de Acceso del Proyecto",
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            "Este es el código de acceso del proyecto. Puedes compartirlo con otros usuarios para que se unan.",
+          ),
+          const SizedBox(height: 16),
+          Obx(
+            () => SelectableText(
+              generatedAccessCode.value,
+              style: Get.textTheme.headlineSmall,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.copy),
+            label: const Text("Copiar Código"),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: generatedAccessCode.value));
+              Get.snackbar(
+                "Código Copiado",
+                "El código de acceso ha sido copiado al portapapeles.",
+                snackPosition: SnackPosition.BOTTOM,
+                duration: const Duration(seconds: 2),
+              );
+            },
+          ),
+        ],
+      ),
+      confirm: ElevatedButton(
+        onPressed: () => Get.back(),
+        child: const Text("CERRAR"),
+      ),
+    );
+  }
+
+  void selectProjectForTv(ProjectModel? project) {
+    if (project == null || project.id == selectedProjectForTv.value?.id) return;
+
+    selectedProjectForTv.value = project;
+    // Resetea a la vista principal (gráfica) cada vez que cambias de proyecto
+    selectedTvDetailViewIndex.value = 0;
+    // Carga los detalles para la nueva selección
+    fetchDetailsForTv();
+  }
+
+  void changeTvDetailView(int index) {
+    selectedTvDetailViewIndex.value = index;
+    fetchDetailsForTv(); // Vuelve a cargar datos si es necesario para la nueva vista
+  }
+
+  Future<void> fetchDetailsForTv() async {
+    final project = selectedProjectForTv.value;
+    if (project == null) return;
+
+    isLoadingTvDetails.value = true;
+    try {
+      switch (selectedTvDetailViewIndex.value) {
+        case 0: // Gráfico de barras
+          await fetchProjectTaskStats();
+          break;
+        case 1: // Actividad Reciente (tareas completadas)
+          await fetchRecentActivityForTv(project.id!);
+          break;
+        case 2: // Miembros (ya están en el modelo de proyecto, no se necesita fetch)
+          break;
+        case 3: // Código de acceso (se genera bajo demanda)
+          generatedAccessCode.value = '...'; // Placeholder
+          break;
+      }
+    } catch (e) {
+      debugPrint("Error fetching TV details: $e");
+      // Opcional: mostrar un snackbar de error
+    } finally {
+      isLoadingTvDetails.value = false;
+    }
+  }
+
+  Future<void> fetchProjectTaskStats() async {
+    List<Map<String, dynamic>> stats = [];
+    for (var proj in projects) {
+      final pendingCount = await _taskProvider.getPendingTasksCount(proj.id!);
+      stats.add({'project': proj, 'pendingTasks': pendingCount});
+    }
+    projectTaskStats.value = stats;
+  }
+
+  Future<void> fetchRecentActivityForTv(String projectId) async {
+    // Implementación simplificada: Obtener últimas 5 tareas completadas
+    final tasksStream = _taskProvider.getTasksStream(projectId);
+    final allTasks = await tasksStream.first;
+
+    final completedTasks = allTasks.where((t) => t.isCompleted).toList();
+    completedTasks.sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+
+    final recent = completedTasks.take(10).map((task) {
+      // Idealmente, aquí buscarías el nombre del usuario desde un provider de usuarios
+      return {
+        'text': "'${task.name}' completada",
+        'user': task.completedBy ?? 'Desconocido', // ID del usuario
+        'time': task.completedAt!,
+      };
+    }).toList();
+
+    recentActivity.value = recent;
   }
 
   void _bindProjectInvitationsStream() {
@@ -280,6 +432,43 @@ class ProjectController extends GetxController {
     selectedColor.value = project.projectColor;
     selectedIconName.value = project.iconName;
     Get.toNamed(AppRoutes.PROJECT_FORM);
+  }
+
+  void showJoinWithCodeDialog(BuildContext context) {
+    accessCodeController.clear();
+    Get.defaultDialog(
+      title: "Unirse a Proyecto con Código",
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            "Ingresa el código de acceso del proyecto al que quieres unirte.",
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: accessCodeController,
+            decoration: const InputDecoration(
+              labelText: "Código de Acceso",
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.vpn_key),
+              hintText: "ABCXYZ",
+            ),
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            maxLength: 10,
+            onFieldSubmitted: (_) => performJoinProjectWithCode(),
+          ),
+        ],
+      ),
+      confirm: ElevatedButton(
+        onPressed: performJoinProjectWithCode,
+        child: const Text("UNIRME"),
+      ),
+      cancel: ElevatedButton(
+        onPressed: () => Get.back(),
+        child: const Text("CANCELAR"),
+      ),
+    );
   }
 
   void _resetFormFields() {

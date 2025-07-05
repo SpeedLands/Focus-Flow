@@ -34,12 +34,10 @@ class PomodoroController extends GetxController {
 
   PomodoroTimerState? _stateBeforePause;
 
-  late Worker _authEverWorker;
-
   @override
   void onInit() {
     super.onInit();
-    _authEverWorker = ever(_authController.currentUser, (firebaseUser) {
+    ever(_authController.currentUser, (firebaseUser) {
       if (firebaseUser != null) {
         _listenToConfigs(firebaseUser.uid);
         _initFormControllers();

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:focus_flow/data/models/pomodoro_config.dart';
-import 'package:focus_flow/modules/pomodoro/pomodoro_controller.dart';
+import 'package:focus_flow/modules/pomodoro/pomodoro_ana/pomodoro_controller.dart';
+import 'package:focus_flow/modules/pomodoro/pomodoro_ana/pomodoro_tv_dashboard.dart'; // 👈 IMPORTANTE
 import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 
-class PomodoroConfigListView extends GetView<PomodoroController> {
-  const PomodoroConfigListView({super.key});
+class PomodoroConfigListViewAna extends GetView<PomodoroControllerAna> {
+  const PomodoroConfigListViewAna({super.key});
 
   Widget _buildWatchPomodoroScreen(BuildContext context) {
     return Scaffold(
@@ -140,22 +141,80 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
 
   Widget _buildTvPomodoroScreen(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: GFAppBar(
-        title: const Text('Configuraciones Pomodoro (TV)'),
+        title: const Text('Pomodoro – TV'),
         backgroundColor: GFColors.PRIMARY,
         leading: GFIconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Get.offAllNamed(AppRoutes.HOME),
         ),
       ),
-      body: Center(
-        child: Text(
-          "Interfaz para TV aún no implementada. \n"
-          "Considera una GridView o una disposición más amplia.",
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
+      body: Obx(() {
+        if (controller.isLoadingConfigs.value) {
+          return const Center(child: GFLoader(type: GFLoaderType.circle));
+        }
+
+        return Row(
+          children: [
+            // Lista de configuraciones (columna izquierda)
+            SizedBox(
+              width: 420,
+              child: controller.configs.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Sin configuraciones',
+                        style: TextStyle(color: Colors.white70, fontSize: 20),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: controller.configs.length,
+                      itemBuilder: (_, i) {
+                        final cfg = controller.configs[i];
+                        return Card(
+                          color: Colors.grey[850],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              cfg.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Trabajo: ${cfg.workTime ~/ 60} m  •  Descanso: ${cfg.shortBreak ~/ 60} m  •  Rondas: ${cfg.rounds}',
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                            onTap: () {
+                              controller.selectConfigForTimer(cfg);
+                              Get.toNamed(AppRoutes.POMODORO_TIMER);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+
+            // Panel de gráficas (columna derecha)
+            Expanded(
+              child: controller.sessionStats.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Sin datos aún',
+                        style: TextStyle(color: Colors.white54, fontSize: 24),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : PomodoroTvDashboard(stats: controller.sessionStats),
+            ),
+          ],
+        );
+      }),
       floatingActionButton: GFIconButton(
         onPressed: () {
           controller.prepareFormForNewConfig();
@@ -293,9 +352,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
     if (isWatch) {
       return _buildWatchPomodoroScreen(context);
     } else if (isTV) {
-      return _buildMobilePomodoroScreen(
-        context,
-      ); //_buildTvPomodoroScreen(context);
+      return _buildTvPomodoroScreen(context);
     } else {
       return _buildMobilePomodoroScreen(context);
     }

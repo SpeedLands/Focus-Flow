@@ -32,7 +32,7 @@ class PomodoroController extends GetxController {
   late TextEditingController goalController;
   String? editingConfigId;
 
-  PomodoroTimerState? _stateBeforePause;
+  PomodoroTimerState? stateBeforePause;
 
   @override
   void onInit() {
@@ -66,6 +66,41 @@ class PomodoroController extends GetxController {
     );
     goalController = TextEditingController(text: config?.goal ?? '');
     editingConfigId = config?.id;
+  }
+
+  double get progressPercentage {
+    // Si el timer no ha empezado o ya terminó, el aro está lleno/vacío (según diseño, aquí 1.0)
+    if (selectedConfig.value == null ||
+        timerState.value == PomodoroTimerState.idle ||
+        timerState.value == PomodoroTimerState.finished) {
+      return 1.0;
+    }
+
+    int totalTime = selectedConfig.value!.workTime; // Valor por defecto
+    PomodoroTimerState currentState =
+        timerState.value == PomodoroTimerState.paused
+        ? stateBeforePause ?? PomodoroTimerState.work
+        : timerState.value;
+
+    switch (currentState) {
+      case PomodoroTimerState.work:
+        totalTime = selectedConfig.value!.workTime;
+        break;
+      case PomodoroTimerState.shortBreak:
+        totalTime = selectedConfig.value!.shortBreak;
+        break;
+      case PomodoroTimerState.longBreak:
+        totalTime =
+            selectedConfig.value!.longBreak ?? selectedConfig.value!.shortBreak;
+        break;
+      default:
+        return 1.0;
+    }
+
+    if (totalTime == 0) return 1.0;
+
+    // Calcula la fracción de tiempo restante
+    return remainingTime.value / totalTime;
   }
 
   void _listenToConfigs(String uid) {
@@ -217,13 +252,13 @@ class PomodoroController extends GetxController {
     }
 
     if (timerState.value == PomodoroTimerState.paused) {
-      if (_stateBeforePause != null) {
-        timerState.value = _stateBeforePause!;
+      if (stateBeforePause != null) {
+        timerState.value = stateBeforePause!;
       }
       _startCountdown();
     } else if (_timer?.isActive ?? false) {
       _timer?.cancel();
-      _stateBeforePause = timerState.value; // Guarda estado actual
+      stateBeforePause = timerState.value; // Guarda estado actual
       timerState.value = PomodoroTimerState.paused;
     } else {
       if (timerState.value == PomodoroTimerState.idle ||
@@ -274,7 +309,7 @@ class PomodoroController extends GetxController {
   void resetTimer() {
     _timer?.cancel();
     _timer = null;
-    _stateBeforePause = null;
+    stateBeforePause = null;
     if (selectedConfig.value != null) {
       _initializeTimerWithConfig(selectedConfig.value!);
     } else {

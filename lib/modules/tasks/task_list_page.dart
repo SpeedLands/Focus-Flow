@@ -324,96 +324,446 @@ class _TasksListScreenState extends State<TasksListScreen>
     String projectId,
     String projectName,
   ) {
-    final bool isTV = true;
     return Scaffold(
-      backgroundColor: Colors.blueGrey[900],
+      backgroundColor: const Color(
+        0xFF101D25,
+      ), // Un fondo oscuro y elegante para TV
       appBar: GFAppBar(
         title: Text(projectName, style: const TextStyle(color: Colors.white)),
-        backgroundColor: Colors.blueGrey[800],
+        backgroundColor: Colors.blueGrey[900],
         leading: GFIconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Get.back(),
+          onPressed: () => Get.offAllNamed(AppRoutes.PROJECTS_LIST),
           type: GFButtonType.transparent,
         ),
+        // BARRA DE HERRAMIENTAS PARA CAMBIAR DE VISTA
         actions: [
+          _buildViewSwitcherTV(), // Botones para cambiar de vista
+          const SizedBox(width: 20),
           GFIconButton(
             icon: const Icon(Icons.add_task_outlined, color: Colors.white),
             onPressed: () => controller.navigateToAddTask(projectId: projectId),
             type: GFButtonType.transparent,
+            focusColor: GFColors.PRIMARY.withValues(alpha: 0.3),
             tooltip: "Nueva Tarea",
           ),
         ],
       ),
       body: Obx(() {
-        bool showMainLoader =
-            (controller.isLoadingTasks.value && controller.tasks.isEmpty) ||
-            (controller.isCurrentUserAdminForCurrentProject &&
-                controller.isLoadingRequests.value &&
-                controller.pendingTaskModificationRequests.isEmpty);
-
-        if (showMainLoader) {
+        // Mantenemos la lógica de carga y errores
+        if (controller.isLoadingTasks.value && controller.tasks.isEmpty) {
           return const Center(child: GFLoader(type: GFLoaderType.circle));
         }
         if (controller.taskListError.value.isNotEmpty) {
-          return _buildErrorState(context, isTV: isTV);
+          return _buildErrorState(context, isTV: true);
+        }
+        if (controller.tasks.isEmpty) {
+          return _buildEmptyState(context, projectId, isTV: true);
         }
 
-        final pendingTasks = controller.tasks
-            .where((t) => !t.isCompleted)
-            .toList();
-        final completedTasks = controller.tasks
-            .where((t) => t.isCompleted)
-            .toList();
-
-        if (pendingTasks.isEmpty &&
-            completedTasks.isEmpty &&
-            !(controller.isCurrentUserAdminForCurrentProject &&
-                controller.pendingTaskModificationRequests.isNotEmpty)) {
-          return _buildEmptyState(context, projectId, isTV: isTV);
+        // RENDERIZADO CONDICIONAL DE LA VISTA SELECCIONADA
+        switch (controller.currentTvView.value) {
+          case TaskViewType.kanban:
+            return _buildKanbanViewTV();
+          case TaskViewType.eisenhower:
+            return _buildEisenhowerViewTV();
+          case TaskViewType.timeline:
+            return _buildTimelineViewTV();
+          case TaskViewType.swimlanes:
+            return _buildSwimlanesViewTV();
         }
-
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child:
-                  (controller.isCurrentUserAdminForCurrentProject &&
-                      (controller.isLoadingRequests.value ||
-                          controller
-                              .pendingTaskModificationRequests
-                              .isNotEmpty))
-                  ? _buildPendingRequestsSection(context, isTV: isTV)
-                  : const SizedBox.shrink(),
-            ),
-            if (pendingTasks.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: _buildSectionHeaderTV(
-                  "Pendientes (${pendingTasks.length})",
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (ctx, i) => _buildTaskCardTV(context, pendingTasks[i]),
-                  childCount: pendingTasks.length,
-                ),
-              ),
-            ],
-            if (completedTasks.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: _buildSectionHeaderTV(
-                  "Completadas (${completedTasks.length})",
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (ctx, i) => _buildTaskCardTV(context, completedTasks[i]),
-                  childCount: completedTasks.length,
-                ),
-              ),
-            ],
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
-          ],
-        );
       }),
+    );
+  }
+
+  Widget _buildViewSwitcherTV() {
+    return Obx(
+      () => Row(
+        children: [
+          _viewSwitcherButton(Icons.view_kanban, TaskViewType.kanban, "Kanban"),
+          _viewSwitcherButton(
+            Icons.grid_view_sharp,
+            TaskViewType.eisenhower,
+            "Matriz",
+          ),
+          _viewSwitcherButton(
+            Icons.timeline,
+            TaskViewType.timeline,
+            "Línea de Tiempo",
+          ),
+          _viewSwitcherButton(
+            Icons.view_stream,
+            TaskViewType.swimlanes,
+            "Por Miembro",
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _viewSwitcherButton(
+    IconData icon,
+    TaskViewType viewType,
+    String tooltip,
+  ) {
+    final bool isSelected = controller.currentTvView.value == viewType;
+    return GFIconButton(
+      icon: Icon(icon, color: isSelected ? GFColors.PRIMARY : Colors.white70),
+      onPressed: () => controller.currentTvView.value = viewType,
+      type: GFButtonType.transparent,
+      tooltip: tooltip,
+      focusColor: GFColors.PRIMARY.withValues(alpha: 0.3),
+      hoverColor: GFColors.PRIMARY.withValues(alpha: 0.2),
+    );
+  }
+
+  // 1. VISTA KANBAN
+  Widget _buildKanbanViewTV() {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildKanbanColumn("PENDIENTES", controller.pendingTasks, false),
+          const SizedBox(width: 20),
+          _buildKanbanColumn("COMPLETADAS", controller.completedTasks, true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKanbanColumn(
+    String title,
+    List<TaskModel> tasks,
+    bool isCompletedColumn,
+  ) {
+    // DragTarget permite que las tarjetas se suelten aquí
+    return Expanded(
+      child: DragTarget<TaskModel>(
+        onWillAccept: (task) =>
+            task != null && task.isCompleted != isCompletedColumn,
+        onAccept: (task) => controller.toggleTaskCompletion(task),
+        builder: (context, candidateData, rejectedData) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.blueGrey[900]?.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: candidateData.isNotEmpty
+                    ? GFColors.SUCCESS
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    itemCount: tasks.length,
+                    itemBuilder: (ctx, index) {
+                      final task = tasks[index];
+                      // Draggable hace que la tarjeta se pueda arrastrar
+                      return Draggable<TaskModel>(
+                        data: task,
+                        feedback: Material(
+                          elevation: 8.0,
+                          color: Colors.transparent,
+                          child: Opacity(
+                            opacity: 0.8,
+                            child: SizedBox(
+                              width: 350,
+                              child: _buildTaskCardTV(context, task),
+                            ),
+                          ),
+                        ),
+                        childWhenDragging: Opacity(
+                          opacity: 0.4,
+                          child: _buildTaskCardTV(context, task),
+                        ),
+                        child: _buildTaskCardTV(context, task),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // 2. VISTA MATRIZ DE EISENHOWER
+  Widget _buildEisenhowerViewTV() {
+    final tasks = controller.eisenhowerTasks;
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: GridView.count(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 1.5, // Ajusta esto para la proporción de las tarjetas
+        children: [
+          _buildEisenhowerQuadrant(
+            "Hacer (Urgente, Importante)",
+            tasks['important_urgent']!,
+            Colors.red.shade300,
+          ),
+          _buildEisenhowerQuadrant(
+            "Planificar (No Urgente, Importante)",
+            tasks['important_not_urgent']!,
+            Colors.orange.shade300,
+          ),
+          _buildEisenhowerQuadrant(
+            "Delegar (Urgente, No Importante)",
+            tasks['not_important_urgent']!,
+            Colors.blue.shade300,
+          ),
+          _buildEisenhowerQuadrant(
+            "Descartar (No Urgente, No Importante)",
+            tasks['not_important_not_urgent']!,
+            Colors.green.shade400,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEisenhowerQuadrant(
+    String title,
+    List<TaskModel> tasks,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey[800],
+        borderRadius: BorderRadius.circular(12),
+        border: Border(left: BorderSide(color: color, width: 6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: tasks.isEmpty
+                ? const Center(
+                    child: Text(
+                      "Nada aquí",
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: tasks.length,
+                    itemBuilder: (ctx, i) => _buildMiniTaskTile(tasks[i]),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniTaskTile(TaskModel task) {
+    return Card(
+      color: Colors.blueGrey[700],
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          task.name,
+          style: const TextStyle(color: Colors.white),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
+  // 3. VISTA LÍNEA DE TIEMPO
+  Widget _buildTimelineViewTV() {
+    final tasksByDay = controller.timelineTasks;
+    final sortedDays = tasksByDay.keys.toList()..sort();
+
+    if (sortedDays.isEmpty) {
+      return const Center(
+        child: Text(
+          "No hay tareas con fechas de entrega próximas.",
+          style: TextStyle(color: Colors.white70, fontSize: 18),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.all(20),
+      itemCount: sortedDays.length,
+      itemBuilder: (context, index) {
+        final day = sortedDays[index];
+        final tasks = tasksByDay[day]!;
+        return Container(
+          width: 250,
+          margin: const EdgeInsets.only(right: 16),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blueGrey[800],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                DateFormat('EEE, dd MMM').format(day),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Divider(color: Colors.white24),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (ctx, i) {
+                    final task = tasks[i];
+                    return GFListTile(
+                      titleText: task.name,
+                      subTitle: Card(
+                        color: _getPriorityColor(
+                          task.priority,
+                          context,
+                          isTV: true,
+                        ).withValues(alpha: 0.3),
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            task.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // 4. VISTA CARRILES (SWIMLANES)
+  Widget _buildSwimlanesViewTV() {
+    final tasksByMember = controller.tasksByMember;
+    final memberIds = tasksByMember.keys.toList();
+
+    if (memberIds.isEmpty) {
+      return const Center(
+        child: Text(
+          "No hay tareas asignadas.",
+          style: TextStyle(color: Colors.white70, fontSize: 18),
+        ),
+      );
+    }
+
+    // Usamos un ListView vertical para los carriles
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: memberIds.length,
+      itemBuilder: (context, index) {
+        final memberId = memberIds[index];
+        final tasks = tasksByMember[memberId]!;
+        return _buildSwimlane(memberId, tasks);
+      },
+    );
+  }
+
+  Widget _buildSwimlane(String memberId, List<TaskModel> tasks) {
+    return Container(
+      height: 220, // Altura fija para cada carril
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey[800]?.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Usamos un FutureBuilder para obtener el nombre del miembro de forma asíncrona
+          FutureBuilder<String>(
+            future: controller.getMemberName(memberId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const GFLoader(
+                  type: GFLoaderType.circle,
+                  size: GFSize.SMALL,
+                );
+              }
+              final memberName = snapshot.data ?? 'Desconocido';
+              return Row(
+                children: [
+                  GFAvatar(
+                    child: Text(
+                      memberName.isNotEmpty ? memberName[0].toUpperCase() : '?',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    memberName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+          // ListView horizontal para las tarjetas de tareas
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: tasks.length,
+              itemBuilder: (context, index) {
+                return SizedBox(
+                  width: 300, // Ancho fijo para las tarjetas en el carril
+                  child: _buildMiniTaskTile(tasks[index]),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -585,19 +935,6 @@ class _TasksListScreenState extends State<TasksListScreen>
               },
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeaderTV(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-      child: Text(
-        title,
-        style: Get.textTheme.headlineSmall?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }

@@ -146,6 +146,20 @@ class FirestoreService {
     }
   }
 
+  Future<int> getCount({
+    required String collectionName,
+    required String subCollectionName,
+    required String id,
+  }) async {
+    final query = await _firestore
+        .collection(collectionName)
+        .doc(id)
+        .collection(subCollectionName)
+        .count()
+        .get();
+    return query.count ?? 0;
+  }
+
   Future<bool> updateDocument(
     String collection,
     String docId,

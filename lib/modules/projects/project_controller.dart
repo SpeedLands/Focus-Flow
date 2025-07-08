@@ -316,12 +316,37 @@ class ProjectController extends GetxController {
     }
   }
 
+  // En ProjectController.dart
+
   Future<void> fetchProjectTaskStats() async {
-    List<Map<String, dynamic>> stats = [];
-    for (var proj in projects) {
-      final pendingCount = await _taskProvider.getPendingTasksCount(proj.id!);
-      stats.add({'project': proj, 'pendingTasks': pendingCount});
-    }
+    // Usamos List<Future<...>> y Future.wait para ejecutar las consultas en paralelo,
+    // lo cual es mucho más eficiente que un bucle con `await` dentro.
+    final List<Future<Map<String, dynamic>>> futures = projects.map((
+      proj,
+    ) async {
+      // Obtenemos ambos conteos al mismo tiempo
+      final totalCountFuture = _taskProvider.getTotalTasksCount(proj.id!);
+      final pendingCountFuture = _taskProvider.getPendingTasksCount(proj.id!);
+
+      // Esperamos a que ambas consultas terminen para este proyecto
+      final List<int> counts = await Future.wait([
+        totalCountFuture,
+        pendingCountFuture,
+      ]);
+      final int totalCount = counts[0];
+      final int pendingCount = counts[1];
+
+      return {
+        'project': proj,
+        'totalTasks': totalCount, // <-- Dato nuevo
+        'pendingTasks': pendingCount,
+      };
+    }).toList();
+
+    // Esperamos a que todos los proyectos terminen de obtener sus datos
+    final List<Map<String, dynamic>> stats = await Future.wait(futures);
+
+    // Actualizamos la lista observable una sola vez al final
     projectTaskStats.value = stats;
   }
 

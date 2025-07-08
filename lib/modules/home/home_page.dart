@@ -18,7 +18,7 @@ class HomeScreen extends GetView<HomeController> {
         case DeviceType.watch:
           return _buildWatchHomeScreen(context);
         case DeviceType.tv:
-          return _buildTvHomeScreen(context);
+          return _buildMobileHomeScreen(context); //_buildTvHomeScreen(context);
         case DeviceType.tablet:
           return _buildTabletHomeScreen(context);
         case DeviceType.mobile:
@@ -169,6 +169,12 @@ class HomeScreen extends GetView<HomeController> {
                   icon: Icons.folder_special_outlined,
                   color: GFColors.PRIMARY,
                   onTap: () => Get.toNamed(AppRoutes.PROJECTS_LIST),
+                ),
+                _buildFeatureCardTV(
+                  title: "Temporizador Pomodoro",
+                  icon: Icons.timer_outlined,
+                  color: GFColors.WARNING,
+                  onTap: () => Get.snackbar("TV", "Pomodoro (Próximamente)"),
                 ),
                 _buildFeatureCardTV(
                   title: "Temporizador Pomodoro",
@@ -388,6 +394,15 @@ class HomeScreen extends GetView<HomeController> {
               color: GFColors.WARNING,
               onTap: () {
                 Get.offAllNamed(AppRoutes.POMODORO_LIST);
+              },
+              isTV: false,
+            ),
+            _buildFeatureSection(
+              title: "Temporizador Pomodoro",
+              icon: Icons.timer_outlined,
+              color: GFColors.WARNING,
+              onTap: () {
+                Get.offAllNamed(AppRoutes.POMODORO_LIST_ANA);
               },
               isTV: false,
             ),

@@ -32,6 +32,21 @@ class TaskProvider {
     return null;
   }
 
+  Future<int> getTotalTasksCount(String projectId) async {
+    try {
+      final snapshot = await _firestoreService.getCount(
+        collectionName: _projectsCollection,
+        subCollectionName: _tasksSubcollection,
+        id: projectId,
+      );
+      return snapshot;
+    } catch (e) {
+      // Manejar el error apropiadamente
+      print("Error getting total tasks count: $e");
+      return 0;
+    }
+  }
+
   Future<String?> addTask(String projectId, TaskModel task) async {
     final currentUser = _authProviderApp.currentUser;
     if (currentUser == null || projectId.isEmpty) return null;

@@ -6,6 +6,8 @@ import 'package:focus_flow/modules/home/home_binding.dart';
 import 'package:focus_flow/modules/home/home_page.dart';
 import 'package:focus_flow/modules/notifications/notifications_binding.dart';
 import 'package:focus_flow/modules/notifications/notifications_page.dart';
+import 'package:focus_flow/modules/pomodoro/pomodoro_ana/pomodoro_binidng.dart';
+import 'package:focus_flow/modules/pomodoro/pomodoro_ana/pomodoro_page.dart';
 import 'package:focus_flow/modules/pomodoro/pomodoro_form.dart';
 import 'package:focus_flow/modules/pomodoro/pomodoro_page.dart';
 import 'package:focus_flow/modules/pomodoro/pomodoro_binidng.dart';
@@ -88,6 +90,11 @@ class AppPages {
       name: AppRoutes.POMODORO_TIMER,
       page: () => PomodoroTimerScreen(),
       bindings: [AuthBinding(), PomodoroBinidng()],
+    ),
+    GetPage(
+      name: AppRoutes.POMODORO_LIST_ANA,
+      page: () => PomodoroConfigListViewAna(),
+      bindings: [AuthBinding(), PomodoroBinidngAna()],
     ),
   ];
 }

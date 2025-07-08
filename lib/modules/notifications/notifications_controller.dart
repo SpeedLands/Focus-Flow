@@ -384,12 +384,6 @@ class NotificationController extends GetxController {
 
     if (notification.routeToNavigate != null &&
         notification.routeToNavigate!.isNotEmpty) {
-      if (notification.routeToNavigate == AppRoutes.VERIFY_EMAIL &&
-          AppRoutes.VERIFY_EMAIL.isEmpty) {
-        debugPrint(
-          "Advertencia: Se intenta navegar a una ruta vacía (VERIFY_EMAIL). Esto podría no funcionar con Get.toNamed().",
-        );
-      }
       Get.toNamed(notification.routeToNavigate!, arguments: notification.data);
       return;
     }

@@ -12,6 +12,8 @@ import 'package:focus_flow/data/models/project_model.dart';
 import 'package:focus_flow/modules/auth/auth_controller.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 
+enum TaskViewType { kanban, eisenhower, timeline, swimlanes }
+
 class TaskController extends GetxController {
   final TaskProvider _taskService = Get.find<TaskProvider>();
   final AuthController _authController = Get.find<AuthController>();
@@ -20,6 +22,13 @@ class TaskController extends GetxController {
   final ProjectProvider _projectService = Get.find<ProjectProvider>();
   final NotificationController _notificationController =
       Get.find<NotificationController>();
+
+  final Rx<TaskViewType> currentTvView = TaskViewType.kanban.obs;
+
+  List<TaskModel> get pendingTasks =>
+      tasks.where((t) => !t.isCompleted).toList();
+  List<TaskModel> get completedTasks =>
+      tasks.where((t) => t.isCompleted).toList();
 
   final RxList<TaskModel> tasks = <TaskModel>[].obs;
   final RxBool isLoadingTasks = true.obs;
@@ -285,6 +294,91 @@ class TaskController extends GetxController {
     } finally {
       isSavingTask.value = false;
     }
+  }
+
+  Map<String, List<TaskModel>> get eisenhowerTasks {
+    final now = DateTime.now();
+    final urgentDueDate = now.add(
+      const Duration(days: 3),
+    ); // Consideramos urgente si vence en 3 días
+
+    final Map<String, List<TaskModel>> categorizedTasks = {
+      'important_urgent': [],
+      'important_not_urgent': [],
+      'not_important_urgent': [],
+      'not_important_not_urgent': [],
+    };
+
+    for (var task in pendingTasks) {
+      // Solo clasificamos tareas pendientes
+      final bool isImportant = task.priority == TaskPriority.alta;
+      final bool isUrgent =
+          task.dueDate != null &&
+          task.dueDate!.toDate().isBefore(urgentDueDate);
+
+      if (isImportant && isUrgent) {
+        categorizedTasks['important_urgent']!.add(task);
+      } else if (isImportant && !isUrgent) {
+        categorizedTasks['important_not_urgent']!.add(task);
+      } else if (!isImportant && isUrgent) {
+        categorizedTasks['not_important_urgent']!.add(task);
+      } else {
+        categorizedTasks['not_important_not_urgent']!.add(task);
+      }
+    }
+    return categorizedTasks;
+  }
+
+  Map<DateTime, List<TaskModel>> get timelineTasks {
+    final Map<DateTime, List<TaskModel>> groupedTasks = {};
+    final now = DateTime.now();
+    final limitDate = now.add(const Duration(days: 30));
+
+    final tasksWithDueDate = pendingTasks.where(
+      (task) =>
+          task.dueDate != null &&
+          task.dueDate!.toDate().isAfter(
+            now.subtract(const Duration(days: 1)),
+          ) &&
+          task.dueDate!.toDate().isBefore(limitDate),
+    );
+
+    for (var task in tasksWithDueDate) {
+      final date = task.dueDate!.toDate();
+      // Normalizamos la fecha a medianoche para agrupar por día
+      final dayKey = DateTime(date.year, date.month, date.day);
+      if (groupedTasks[dayKey] == null) {
+        groupedTasks[dayKey] = [];
+      }
+      groupedTasks[dayKey]!.add(task);
+    }
+    return groupedTasks;
+  }
+
+  Map<String, List<TaskModel>> get tasksByMember {
+    final Map<String, List<TaskModel>> groupedTasks = {};
+    for (var task in pendingTasks) {
+      final memberId = task.createdBy;
+      if (groupedTasks[memberId] == null) {
+        groupedTasks[memberId] = [];
+      }
+      groupedTasks[memberId]!.add(task);
+    }
+    return groupedTasks;
+  }
+
+  Future<String> getMemberName(String userId) async {
+    // Si el usuario es el admin del proyecto actual
+    // Busca en la lista de miembros
+    if (currentProjectData.value != null) {
+      for (var role in currentProjectData.value!.userRoles) {
+        if (role.startsWith('$userId:')) {
+          return role.split(':')[1]; // Retorna el nombre del miembro
+        }
+      }
+    }
+    // Fallback: si no se encuentra, retorna un identificador
+    return 'Miembro ($userId.substring(0, 6))';
   }
 
   Future<void> deleteTask(TaskModel task) async {

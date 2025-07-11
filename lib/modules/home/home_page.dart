@@ -47,7 +47,7 @@ class HomeScreen extends GetView<HomeController> {
                 ),
                 Obx(
                   () => Text(
-                    controller.userData.value?.name?.split(' ').first ?? "",
+                    controller.userData.value?.name?.split(' ').first ?? '',
                     style: titleStyle,
                     textAlign: TextAlign.center,
                   ),
@@ -58,43 +58,43 @@ class HomeScreen extends GetView<HomeController> {
 
             _buildWatchAction(
               context: context,
-              text: "Iniciar Pomodoro",
+              text: 'Iniciar Pomodoro',
               icon: Icons.timer_outlined,
               color: GFColors.WARNING,
-              onTap: () => Get.toNamed(AppRoutes.POMODORO_LIST),
+              onTap: () => Get.toNamed<Object>(AppRoutes.POMODORO_LIST),
             ),
             const SizedBox(height: 10),
 
             _buildWatchAction(
               context: context,
-              text: "Mis Proyectos",
+              text: 'Mis Proyectos',
               icon: Icons.folder_open,
               color: GFColors.PRIMARY,
-              onTap: () => Get.toNamed(AppRoutes.PROJECTS_LIST),
+              onTap: () => Get.toNamed<Object>(AppRoutes.PROJECTS_LIST),
             ),
             const SizedBox(height: 10),
 
             _buildWatchAction(
               context: context,
-              text: "Notificaciones",
+              text: 'Notificaciones',
               icon: Icons.notifications_outlined,
               color: GFColors.INFO,
-              onTap: () => Get.toNamed(AppRoutes.NOTIFICATIONS_LIST),
+              onTap: () => Get.toNamed<Object>(AppRoutes.NOTIFICATIONS_LIST),
             ),
             const SizedBox(height: 10),
 
             _buildWatchAction(
               context: context,
-              text: "Mi Perfil",
+              text: 'Mi Perfil',
               icon: Icons.settings_outlined,
               color: Colors.teal,
-              onTap: () => Get.toNamed(AppRoutes.USER_SETTINGS),
+              onTap: () => Get.toNamed<Object>(AppRoutes.USER_SETTINGS),
             ),
             const SizedBox(height: 10),
 
             _buildWatchAction(
               context: context,
-              text: "Salir",
+              text: 'Salir',
               icon: Icons.exit_to_app,
               color: GFColors.DANGER,
               onTap: controller.logout,
@@ -139,10 +139,7 @@ class HomeScreen extends GetView<HomeController> {
       fontWeight: FontWeight.bold,
     );
     final bodyStyle = Get.textTheme.titleLarge?.copyWith(color: Colors.white70);
-    final padding = const EdgeInsets.symmetric(
-      horizontal: 60.0,
-      vertical: 40.0,
-    );
+    const padding = EdgeInsets.symmetric(horizontal: 60.0, vertical: 40.0);
 
     return Scaffold(
       backgroundColor: Colors.blueGrey[900],
@@ -153,7 +150,7 @@ class HomeScreen extends GetView<HomeController> {
           children: <Widget>[
             Obx(() => Text(controller.greeting, style: titleStyle)),
             const SizedBox(height: 10),
-            Text("Bienvenido a FocusFlow. Organiza tu día.", style: bodyStyle),
+            Text('Bienvenido a FocusFlow. Organiza tu día.', style: bodyStyle),
             const SizedBox(height: 50),
 
             GridView.count(
@@ -165,25 +162,25 @@ class HomeScreen extends GetView<HomeController> {
               childAspectRatio: 1.8,
               children: [
                 _buildFeatureCardTV(
-                  title: "Mis Proyectos",
+                  title: 'Mis Proyectos',
                   icon: Icons.folder_special_outlined,
                   color: GFColors.PRIMARY,
-                  onTap: () => Get.toNamed(AppRoutes.PROJECTS_LIST),
+                  onTap: () => Get.toNamed<Object>(AppRoutes.PROJECTS_LIST),
                 ),
                 _buildFeatureCardTV(
-                  title: "Temporizador Pomodoro",
+                  title: 'Temporizador Pomodoro',
                   icon: Icons.timer_outlined,
                   color: GFColors.WARNING,
-                  onTap: () => Get.snackbar("TV", "Pomodoro (Próximamente)"),
+                  onTap: () => Get.snackbar('TV', 'Pomodoro (Próximamente)'),
                 ),
                 _buildFeatureCardTV(
-                  title: "Temporizador Pomodoro",
+                  title: 'Temporizador Pomodoro',
                   icon: Icons.timer_outlined,
                   color: GFColors.WARNING,
-                  onTap: () => Get.snackbar("TV", "Pomodoro (Próximamente)"),
+                  onTap: () => Get.snackbar('TV', 'Pomodoro (Próximamente)'),
                 ),
                 _buildFeatureCardTV(
-                  title: "Cerrar Sesión",
+                  title: 'Cerrar Sesión',
                   icon: Icons.logout,
                   color: GFColors.DANGER,
                   onTap: () => _showLogoutDialog(context),
@@ -238,21 +235,21 @@ class HomeScreen extends GetView<HomeController> {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    Get.defaultDialog(
-      title: "Cerrar Sesión",
+    Get.defaultDialog<void>(
+      title: 'Cerrar Sesión',
       titleStyle: TextStyle(
         color: Theme.of(context).brightness == Brightness.dark
             ? Colors.white
             : Colors.black,
       ),
-      middleText: "¿Estás seguro de que quieres cerrar sesión?",
+      middleText: '¿Estás seguro de que quieres cerrar sesión?',
       middleTextStyle: TextStyle(
         color: Theme.of(context).brightness == Brightness.dark
             ? Colors.white70
             : Colors.black87,
       ),
-      textConfirm: "Sí, cerrar",
-      textCancel: "Cancelar",
+      textConfirm: 'Sí, cerrar',
+      textCancel: 'Cancelar',
       confirmTextColor: Colors.white,
       cancelTextColor: Theme.of(context).brightness == Brightness.dark
           ? Colors.white70
@@ -270,11 +267,11 @@ class HomeScreen extends GetView<HomeController> {
       fontWeight: FontWeight.bold,
     );
     final bodyStyle = Get.textTheme.bodyLarge;
-    final padding = const EdgeInsets.all(30.0);
+    const padding = EdgeInsets.all(30.0);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("FocusFlow Home (Tablet)"),
+        title: const Text('FocusFlow Home (Tablet)'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -295,23 +292,23 @@ class HomeScreen extends GetView<HomeController> {
                   Obx(() => Text(controller.greeting, style: titleStyle)),
                   const SizedBox(height: 20),
                   Text(
-                    "Gestiona tus proyectos y tareas eficientemente.",
+                    'Gestiona tus proyectos y tareas eficientemente.',
                     style: bodyStyle,
                   ),
                   const SizedBox(height: 30),
                   _buildFeatureSection(
-                    title: "Mis Proyectos",
+                    title: 'Mis Proyectos',
                     icon: Icons.folder_special_outlined,
                     color: GFColors.PRIMARY,
-                    onTap: () => Get.toNamed(AppRoutes.PROJECTS_LIST),
+                    onTap: () => Get.toNamed<Object>(AppRoutes.PROJECTS_LIST),
                   ),
                   const SizedBox(height: 20),
                   _buildFeatureSection(
-                    title: "Temporizador Pomodoro",
+                    title: 'Temporizador Pomodoro',
                     icon: Icons.timer_outlined,
                     color: GFColors.WARNING,
                     onTap: () =>
-                        Get.snackbar("Tablet", "Pomodoro (Próximamente)"),
+                        Get.snackbar('Tablet', 'Pomodoro (Próximamente)'),
                   ),
                 ],
               ),
@@ -327,11 +324,11 @@ class HomeScreen extends GetView<HomeController> {
                 ),
                 child: Column(
                   children: [
-                    Text("Resumen Rápido", style: Get.textTheme.titleMedium),
+                    Text('Resumen Rápido', style: Get.textTheme.titleMedium),
                     const Divider(),
                     const ListTile(
                       leading: Icon(Icons.info_outline),
-                      title: Text("Info adicional aquí..."),
+                      title: Text('Info adicional aquí...'),
                     ),
                   ],
                 ),
@@ -344,19 +341,19 @@ class HomeScreen extends GetView<HomeController> {
   }
 
   Widget _buildMobileHomeScreen(BuildContext context) {
-    final padding = const EdgeInsets.all(20.0);
+    const padding = EdgeInsets.all(20.0);
 
     return Scaffold(
       appBar: GFAppBar(
         backgroundColor: GFColors.PRIMARY,
         title: const GFTypography(
-          text: "FocusFlow Home",
+          text: 'FocusFlow Home',
           type: GFTypographyType.typo1,
           showDivider: false,
           textColor: GFColors.WHITE,
         ),
         elevation: 2.0,
-        actions: [NotificationIconBadge(), GoToSettingsButton()],
+        actions: [const NotificationIconBadge(), const GoToSettingsButton()],
       ),
       body: SingleChildScrollView(
         padding: padding,
@@ -371,38 +368,38 @@ class HomeScreen extends GetView<HomeController> {
               ),
             ),
             const SizedBox(height: 10),
-            GFTypography(
-              text: "Organiza tus proyectos y maximiza tu productividad.",
+            const GFTypography(
+              text: 'Organiza tus proyectos y maximiza tu productividad.',
               type: GFTypographyType.typo4,
               showDivider: false,
             ),
             const SizedBox(height: 30),
 
             _buildFeatureSection(
-              title: "Mis Proyectos",
+              title: 'Mis Proyectos',
               icon: Icons.folder_special_outlined,
               color: GFColors.PRIMARY,
               onTap: () {
-                Get.toNamed(AppRoutes.PROJECTS_LIST);
+                Get.toNamed<Object>(AppRoutes.PROJECTS_LIST);
               },
               isTV: false,
             ),
             const SizedBox(height: 15),
             _buildFeatureSection(
-              title: "Temporizador Pomodoro",
+              title: 'Temporizador Pomodoro',
               icon: Icons.timer_outlined,
               color: GFColors.WARNING,
               onTap: () {
-                Get.offAllNamed(AppRoutes.POMODORO_LIST);
+                Get.offAllNamed<Object>(AppRoutes.POMODORO_LIST);
               },
               isTV: false,
             ),
             _buildFeatureSection(
-              title: "Temporizador Pomodoro",
+              title: 'Temporizador Pomodoro',
               icon: Icons.timer_outlined,
               color: GFColors.WARNING,
               onTap: () {
-                Get.offAllNamed(AppRoutes.POMODORO_LIST_ANA);
+                Get.offAllNamed<Object>(AppRoutes.POMODORO_LIST_ANA);
               },
               isTV: false,
             ),

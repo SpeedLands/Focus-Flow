@@ -68,7 +68,7 @@ class TaskController extends GetxController {
         tasks.clear();
         currentProjectData.value = null;
         isLoadingTasks.value = false;
-        taskListError.value = "";
+        taskListError.value = '';
         pendingTaskModificationRequests.clear();
       }
     });
@@ -85,24 +85,24 @@ class TaskController extends GetxController {
 
   Future<void> _loadProjectDetailsAndBindTasks(String projectId) async {
     isLoadingTasks.value = true;
-    taskListError.value = "";
+    taskListError.value = '';
     try {
       currentProjectData.value = await _projectService.getProjectById(
         projectId,
       );
       if (currentProjectData.value == null) {
         taskListError.value =
-            "No se pudo cargar el proyecto o no tienes acceso.";
+            'No se pudo cargar el proyecto o no tienes acceso.';
         isLoadingTasks.value = false;
         tasks.clear();
         return;
       }
       _bindTasksStreamForProject(projectId);
       if (isCurrentUserAdminForCurrentProject) {
-        _fetchPendingTaskModificationRequests(projectId);
+        await _fetchPendingTaskModificationRequests(projectId);
       }
     } catch (e) {
-      taskListError.value = "Error cargando detalles del proyecto: $e";
+      taskListError.value = 'Error cargando detalles del proyecto: $e';
       isLoadingTasks.value = false;
       tasks.clear();
     }
@@ -125,7 +125,7 @@ class TaskController extends GetxController {
 
   void loadTasksForProject(String projectId) {
     if (projectId.isEmpty) {
-      taskListError.value = "ID de proyecto no válido.";
+      taskListError.value = 'ID de proyecto no válido.';
       currentProjectId.value = '';
       return;
     }
@@ -143,13 +143,13 @@ class TaskController extends GetxController {
     if (_authController.isAuthenticated.value &&
         currentProjectData.value != null) {
       tasks.bindStream(
-        _taskService.getTasksStream(projectId).handleError((error) {
+        _taskService.getTasksStream(projectId).handleError((Object error) {
           debugPrint(
-            "Error en stream de tareas para proyecto $projectId: $error",
+            'Error en stream de tareas para proyecto $projectId: $error',
           );
-          taskListError.value = "Error al cargar tareas: ${error.toString()}";
+          taskListError.value = 'Error al cargar tareas: ${error.toString()}';
           isLoadingTasks.value = false;
-          return Stream.value([]);
+          return Stream.value(<TaskModel>[]);
         }),
       );
       once(tasks, (_) {
@@ -164,7 +164,7 @@ class TaskController extends GetxController {
       isLoadingTasks.value = false;
       if (currentProjectData.value == null && projectId.isNotEmpty) {
       } else if (!_authController.isAuthenticated.value) {
-        taskListError.value = "Usuario no autenticado.";
+        taskListError.value = 'Usuario no autenticado.';
       }
     }
   }
@@ -174,19 +174,19 @@ class TaskController extends GetxController {
     final targetProjectName = projectName;
     if (targetProjectId.isEmpty) {
       Get.snackbar(
-        "Error",
-        "No se ha seleccionado un proyecto para añadir la tarea.",
+        'Error',
+        'No se ha seleccionado un proyecto para añadir la tarea.',
       );
       return;
     }
     if (!isCurrentUserMemberForCurrentProject &&
         currentProjectData.value?.id == targetProjectId) {
-      Get.snackbar("Permiso Denegado", "No eres miembro de este proyecto.");
+      Get.snackbar('Permiso Denegado', 'No eres miembro de este proyecto.');
       return;
     }
     currentEditingTask.value = null;
     _resetTaskFormFields();
-    Get.toNamed(
+    Get.toNamed<Object>(
       AppRoutes.TASK_FORM,
       arguments: {
         'projectId': targetProjectId,
@@ -201,7 +201,10 @@ class TaskController extends GetxController {
     taskDescriptionController.text = task.description ?? '';
     selectedPriority.value = task.priority;
     selectedDueDate.value = task.dueDate?.toDate();
-    Get.toNamed(AppRoutes.TASK_FORM, arguments: {'projectId': task.projectId});
+    Get.toNamed<Object>(
+      AppRoutes.TASK_FORM,
+      arguments: {'projectId': task.projectId},
+    );
   }
 
   void _resetTaskFormFields() {
@@ -220,21 +223,21 @@ class TaskController extends GetxController {
         currentEditingTask.value?.projectId ?? currentProjectId.value;
 
     if (editorId == null || projIdForSave.isEmpty) {
-      Get.snackbar("Error", "Usuario o proyecto no identificado.");
+      Get.snackbar('Error', 'Usuario o proyecto no identificado.');
       isSavingTask.value = false;
       return;
     }
 
     if (!isCurrentUserMemberForCurrentProject && !isEditingTask) {
       Get.snackbar(
-        "Permiso Denegado",
-        "No eres miembro de este proyecto para crear tareas.",
+        'Permiso Denegado',
+        'No eres miembro de este proyecto para crear tareas.',
       );
       isSavingTask.value = false;
       return;
     }
 
-    TaskModel taskData = TaskModel(
+    final TaskModel taskData = TaskModel(
       id: isEditingTask ? currentEditingTask.value!.id : null,
       projectId: projIdForSave,
       name: taskNameController.text.trim(),
@@ -260,37 +263,37 @@ class TaskController extends GetxController {
         if (!isCurrentUserAdminForCurrentProject) {
           await _createAndSendModificationRequest(
             taskOriginal: currentEditingTask.value!,
-            requestType: "edición",
+            requestType: 'edición',
             proposedChangesTaskModel: taskData,
           );
           Get.snackbar(
-            "Solicitud Enviada",
-            "Tu solicitud para editar la tarea ha sido enviada al administrador.",
+            'Solicitud Enviada',
+            'Tu solicitud para editar la tarea ha sido enviada al administrador.',
           );
         } else {
           await _taskService.updateTaskDetails(taskData);
-          Get.snackbar("Éxito", "Tarea actualizada.");
+          Get.snackbar('Éxito', 'Tarea actualizada.');
           await _sendTaskChangeNotification(
             projectId: projIdForSave,
-            action: "actualizada",
+            action: 'actualizada',
             taskName: taskData.name,
             taskId: taskData.id!,
           );
         }
       } else {
         final docRef = await _taskService.addTask(projIdForSave, taskData);
-        Get.snackbar("Éxito", "Tarea creada.");
+        Get.snackbar('Éxito', 'Tarea creada.');
         await _sendTaskChangeNotification(
           projectId: projIdForSave,
-          action: "creada",
+          action: 'creada',
           taskName: taskData.name,
-          taskId: docRef!,
+          taskId: docRef ?? '',
         );
       }
       _resetTaskFormFields();
-      Get.back();
+      Get.back<Object>();
     } catch (e) {
-      Get.snackbar("Error", "No se pudo guardar la tarea: ${e.toString()}");
+      Get.snackbar('Error', 'No se pudo guardar la tarea: ${e.toString()}');
     } finally {
       isSavingTask.value = false;
     }
@@ -309,7 +312,7 @@ class TaskController extends GetxController {
       'not_important_not_urgent': [],
     };
 
-    for (var task in pendingTasks) {
+    for (final task in pendingTasks) {
       // Solo clasificamos tareas pendientes
       final bool isImportant = task.priority == TaskPriority.alta;
       final bool isUrgent =
@@ -343,7 +346,7 @@ class TaskController extends GetxController {
           task.dueDate!.toDate().isBefore(limitDate),
     );
 
-    for (var task in tasksWithDueDate) {
+    for (final task in tasksWithDueDate) {
       final date = task.dueDate!.toDate();
       // Normalizamos la fecha a medianoche para agrupar por día
       final dayKey = DateTime(date.year, date.month, date.day);
@@ -355,14 +358,24 @@ class TaskController extends GetxController {
     return groupedTasks;
   }
 
+  // In TaskController.dart
+
   Map<String, List<TaskModel>> get tasksByMember {
     final Map<String, List<TaskModel>> groupedTasks = {};
-    for (var task in pendingTasks) {
+    for (final task in pendingTasks) {
+      // Asumimos que task.createdBy es un String no nulable.
       final memberId = task.createdBy;
-      if (groupedTasks[memberId] == null) {
-        groupedTasks[memberId] = [];
+
+      // Solo procesamos tareas con un creador asignado.
+      if (memberId.isNotEmpty) {
+        // Si la clave para este miembro aún no existe en el mapa,
+        // la inicializamos con una lista vacía.
+        // El método .putIfAbsent es una forma elegante de hacer esto.
+        groupedTasks.putIfAbsent(memberId, () => []);
+
+        // Añadimos la tarea a la lista de ese miembro UNA SOLA VEZ.
+        groupedTasks[memberId]!.add(task);
       }
-      groupedTasks[memberId]!.add(task);
     }
     return groupedTasks;
   }
@@ -371,53 +384,53 @@ class TaskController extends GetxController {
     // Si el usuario es el admin del proyecto actual
     // Busca en la lista de miembros
     if (currentProjectData.value != null) {
-      for (var role in currentProjectData.value!.userRoles) {
+      for (final role in currentProjectData.value!.userRoles) {
         if (role.startsWith('$userId:')) {
           return role.split(':')[1]; // Retorna el nombre del miembro
         }
       }
     }
     // Fallback: si no se encuentra, retorna un identificador
-    return 'Miembro ($userId.substring(0, 6))';
+    return 'Miembro (${userId.length > 6 ? userId.substring(0, 6) : userId})';
   }
 
   Future<void> deleteTask(TaskModel task) async {
-    Get.defaultDialog(
+    await Get.defaultDialog<void>(
       title: isCurrentUserAdminForCurrentProject
-          ? "Confirmar Eliminación"
-          : "Solicitar Eliminación",
+          ? 'Confirmar Eliminación'
+          : 'Solicitar Eliminación',
       middleText: isCurrentUserAdminForCurrentProject
-          ? "¿Estás seguro de que quieres eliminar esta tarea?"
-          : "¿Estás seguro de que quieres solicitar la eliminación de esta tarea? El administrador del proyecto deberá aprobarlo.",
+          ? '¿Estás seguro de que quieres eliminar esta tarea?'
+          : '¿Estás seguro de que quieres solicitar la eliminación de esta tarea? El administrador del proyecto deberá aprobarlo.',
       textConfirm: isCurrentUserAdminForCurrentProject
-          ? "Sí, eliminar"
-          : "Sí, solicitar",
-      textCancel: "Cancelar",
+          ? 'Sí, eliminar'
+          : 'Sí, solicitar',
+      textCancel: 'Cancelar',
       onConfirm: () async {
-        Get.back();
+        Get.back<Object>();
         if (!isCurrentUserAdminForCurrentProject) {
           await _createAndSendModificationRequest(
             taskOriginal: task,
-            requestType: "eliminación",
+            requestType: 'eliminación',
           );
           Get.snackbar(
-            "Solicitud Enviada",
-            "Tu solicitud para eliminar la tarea ha sido enviada al administrador.",
+            'Solicitud Enviada',
+            'Tu solicitud para eliminar la tarea ha sido enviada al administrador.',
           );
         } else {
           try {
             await _taskService.deleteTask(task.projectId, task.id!);
-            Get.snackbar("Éxito", "Tarea eliminada.");
+            Get.snackbar('Éxito', 'Tarea eliminada.');
             await _sendTaskChangeNotification(
               projectId: task.projectId,
-              action: "eliminada",
+              action: 'eliminada',
               taskName: task.name,
               taskId: task.id!,
             );
           } catch (e) {
             Get.snackbar(
-              "Error",
-              "No se pudo eliminar la tarea: ${e.toString()}",
+              'Error',
+              'No se pudo eliminar la tarea: ${e.toString()}',
             );
           }
         }
@@ -435,27 +448,27 @@ class TaskController extends GetxController {
 
     if (project == null || requester == null) {
       Get.snackbar(
-        "Error",
-        "No se pudo procesar la solicitud. Faltan datos del proyecto o usuario.",
+        'Error',
+        'No se pudo procesar la solicitud. Faltan datos del proyecto o usuario.',
       );
       debugPrint(
-        "Error en _createAndSendModificationRequest: proyecto, adminId o requester es null.",
+        'Error en _createAndSendModificationRequest: proyecto, adminId o requester es null.',
       );
       return;
     }
 
     if (requester.uid == project.adminUserId) {
       debugPrint(
-        "_createAndSendModificationRequest: El solicitante es el admin, no se crea solicitud.",
+        '_createAndSendModificationRequest: El solicitante es el admin, no se crea solicitud.',
       );
       return;
     }
 
-    final String title = "Solicitud de $requestType de tarea";
+    final String title = 'Solicitud de $requestType de tarea';
     final String body =
         "${requester.name ?? requester.email} solicita la $requestType de la tarea '${taskOriginal.name}' en el proyecto '${project.name}'.";
 
-    Map<String, dynamic> notificationData = {
+    final Map<String, dynamic> notificationData = {
       'projectId': project.id,
       'projectName': project.name,
       'taskId': taskOriginal.id!,
@@ -465,7 +478,7 @@ class TaskController extends GetxController {
       'requestType': requestType,
     };
 
-    if (requestType == "edición" && proposedChangesTaskModel != null) {
+    if (requestType == 'edición' && proposedChangesTaskModel != null) {
       notificationData['proposedChanges'] = proposedChangesTaskModel.toJson();
     }
 
@@ -481,7 +494,7 @@ class TaskController extends GetxController {
 
     final currentUserId = _authController.currentUser.value?.uid;
 
-    for (String roleEntry in project.userRoles) {
+    for (final String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
         await _notificationProvider.saveNotification(
@@ -501,37 +514,37 @@ class TaskController extends GetxController {
 
     try {
       debugPrint(
-        "AppNotification de solicitud de $requestType guardada para admin ${project.adminUserId}",
+        'AppNotification de solicitud de $requestType guardada para admin ${project.adminUserId}',
       );
 
-      List<String>? adminTokens = await _notificationProvider.getUserTokensById(
-        project.adminUserId,
-      );
+      final List<String>? adminTokens = await _notificationProvider
+          .getUserTokensById(project.adminUserId);
       if (adminTokens != null && adminTokens.isNotEmpty) {
-        Map<String, String> pushDataPayload = {
+        final Map<String, String> pushDataPayload = {
           'type': 'new_task_modification_request',
-          'projectId': ?project.id,
+          'projectId': project.id ?? '',
           'screen': AppRoutes.NOTIFICATIONS_LIST,
           'title': title,
           'body': body,
         };
-        for (String token in adminTokens) {
+        for (final String token in adminTokens) {
           await _notificationProvider.sendNotificationToToken(
             token: token,
             title: title,
-            body: "Tienes una nueva solicitud de tarea para revisar.",
+            body: 'Tienes una nueva solicitud de tarea para revisar.',
             data: pushDataPayload,
           );
         }
-        debugPrint("Push notification de solicitud enviada al admin.");
+        debugPrint('Push notification de solicitud enviada al admin.');
       }
     } catch (e) {
-      debugPrint("Error al enviar solicitud de modificación: $e");
-      Get.snackbar("Error", "No se pudo enviar la solicitud al administrador.");
+      debugPrint('Error al enviar solicitud de modificación: $e');
+      Get.snackbar('Error', 'No se pudo enviar la solicitud al administrador.');
     }
   }
 
-  StreamSubscription? _pendingRequestsSubscription;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+  _pendingRequestsSubscription;
   Future<void> _fetchPendingTaskModificationRequests(String projectId) async {
     if (!isCurrentUserAdminForCurrentProject) {
       pendingTaskModificationRequests.clear();
@@ -563,8 +576,8 @@ class TaskController extends GetxController {
                 .toList();
             isLoadingRequests.value = false;
           },
-          onError: (error) {
-            debugPrint("Error al cargar solicitudes pendientes: $error");
+          onError: (Object error) {
+            debugPrint('Error al cargar solicitudes pendientes: $error');
             pendingTaskModificationRequests.clear();
             isLoadingRequests.value = false;
           },
@@ -581,48 +594,61 @@ class TaskController extends GetxController {
     AppNotificationModel request,
   ) async {
     if (!isCurrentUserAdminForCurrentProject || request.data == null) {
-      Get.snackbar("Error", "No tienes permiso o la solicitud es inválida.");
+      Get.snackbar('Error', 'No tienes permiso o la solicitud es inválida.');
       return;
     }
 
     final requestData = request.data!;
-    final String taskId = requestData['taskId'];
-    final String taskName = requestData['taskName'];
-    final String projectId = requestData['projectId'];
-    final String requestType = requestData['requestType'];
-    final String requesterId = requestData['requesterId'];
+    final String? taskId = requestData['taskId'] as String?;
+    final String? taskName = requestData['taskName'] as String?;
+    final String? projectId = requestData['projectId'] as String?;
+    final String? requestType = requestData['requestType'] as String?;
+    final String? requesterId = requestData['requesterId'] as String?;
+    final String? projectName = requestData['projectName'] as String?;
+
+    if (taskId == null ||
+        taskName == null ||
+        projectId == null ||
+        requestType == null ||
+        requesterId == null) {
+      Get.snackbar('Error', 'Datos de solicitud incompletos.');
+      return;
+    }
 
     try {
-      if (requestType == "edición") {
-        if (requestData['proposedChanges'] == null) {
+      if (requestType == 'edición') {
+        final proposedChangesData = requestData['proposedChanges'];
+        if (proposedChangesData == null || proposedChangesData is! Map) {
+          // Comprobación de tipo
           Get.snackbar(
-            "Error",
-            "No se encontraron los cambios propuestos para la edición.",
+            'Error',
+            'No se encontraron los cambios propuestos para la edición.',
           );
           return;
         }
         final TaskModel updatedTask = TaskModel.fromJson(
-          Map<String, dynamic>.from(requestData['proposedChanges']),
+          Map<String, dynamic>.from(proposedChangesData),
         );
+
         await _taskService.updateTaskDetails(updatedTask);
-        Get.snackbar("Éxito", "Tarea '$taskName' actualizada según solicitud.");
+        Get.snackbar('Éxito', "Tarea '$taskName' actualizada según solicitud.");
 
         await _sendTaskChangeNotification(
           projectId: projectId,
-          action: "actualizada_por_solicitud",
+          action: 'actualizada_por_solicitud',
           taskName: updatedTask.name,
           taskId: taskId,
-          details: "Aprobada por el admin.",
+          details: 'Aprobada por el admin.',
         );
-      } else if (requestType == "eliminación") {
+      } else if (requestType == 'eliminación') {
         await _taskService.deleteTask(projectId, taskId);
-        Get.snackbar("Éxito", "Tarea '$taskName' eliminada según solicitud.");
+        Get.snackbar('Éxito', "Tarea '$taskName' eliminada según solicitud.");
         await _sendTaskChangeNotification(
           projectId: projectId,
-          action: "eliminada_por_solicitud",
+          action: 'eliminada_por_solicitud',
           taskName: taskName,
           taskId: taskId,
-          details: "Aprobada por el admin.",
+          details: 'Aprobada por el admin.',
         );
       }
 
@@ -631,17 +657,17 @@ class TaskController extends GetxController {
       await _sendApprovalRejectionNotificationToRequester(
         requesterId: requesterId,
         taskName: taskName,
-        projectName: requestData['projectName'],
+        projectName: projectName ?? '',
         requestType: requestType,
         isApproved: true,
       );
-      _fetchPendingTaskModificationRequests(projectId);
+      await _fetchPendingTaskModificationRequests(projectId);
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo procesar la solicitud: ${e.toString()}",
+        'Error',
+        'No se pudo procesar la solicitud: ${e.toString()}',
       );
-      debugPrint("Error aprobando solicitud ${request.id}: $e");
+      debugPrint('Error aprobando solicitud ${request.id}: $e');
     }
   }
 
@@ -649,34 +675,43 @@ class TaskController extends GetxController {
     AppNotificationModel request,
   ) async {
     if (!isCurrentUserAdminForCurrentProject || request.data == null) {
-      Get.snackbar("Error", "No tienes permiso o la solicitud es inválida.");
+      Get.snackbar('Error', 'No tienes permiso o la solicitud es inválida.');
       return;
     }
     final requestData = request.data!;
-    final String taskName = requestData['taskName'];
-    final String projectId = requestData['projectId'];
-    final String requesterId = requestData['requesterId'];
-    final String requestType = requestData['requestType'];
+    final String? taskName = requestData['taskName'] as String?;
+    final String? projectId = requestData['projectId'] as String?;
+    final String? requesterId = requestData['requesterId'] as String?;
+    final String? requestType = requestData['requestType'] as String?;
+    final String? projectName = requestData['projectName'] as String?;
+
+    if (taskName == null ||
+        projectId == null ||
+        requesterId == null ||
+        requestType == null) {
+      Get.snackbar('Error', 'Datos de solicitud incompletos.');
+      return;
+    }
 
     try {
       await _notificationController.markAsRead(request.id!);
 
       Get.snackbar(
-        "Solicitud Rechazada",
+        'Solicitud Rechazada',
         "La solicitud para '$taskName' ha sido rechazada.",
       );
 
       await _sendApprovalRejectionNotificationToRequester(
         requesterId: requesterId,
         taskName: taskName,
-        projectName: requestData['projectName'],
+        projectName: projectName ?? '',
         requestType: requestType,
         isApproved: false,
       );
-      _fetchPendingTaskModificationRequests(projectId);
+      await _fetchPendingTaskModificationRequests(projectId);
     } catch (e) {
-      Get.snackbar("Error", "No se pudo procesar el rechazo: ${e.toString()}");
-      debugPrint("Error rechazando solicitud ${request.id}: $e");
+      Get.snackbar('Error', 'No se pudo procesar el rechazo: ${e.toString()}');
+      debugPrint('Error rechazando solicitud ${request.id}: $e');
     }
   }
 
@@ -688,9 +723,9 @@ class TaskController extends GetxController {
     required bool isApproved,
   }) async {
     final String title = isApproved
-        ? "Solicitud Aprobada"
-        : "Solicitud Rechazada";
-    final String decision = isApproved ? "aprobada" : "rechazada";
+        ? 'Solicitud Aprobada'
+        : 'Solicitud Rechazada';
+    final String decision = isApproved ? 'aprobada' : 'rechazada';
     final String body =
         "Tu solicitud de $requestType para la tarea '$taskName' en el proyecto '$projectName' ha sido $decision por el administrador.";
 
@@ -713,16 +748,16 @@ class TaskController extends GetxController {
       notification: feedbackNotification,
     );
 
-    List<String>? requesterTokens = await _notificationProvider
+    final List<String>? requesterTokens = await _notificationProvider
         .getUserTokensById(requesterId);
     if (requesterTokens != null && requesterTokens.isNotEmpty) {
-      Map<String, String> pushDataPayload = {
+      final Map<String, String> pushDataPayload = {
         'type': isApproved ? 'task_request_approved' : 'task_request_rejected',
         'title': title,
         'body': body,
       };
-      for (String token in requesterTokens) {
-        _notificationProvider.sendNotificationToToken(
+      for (final String token in requesterTokens) {
+        await _notificationProvider.sendNotificationToToken(
           token: token,
           title: title,
           body: body,
@@ -734,10 +769,10 @@ class TaskController extends GetxController {
 
   Future<void> toggleTaskCompletion(TaskModel task) async {
     if (!isCurrentUserMemberForCurrentProject) {
-      Get.snackbar("Permiso Denegado", "No eres miembro de este proyecto.");
+      Get.snackbar('Permiso Denegado', 'No eres miembro de este proyecto.');
       return;
     }
-    bool newCompletionStatus = !task.isCompleted;
+    final bool newCompletionStatus = !task.isCompleted;
     try {
       await _taskService.toggleTaskCompletion(
         task.projectId,
@@ -749,14 +784,14 @@ class TaskController extends GetxController {
       } else {
         await _sendTaskChangeNotification(
           projectId: task.projectId,
-          action: "marcada_como_pendiente",
+          action: 'marcada_como_pendiente',
           taskName: task.name,
           taskId: task.id!,
-          details: "Ahora está marcada como pendiente ⏳.",
+          details: 'Ahora está marcada como pendiente ⏳.',
         );
       }
     } catch (e) {
-      Get.snackbar("Error", "No se pudo actualizar el estado: ${e.toString()}");
+      Get.snackbar('Error', 'No se pudo actualizar el estado: ${e.toString()}');
     }
   }
 
@@ -766,7 +801,7 @@ class TaskController extends GetxController {
       project = await _projectService.getProjectById(task.projectId);
       if (project == null) {
         debugPrint(
-          "No se pudo obtener el proyecto para enviar notificación de tarea completada.",
+          'No se pudo obtener el proyecto para enviar notificación de tarea completada.',
         );
         return;
       }
@@ -776,11 +811,11 @@ class TaskController extends GetxController {
     final userName =
         _authController.currentUser.value?.name ??
         _authController.currentUser.value?.email ??
-        "Alguien";
-    String title = "¡Tarea Completada en '${project.name}'! 🎉";
-    String body = "$userName ha completado la tarea: '${task.name}'.";
+        'Alguien';
+    final String title = "¡Tarea Completada en '${project.name}'! 🎉";
+    final String body = "$userName ha completado la tarea: '${task.name}'.";
 
-    List<String> targetTokens =
+    final List<String> targetTokens =
         await _getProjectMemberTokensExcludingCurrentUser(
           project,
           currentUserId,
@@ -806,7 +841,7 @@ class TaskController extends GetxController {
       routeToNavigate: AppRoutes.TASKS_LIST,
     );
 
-    for (String roleEntry in project.userRoles) {
+    for (final String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
         await _notificationProvider.saveNotification(
@@ -824,7 +859,7 @@ class TaskController extends GetxController {
     }
 
     if (targetTokens.isNotEmpty) {
-      Map<String, String> notificationDataPayload = {
+      final Map<String, String> notificationDataPayload = {
         'type': 'task_completed',
         'projectId': task.projectId,
         'projectName': project.name,
@@ -833,7 +868,7 @@ class TaskController extends GetxController {
         'title': title,
         'body': body,
       };
-      for (String token in targetTokens) {
+      for (final String token in targetTokens) {
         await _notificationProvider.sendNotificationToToken(
           token: token,
           title: title,
@@ -848,17 +883,16 @@ class TaskController extends GetxController {
     ProjectModel project,
     String? currentUserId,
   ) async {
-    List<String> targetTokens = [];
+    final List<String> targetTokens = [];
     if (project.adminUserId != currentUserId) {
-      List<String>? adminTokens = await _notificationProvider.getUserTokensById(
-        project.adminUserId,
-      );
+      final List<String>? adminTokens = await _notificationProvider
+          .getUserTokensById(project.adminUserId);
       if (adminTokens != null) targetTokens.addAll(adminTokens);
     }
-    for (String roleEntry in project.userRoles) {
+    for (final String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId && memberId != project.adminUserId) {
-        List<String>? memberTokens = await _notificationProvider
+        final List<String>? memberTokens = await _notificationProvider
             .getUserTokensById(memberId);
         if (memberTokens != null) targetTokens.addAll(memberTokens);
       }
@@ -878,7 +912,7 @@ class TaskController extends GetxController {
       project = await _projectService.getProjectById(projectId);
       if (project == null) {
         debugPrint(
-          "No se pudo obtener el proyecto para enviar notificaciones de tarea.",
+          'No se pudo obtener el proyecto para enviar notificaciones de tarea.',
         );
         return;
       }
@@ -888,44 +922,44 @@ class TaskController extends GetxController {
     final userName =
         _authController.currentUser.value?.name ??
         _authController.currentUser.value?.email ??
-        "Alguien";
-    String title = "";
-    String body = "";
+        'Alguien';
+    String title = '';
+    String body = '';
 
     switch (action) {
-      case "creada":
+      case 'creada':
         title = "Nueva Tarea en '${project.name}' ✨";
         body = "$userName ha creado la tarea: '$taskName'.";
         break;
-      case "actualizada":
+      case 'actualizada':
         title = "Tarea Actualizada en '${project.name}' 🔄";
         body = "$userName ha actualizado la tarea: '$taskName'.";
         break;
-      case "eliminada":
+      case 'eliminada':
         title = "Tarea Eliminada de '${project.name}' 🗑️";
         body = "$userName ha eliminado la tarea: '$taskName'.";
         break;
-      case "marcada_como_pendiente":
+      case 'marcada_como_pendiente':
         title = "Estado de Tarea en '${project.name}'";
         body = "$userName actualizó la tarea '$taskName'.";
         break;
-      case "actualizada_por_solicitud":
+      case 'actualizada_por_solicitud':
         title = "Tarea Actualizada en '${project.name}'";
         body =
             "La tarea '$taskName' fue actualizada (solicitud aprobada por admin).";
         break;
-      case "eliminada_por_solicitud":
+      case 'eliminada_por_solicitud':
         title = "Tarea Eliminada de '${project.name}'";
         body =
             "La tarea '$taskName' fue eliminada (solicitud aprobada por admin).";
         break;
       default:
-        debugPrint("Acción de notificación de tarea desconocida: $action");
+        debugPrint('Acción de notificación de tarea desconocida: $action');
         return;
     }
-    if (details != null) body += " $details";
+    if (details != null) body += ' $details';
 
-    List<String> targetTokens =
+    final List<String> targetTokens =
         await _getProjectMemberTokensExcludingCurrentUser(
           project,
           currentUserId,
@@ -940,7 +974,7 @@ class TaskController extends GetxController {
       routeToNavigate: AppRoutes.TASKS_LIST,
     );
 
-    for (String roleEntry in project.userRoles) {
+    for (final String roleEntry in project.userRoles) {
       final memberId = roleEntry.split(':')[0];
       if (memberId != currentUserId) {
         await _notificationProvider.saveNotification(
@@ -964,7 +998,7 @@ class TaskController extends GetxController {
       return;
     }
 
-    Map<String, String> notificationDataPayload = {
+    final Map<String, String> notificationDataPayload = {
       'type': 'task_event',
       'projectId': projectId,
       'projectName': project.name,
@@ -976,7 +1010,7 @@ class TaskController extends GetxController {
     };
     if (taskId.isNotEmpty) notificationDataPayload['taskId'] = taskId;
 
-    for (String token in targetTokens) {
+    for (final String token in targetTokens) {
       await _notificationProvider.sendNotificationToToken(
         token: token,
         title: title,

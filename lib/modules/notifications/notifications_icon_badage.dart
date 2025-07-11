@@ -14,15 +14,15 @@ class NotificationIconBadge extends StatelessWidget {
       notificationController = Get.find<NotificationController>();
     } catch (e) {
       debugPrint(
-        "NotificationIconBadge: NotificationController no encontrado.",
+        'NotificationIconBadge: NotificationController no encontrado.',
       );
 
       return GFIconButton(
         icon: const Icon(Icons.notifications_off_outlined, color: Colors.grey),
         onPressed: () {
-          Get.snackbar("Error", "Controlador de notificaciones no disponible.");
+          Get.snackbar('Error', 'Controlador de notificaciones no disponible.');
         },
-        tooltip: "Notificaciones (Error de controlador)",
+        tooltip: 'Notificaciones (Error de controlador)',
         type: GFButtonType.transparent,
       );
     }
@@ -30,10 +30,11 @@ class NotificationIconBadge extends StatelessWidget {
     final iconColor = IconTheme.of(context).color;
 
     return Obx(() {
-      int unreadCount = notificationController.unreadNotificationCount.value;
+      final int unreadCount =
+          notificationController.unreadNotificationCount.value;
 
       return GFIconBadge(
-        position: GFBadgePosition(top: 5, end: 5),
+        position: const GFBadgePosition(top: 5, end: 5),
         counterChild: unreadCount > 0
             ? GFBadge(
                 color: Colors.redAccent,
@@ -49,10 +50,10 @@ class NotificationIconBadge extends StatelessWidget {
             : const SizedBox.shrink(),
         child: GFIconButton(
           onPressed: () {
-            Get.toNamed(AppRoutes.NOTIFICATIONS_LIST);
+            Get.toNamed<Object>(AppRoutes.NOTIFICATIONS_LIST);
           },
           icon: Icon(Icons.notifications_outlined, color: iconColor),
-          tooltip: "Notificaciones",
+          tooltip: 'Notificaciones',
           type: GFButtonType.transparent,
         ),
       );

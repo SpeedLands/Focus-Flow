@@ -87,7 +87,7 @@ class HttpService {
           'priority': 'high',
           'notification': {
             'sound': 'default',
-            "icon": "ic_stat_notification",
+            'icon': 'ic_stat_notification',
             'channel_id': 'high_importance_channel',
           },
         },

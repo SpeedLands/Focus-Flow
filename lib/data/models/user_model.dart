@@ -16,15 +16,37 @@ class UserData {
   });
 
   factory UserData.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    // Es una buena práctica castear el DocumentSnapshot al tipo correcto si es posible
+    final data = doc.data() as Map<String, dynamic>?;
+
+    // Guarda de seguridad
+    if (data == null) {
+      throw StateError('El documento de usuario ${doc.id} no tiene datos.');
+    }
+
+    // Lógica segura para las listas
+    final fcmTokensList = (data['fcmTokens'] is List)
+        ? List<String>.from((data['fcmTokens'] as List).whereType<String>())
+        : <String>[]; // Devuelve una lista vacía si el campo no es una lista
+
+    final invitedProjectIdsList = (data['invitedProjectIds'] is List)
+        ? List<String>.from(
+            (data['invitedProjectIds'] as List).whereType<String>(),
+          )
+        : null; // Devuelve null si el campo no es una lista, lo cual es válido
+
     return UserData(
       uid: doc.id,
-      email: data['email'] ?? '',
-      name: data['name'],
-      fcmTokens: List<String>.from(data['fcmTokens'] ?? []),
-      invitedProjectIds: data['invitedProjectIds'] != null
-          ? List<String>.from(data['invitedProjectIds'])
-          : null,
+
+      // Campo String requerido
+      email: (data['email'] as String?) ?? '',
+
+      // Campo String nulable
+      name: data['name'] as String?,
+
+      // Listas manejadas de forma segura arriba
+      fcmTokens: fcmTokensList,
+      invitedProjectIds: invitedProjectIdsList,
     );
   }
 

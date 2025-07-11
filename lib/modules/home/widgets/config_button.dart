@@ -10,9 +10,9 @@ class GoToSettingsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GFIconButton(
       icon: const Icon(Icons.settings_outlined),
-      tooltip: "Configuración de Usuario",
+      tooltip: 'Configuración de Usuario',
       onPressed: () {
-        Get.toNamed(AppRoutes.USER_SETTINGS);
+        Get.toNamed<Object>(AppRoutes.USER_SETTINGS);
       },
     );
   }

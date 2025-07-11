@@ -21,9 +21,9 @@ class HomeController extends GetxController {
 
   String get greeting {
     if (userData.value != null && userData.value!.name!.isNotEmpty) {
-      return "¡Hola, ${userData.value!.name}!";
+      return '¡Hola, ${userData.value!.name}!';
     }
-    return "¡Bienvenido a FocusFlow!";
+    return '¡Bienvenido a FocusFlow!';
   }
 
   void logout() {
@@ -50,7 +50,7 @@ class HomeController extends GetxController {
     } else {
       deviceType.value = DeviceType.mobile;
     }
-    debugPrint("Detected device type: ${deviceType.value}");
+    debugPrint('Detected device type: ${deviceType.value}');
   }
 }
 

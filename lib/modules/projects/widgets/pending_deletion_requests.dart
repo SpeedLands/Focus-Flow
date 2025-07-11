@@ -34,10 +34,10 @@ class PendingDeletionRequests extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+            const Padding(
+              padding: EdgeInsets.only(left: 8.0, bottom: 4.0),
               child: Text(
-                "Solicitudes de Eliminación Pendientes",
+                'Solicitudes de Eliminación Pendientes',
                 style: TextStyle(
                   color: GFColors.DARK,
                   fontWeight: FontWeight.bold,
@@ -62,21 +62,21 @@ class PendingDeletionRequests extends StatelessWidget {
                 return GFCard(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   title: GFListTile(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.warning_amber_rounded,
                       color: GFColors.DANGER,
                     ),
                     title: Text(
                       "Eliminar: '$projectName'",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subTitle: Text(
                       "Solicitado por: $requesterName\nEmail: ${requestData['requesterEmail'] ?? 'N/A'}",
                     ),
                     firstButtonTitle: 'Aprobar Eliminacion',
-                    firstButtonTextStyle: TextStyle(),
+                    firstButtonTextStyle: const TextStyle(),
                     secondButtonTitle: 'Rechazar Eliminacion',
-                    secondButtonTextStyle: TextStyle(),
+                    secondButtonTextStyle: const TextStyle(),
                     onFirstButtonTap: () =>
                         controller.approveProjectDeletionRequest(request),
                     onSecondButtonTap: () =>

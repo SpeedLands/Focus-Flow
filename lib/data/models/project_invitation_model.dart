@@ -24,18 +24,35 @@ class ProjectInvitationModel {
   factory ProjectInvitationModel.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
   ) {
-    final data = snapshot.data()!;
+    final data = snapshot.data();
+
+    // Guarda de seguridad por si el documento no tiene datos.
+    if (data == null) {
+      throw StateError(
+        'El documento de invitación ${snapshot.id} no tiene datos.',
+      );
+    }
+
     return ProjectInvitationModel(
       id: snapshot.id,
-      projectId: data['projectId'] ?? '',
-      projectName: data['projectName'] ?? 'Proyecto Desconocido',
-      invitedUserEmail: data['invitedUserEmail'] ?? '',
-      invitedByUserId: data['invitedByUserId'] ?? '',
+
+      // Para los campos String requeridos
+      projectId: (data['projectId'] as String?) ?? '',
+      projectName: (data['projectName'] as String?) ?? 'Proyecto Desconocido',
+      invitedUserEmail: (data['invitedUserEmail'] as String?) ?? '',
+      invitedByUserId: (data['invitedByUserId'] as String?) ?? '',
+
+      // Para el Enum
       status: InvitationStatus.values.firstWhere(
-        (e) => e.toString() == data['status'],
-        orElse: () => InvitationStatus.pending,
+        (e) =>
+            e.toString() ==
+            (data['status'] as String?), // Cast a String nulable
+        orElse: () => InvitationStatus
+            .pending, // Valor por defecto si no se encuentra o es null
       ),
-      createdAt: data['createdAt'] ?? Timestamp.now(),
+
+      // Para el Timestamp
+      createdAt: (data['createdAt'] as Timestamp?) ?? Timestamp.now(),
     );
   }
 

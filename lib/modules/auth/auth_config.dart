@@ -23,11 +23,11 @@ class UserSettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: GFAppBar(
-        title: const Text("Configuración de Perfil"),
+        title: const Text('Configuración de Perfil'),
         backgroundColor: GFColors.PRIMARY,
         leading: GFIconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.offAllNamed(AppRoutes.HOME),
+          onPressed: () => Get.offAllNamed<Object>(AppRoutes.HOME),
         ),
       ),
       body: Obx(() {
@@ -42,7 +42,7 @@ class UserSettingsScreen extends StatelessWidget {
             child: ListView(
               children: [
                 Text(
-                  "Email: ${authController.currentUser.value!.email}",
+                  'Email: ${authController.currentUser.value!.email}',
                   style: Get.textTheme.titleMedium?.copyWith(
                     color: Colors.grey[700],
                   ),
@@ -51,8 +51,8 @@ class UserSettingsScreen extends StatelessWidget {
                 TextFormField(
                   controller: authController.editNameController,
                   decoration: InputDecoration(
-                    labelText: "Nombre para mostrar",
-                    hintText: "Ingresa tu nuevo nombre",
+                    labelText: 'Nombre para mostrar',
+                    hintText: 'Ingresa tu nuevo nombre',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.person_outline),
                     suffixIcon:
@@ -66,14 +66,14 @@ class UserSettingsScreen extends StatelessWidget {
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return "El nombre no puede estar vacío.";
+                      return 'El nombre no puede estar vacío.';
                     }
                     if (value.trim() ==
                         authController.currentUser.value!.name) {
-                      return "El nuevo nombre es igual al actual.";
+                      return 'El nuevo nombre es igual al actual.';
                     }
                     if (value.trim().length < 3) {
-                      return "El nombre debe tener al menos 3 caracteres.";
+                      return 'El nombre debe tener al menos 3 caracteres.';
                     }
                     return null;
                   },
@@ -92,8 +92,8 @@ class UserSettingsScreen extends StatelessWidget {
                             }
                           },
                     text: authController.isProfileUpdating.value
-                        ? "Guardando..."
-                        : "Guardar Nombre",
+                        ? 'Guardando...'
+                        : 'Guardar Nombre',
                     icon: authController.isProfileUpdating.value
                         ? const GFLoader(
                             type: GFLoaderType.circle,
@@ -119,20 +119,20 @@ class UserSettingsScreen extends StatelessWidget {
 
                 GFButton(
                   onPressed: () async {
-                    Get.defaultDialog(
-                      title: "Confirmar Cierre de Sesión",
-                      middleText: "¿Estás seguro de que quieres cerrar sesión?",
-                      textConfirm: "Sí, cerrar",
-                      textCancel: "Cancelar",
+                    await Get.defaultDialog<void>(
+                      title: 'Confirmar Cierre de Sesión',
+                      middleText: '¿Estás seguro de que quieres cerrar sesión?',
+                      textConfirm: 'Sí, cerrar',
+                      textCancel: 'Cancelar',
                       confirmTextColor: Colors.white,
                       onConfirm: () async {
-                        Get.back();
+                        Get.back<Object>();
                         await authController.logout();
                       },
                     );
                   },
-                  text: "Cerrar Sesión",
-                  icon: Icon(Icons.logout, color: GFColors.WHITE),
+                  text: 'Cerrar Sesión',
+                  icon: const Icon(Icons.logout, color: GFColors.WHITE),
                   type: GFButtonType.solid,
                   color: GFColors.DANGER,
                 ),

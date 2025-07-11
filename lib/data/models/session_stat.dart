@@ -1,4 +1,3 @@
-// TODO Implement this library.
 class SessionStat {
   DateTime start;
   int workedMinutes;

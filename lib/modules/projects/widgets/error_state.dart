@@ -25,7 +25,7 @@ class ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 15),
             Text(
-              "Error al Cargar",
+              'Error al Cargar',
               style: Get.textTheme.headlineSmall?.copyWith(color: titleColor),
               textAlign: TextAlign.center,
             ),
@@ -38,7 +38,7 @@ class ErrorState extends StatelessWidget {
             const SizedBox(height: 25),
             GFButton(
               onPressed: controller.reloadProjects,
-              text: "Reintentar",
+              text: 'Reintentar',
               icon: const Icon(Icons.refresh, color: Colors.white),
               type: isTV ? GFButtonType.outline2x : GFButtonType.solid,
               textColor: isTV ? Colors.white : null,

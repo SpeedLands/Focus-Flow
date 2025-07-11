@@ -41,20 +41,45 @@ class AppNotificationModel {
   factory AppNotificationModel.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
   ) {
-    final d = snapshot.data()!;
+    final d = snapshot.data();
+
+    // Es una buena práctica verificar si el documento tiene datos antes de proceder.
+    if (d == null) {
+      // Puedes lanzar una excepción o devolver un objeto por defecto si el documento está vacío.
+      // Lanzar una excepción suele ser mejor para detectar problemas en los datos.
+      throw StateError(
+        'El documento de notificación ${snapshot.id} no tiene datos.',
+      );
+    }
+
     return AppNotificationModel(
       id: snapshot.id,
-      title: d['title'] ?? 'Notificación',
-      body: d['body'] ?? '',
+
+      // Para Strings: Haz un cast a String nulable y luego proporciona un valor por defecto.
+      title: (d['title'] as String?) ?? 'Notificación',
+      body: (d['body'] as String?) ?? '',
+
+      // Para el Enum: La lógica actual es buena, pero podemos hacer el cast más explícito.
       type: AppNotificationType.values.firstWhere(
-        (e) => e.toString() == d['type'],
+        (e) => e.toString() == (d['type'] as String?), // Cast a String nulable
         orElse: () => AppNotificationType.generic,
       ),
-      data: d['data'] != null ? Map<String, dynamic>.from(d['data']) : null,
-      isRead: d['isRead'] ?? false,
-      createdAt: d['createdAt'] ?? Timestamp.now(),
-      iconName: d['iconName'],
-      routeToNavigate: d['routeToNavigate'],
+
+      // Para el Map anidado: Tu lógica es correcta, pero podemos añadir el cast.
+      data: d['data'] != null
+          ? Map<String, dynamic>.from(d['data'] as Map)
+          : null,
+
+      // Para Bools:
+      isRead: (d['isRead'] as bool?) ?? false,
+
+      // Para Timestamps:
+      createdAt: (d['createdAt'] as Timestamp?) ?? Timestamp.now(),
+
+      // Para campos que pueden ser nulos y quieres que sigan siéndolo:
+      // Simplemente haz un cast al tipo nulable.
+      iconName: d['iconName'] as String?,
+      routeToNavigate: d['routeToNavigate'] as String?,
     );
   }
 

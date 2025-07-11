@@ -21,21 +21,21 @@ class NotificationController extends GetxController {
 
   @override
   void onInit() {
-    debugPrint("[GETX_CONTROLLER] NotificationController - onInit() CALLED");
+    debugPrint('[GETX_CONTROLLER] NotificationController - onInit() CALLED');
     super.onInit();
 
     _authEverWorker = ever(_authController.currentUser, (firebaseUser) {
       debugPrint(
-        "[NotificationController] Auth state changed. User: ${firebaseUser?.uid}",
+        '[NotificationController] Auth state changed. User: ${firebaseUser?.uid}',
       );
       if (firebaseUser != null) {
         debugPrint(
-          "[NotificationController] User is authenticated (uid: ${firebaseUser.uid}). Binding notifications stream.",
+          '[NotificationController] User is authenticated (uid: ${firebaseUser.uid}). Binding notifications stream.',
         );
         _bindAppNotificationsStream(firebaseUser.uid);
       } else {
         debugPrint(
-          "[NotificationController] User is not authenticated. Clearing notifications.",
+          '[NotificationController] User is not authenticated. Clearing notifications.',
         );
         _clearAndResetNotifications();
       }
@@ -44,12 +44,12 @@ class NotificationController extends GetxController {
     final initialUser = _authController.currentUser.value;
     if (initialUser != null) {
       debugPrint(
-        "[NotificationController] onInit - User ALREADY authenticated (uid: ${initialUser.uid}). Binding stream.",
+        '[NotificationController] onInit - User ALREADY authenticated (uid: ${initialUser.uid}). Binding stream.',
       );
       _bindAppNotificationsStream(initialUser.uid);
     } else {
       debugPrint(
-        "[NotificationController] onInit - User NOT authenticated initially. Waiting for auth state change.",
+        '[NotificationController] onInit - User NOT authenticated initially. Waiting for auth state change.',
       );
       isLoadingNotifications.value = false;
       _clearAndResetNotifications();
@@ -58,7 +58,7 @@ class NotificationController extends GetxController {
 
   void _bindAppNotificationsStream(String userId) {
     debugPrint(
-      "[NotificationController] _bindAppNotificationsStream - Binding for userId: $userId",
+      '[NotificationController] _bindAppNotificationsStream - Binding for userId: $userId',
     );
     isLoadingNotifications.value = true;
     appNotifications.bindStream(
@@ -66,7 +66,7 @@ class NotificationController extends GetxController {
           .getUserNotifications(userId)
           .map((notifications) {
             debugPrint(
-              "NotificationController: Stream emitted ${notifications.length} notifications for $userId.",
+              'NotificationController: Stream emitted ${notifications.length} notifications for $userId.',
             );
             unreadNotificationCount.value = notifications
                 .where((n) => !n.isRead)
@@ -74,11 +74,11 @@ class NotificationController extends GetxController {
             isLoadingNotifications.value = false;
             return notifications;
           })
-          .handleError((error, stackTrace) {
+          .handleError((Object error, Object stackTrace) {
             debugPrint(
-              "NotificationController: ERROR in stream of AppNotifications for $userId: $error",
+              'NotificationController: ERROR in stream of AppNotifications for $userId: $error',
             );
-            debugPrint("NotificationController: StackTrace: $stackTrace");
+            debugPrint('NotificationController: StackTrace: $stackTrace');
             isLoadingNotifications.value = false;
             unreadNotificationCount.value = 0;
             appNotifications.clear();
@@ -89,7 +89,7 @@ class NotificationController extends GetxController {
 
   void _clearAndResetNotifications() {
     debugPrint(
-      "[NotificationController] Clearing local notifications and resetting state.",
+      '[NotificationController] Clearing local notifications and resetting state.',
     );
     appNotifications.clear();
     isLoadingNotifications.value = false;
@@ -100,7 +100,7 @@ class NotificationController extends GetxController {
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
       debugPrint(
-        "[NotificationController] markAsRead - User not authenticated.",
+        '[NotificationController] markAsRead - User not authenticated.',
       );
       return;
     }
@@ -108,8 +108,8 @@ class NotificationController extends GetxController {
       await _notificationProvider.markAsRead(userId, notificationId);
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo marcar la notificación como leída: ${e.toString()}",
+        'Error',
+        'No se pudo marcar la notificación como leída: ${e.toString()}',
       );
     }
   }
@@ -118,20 +118,20 @@ class NotificationController extends GetxController {
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
       debugPrint(
-        "[NotificationController] deleteNotification - User not authenticated.",
+        '[NotificationController] deleteNotification - User not authenticated.',
       );
       return;
     }
     try {
       await _notificationProvider.deleteNotification(userId, notificationId);
       Get.snackbar(
-        "Notificación Eliminada",
-        "La notificación ha sido eliminada.",
+        'Notificación Eliminada',
+        'La notificación ha sido eliminada.',
       );
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo eliminar la notificación: ${e.toString()}",
+        'Error',
+        'No se pudo eliminar la notificación: ${e.toString()}',
       );
     }
   }
@@ -140,20 +140,20 @@ class NotificationController extends GetxController {
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
       debugPrint(
-        "[NotificationController] markAllAsRead - User not authenticated.",
+        '[NotificationController] markAllAsRead - User not authenticated.',
       );
       return;
     }
     try {
       await _notificationProvider.markAllAsRead(userId);
       Get.snackbar(
-        "Notificaciones Leídas",
-        "Todas las notificaciones han sido marcadas como leídas.",
+        'Notificaciones Leídas',
+        'Todas las notificaciones han sido marcadas como leídas.',
       );
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudieron marcar todas como leídas: ${e.toString()}",
+        'Error',
+        'No se pudieron marcar todas como leídas: ${e.toString()}',
       );
     }
   }
@@ -163,22 +163,22 @@ class NotificationController extends GetxController {
   ) async {
     if (notification.type != AppNotificationType.taskModificationRequest) {
       Get.snackbar(
-        "Error",
-        "Esta notificación no es una solicitud de tarea válida.",
+        'Error',
+        'Esta notificación no es una solicitud de tarea válida.',
       );
       return;
     }
     if (notification.id == null) {
-      Get.snackbar("Error", "ID de notificación no válido.");
+      Get.snackbar('Error', 'ID de notificación no válido.');
       return;
     }
 
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
       debugPrint(
-        "[NotificationController] acceptTaskModificationRequest - User not authenticated.",
+        '[NotificationController] acceptTaskModificationRequest - User not authenticated.',
       );
-      Get.snackbar("Error", "Usuario no autenticado.");
+      Get.snackbar('Error', 'Usuario no autenticado.');
       return;
     }
 
@@ -188,13 +188,13 @@ class NotificationController extends GetxController {
       await taskController.approveTaskModificationRequest(notification);
 
       Get.snackbar(
-        "Solicitud Aceptada",
-        "La solicitud de tarea ha sido procesada.",
+        'Solicitud Aceptada',
+        'La solicitud de tarea ha sido procesada.',
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      debugPrint("Error en acceptTaskModificationRequest: $e");
-      Get.snackbar("Error", "No se pudo aceptar la solicitud: ${e.toString()}");
+      debugPrint('Error en acceptTaskModificationRequest: $e');
+      Get.snackbar('Error', 'No se pudo aceptar la solicitud: ${e.toString()}');
     }
   }
 
@@ -203,22 +203,22 @@ class NotificationController extends GetxController {
   ) async {
     if (notification.type != AppNotificationType.taskModificationRequest) {
       Get.snackbar(
-        "Error",
-        "Esta notificación no es una solicitud de tarea válida.",
+        'Error',
+        'Esta notificación no es una solicitud de tarea válida.',
       );
       return;
     }
     if (notification.id == null) {
-      Get.snackbar("Error", "ID de notificación no válido.");
+      Get.snackbar('Error', 'ID de notificación no válido.');
       return;
     }
 
     final userId = _authController.currentUser.value?.uid;
     if (userId == null) {
       debugPrint(
-        "[NotificationController] rejectTaskModificationRequest - User not authenticated.",
+        '[NotificationController] rejectTaskModificationRequest - User not authenticated.',
       );
-      Get.snackbar("Error", "Usuario no autenticado.");
+      Get.snackbar('Error', 'Usuario no autenticado.');
       return;
     }
 
@@ -227,15 +227,15 @@ class NotificationController extends GetxController {
       await taskController.rejectTaskModificationRequest(notification);
 
       Get.snackbar(
-        "Solicitud Rechazada",
-        "La solicitud de tarea ha sido rechazada.",
+        'Solicitud Rechazada',
+        'La solicitud de tarea ha sido rechazada.',
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      debugPrint("Error en rejectTaskModificationRequest: $e");
+      debugPrint('Error en rejectTaskModificationRequest: $e');
       Get.snackbar(
-        "Error",
-        "No se pudo rechazar la solicitud: ${e.toString()}",
+        'Error',
+        'No se pudo rechazar la solicitud: ${e.toString()}',
       );
     }
   }
@@ -258,7 +258,7 @@ class NotificationController extends GetxController {
     switch (notification.type) {
       case AppNotificationType.projectInvitation:
         if (projectId != null) {
-          Get.toNamed(
+          Get.toNamed<Object>(
             AppRoutes.PROJECTS_LIST,
             arguments: {
               'projectId': projectId,
@@ -273,7 +273,7 @@ class NotificationController extends GetxController {
       case AppNotificationType.taskAssigned:
       case AppNotificationType.taskCompleted:
         if (projectId != null) {
-          Get.toNamed(
+          Get.toNamed<Object>(
             AppRoutes.TASKS_LIST,
             arguments: {
               'projectId': projectId,
@@ -287,7 +287,7 @@ class NotificationController extends GetxController {
 
       case AppNotificationType.projectUpdate:
         if (projectId != null) {
-          Get.toNamed(
+          Get.toNamed<Object>(
             AppRoutes.PROJECTS_LIST,
             arguments: {
               'projectId': projectId,
@@ -302,7 +302,7 @@ class NotificationController extends GetxController {
         if (projectId != null &&
             adminUserIdForProject != null &&
             authController.currentUser.value?.uid == adminUserIdForProject) {
-          Get.toNamed(
+          Get.toNamed<Object>(
             AppRoutes.TASKS_LIST,
             arguments: {
               'projectId': projectId,
@@ -319,7 +319,7 @@ class NotificationController extends GetxController {
         if (requestingUserId != null &&
             authController.currentUser.value?.uid == requestingUserId &&
             projectId != null) {
-          Get.toNamed(
+          Get.toNamed<Object>(
             AppRoutes.TASKS_LIST,
             arguments: {
               'projectId': projectId,
@@ -335,7 +335,7 @@ class NotificationController extends GetxController {
         if (projectId != null &&
             adminUserIdForProject != null &&
             authController.currentUser.value?.uid == adminUserIdForProject) {
-          Get.toNamed(
+          Get.toNamed<Object>(
             AppRoutes.PROJECTS_LIST,
             arguments: {
               'projectIdToFocus': projectId,
@@ -349,7 +349,7 @@ class NotificationController extends GetxController {
       case AppNotificationType.projectDeletionApproved:
         if (requestingUserId != null &&
             authController.currentUser.value?.uid == requestingUserId) {
-          Get.offAllNamed(AppRoutes.PROJECTS_LIST);
+          Get.offAllNamed<Object>(AppRoutes.PROJECTS_LIST);
           Get.snackbar(
             notification.title,
             notification.body,
@@ -364,7 +364,7 @@ class NotificationController extends GetxController {
         if (requestingUserId != null &&
             authController.currentUser.value?.uid == requestingUserId &&
             projectId != null) {
-          Get.toNamed(
+          Get.toNamed<Object>(
             AppRoutes.TASKS_LIST,
             arguments: {
               'projectId': projectId,
@@ -384,7 +384,10 @@ class NotificationController extends GetxController {
 
     if (notification.routeToNavigate != null &&
         notification.routeToNavigate!.isNotEmpty) {
-      Get.toNamed(notification.routeToNavigate!, arguments: notification.data);
+      Get.toNamed<Object>(
+        notification.routeToNavigate!,
+        arguments: notification.data,
+      );
       return;
     }
 
@@ -398,7 +401,7 @@ class NotificationController extends GetxController {
 
   @override
   void onClose() {
-    debugPrint("[GETX_CONTROLLER] NotificationController - onClose() CALLED");
+    debugPrint('[GETX_CONTROLLER] NotificationController - onClose() CALLED');
     _authEverWorker.dispose();
     super.onClose();
   }

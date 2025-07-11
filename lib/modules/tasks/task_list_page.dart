@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:focus_flow/modules/tasks/widgets/eisenhower_tv.dart';
+import 'package:focus_flow/modules/tasks/widgets/kanban_tv.dart';
+import 'package:focus_flow/modules/tasks/widgets/swinless.dart';
+import 'package:focus_flow/modules/tasks/widgets/timeline_tv.dart';
 import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:focus_flow/modules/tasks/tasks_controller.dart';
@@ -30,13 +34,18 @@ class _TasksListScreenState extends State<TasksListScreen>
     _tabController = TabController(length: 2, vsync: this);
 
     // Mantenemos la lógica de carga de tareas
-    final Map<String, dynamic> args = Get.arguments ?? {};
-    final String projectId = args['projectId'] ?? '';
+    final dynamic arguments = Get.arguments;
+    final Map<String, dynamic> args = (arguments is Map<String, dynamic>)
+        ? arguments
+        : {};
+    final String? projectId = args['projectId'] as String?;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (controller.currentProjectId.value != projectId ||
-          (controller.tasks.isEmpty &&
-              !controller.isLoadingTasks.value &&
-              controller.taskListError.value.isEmpty)) {
+      if (projectId != null &&
+          (controller.currentProjectId.value != projectId ||
+              (controller.tasks.isEmpty &&
+                  !controller.isLoadingTasks.value &&
+                  controller.taskListError.value.isEmpty))) {
         controller.loadTasksForProject(projectId);
       }
     });
@@ -44,32 +53,64 @@ class _TasksListScreenState extends State<TasksListScreen>
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> args = Get.arguments ?? {};
-    final String projectId = args['projectId'] ?? '';
-    final String projectName = args['projectName'] ?? 'Tareas';
+    // 1. Obtenemos los argumentos de forma segura, como ya lo hicimos.
+    final dynamic arguments = Get.arguments;
+    final Map<String, dynamic> args = (arguments is Map<String, dynamic>)
+        ? arguments
+        : {};
+    final String? projectId = args['projectId'] as String?;
+    final String projectName = (args['projectName'] as String?) ?? 'Tareas';
 
-    final screenWidth = Get.width;
-    final bool isTV = screenWidth > 800 && Get.height > 500;
-    final bool isWatch = screenWidth < 300;
+    // 2. --- LA GUARDIA DE NULIDAD ---
+    // Comprobamos si tenemos el ID del proyecto. Si no, mostramos un error.
+    if (projectId == null || projectId.isEmpty) {
+      // Es una buena práctica retornar un Scaffold completo para que la pantalla no se rompa visualmente.
+      return Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'No se pudo cargar la página de tareas: falta el ID del proyecto.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, color: Colors.red),
+            ),
+          ),
+        ),
+      );
+    }
 
+    // 3. A partir de aquí, Dart sabe que 'projectId' NO ES NULO.
+    // El analizador "promociona" el tipo de `projectId` de `String?` a `String`.
+
+    // La lógica de carga de tareas ahora usa un `projectId` garantizado.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (controller.currentProjectId.value != projectId ||
           (controller.tasks.isEmpty &&
               !controller.isLoadingTasks.value &&
               controller.taskListError.value.isEmpty)) {
-        controller.loadTasksForProject(projectId);
+        controller.loadTasksForProject(projectId); // <-- Ahora es seguro
       }
     });
 
+    // 4. Tu lógica if-else if-else ahora es completamente segura.
+    final screenWidth = Get.width;
+    final bool isTV = screenWidth > 800 && Get.height > 500;
+    final bool isWatch = screenWidth < 300;
+
     if (isWatch) {
-      return _buildWatchTasksScreen(context, projectId, projectName);
+      return _buildWatchTasksScreen(
+        context,
+        projectId,
+        projectName,
+      ); // <-- Seguro
     } else if (isTV) {
-      return _buildTvTasksScreen(context, projectId, projectName);
+      return _buildTvTasksScreen(context, projectId, projectName); // <-- Seguro
     } else {
       return _buildMobileTasksScreen(
         context,
         projectId,
-        projectName,
+        projectName, // <-- Seguro
         isTV: false,
       );
     }
@@ -87,7 +128,7 @@ class _TasksListScreenState extends State<TasksListScreen>
         title: Text(projectName),
         leading: GFIconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Get.offAllNamed(AppRoutes.PROJECTS_LIST),
+          onPressed: () => Get.offAllNamed<Object>(AppRoutes.PROJECTS_LIST),
           type: GFButtonType.transparent,
         ),
         actions: [
@@ -143,8 +184,8 @@ class _TasksListScreenState extends State<TasksListScreen>
                 indicatorColor: GFColors.PRIMARY,
                 labelColor: GFColors.WHITE,
                 tabs: <Widget>[
-                  Tab(child: Text("PENDIENTES (${pendingTasks.length})")),
-                  Tab(child: Text("COMPLETADAS (${completedTasks.length})")),
+                  Tab(child: Text('PENDIENTES (${pendingTasks.length})')),
+                  Tab(child: Text('COMPLETADAS (${completedTasks.length})')),
                 ],
                 tabBarView: GFTabBarView(
                   controller: _tabController,
@@ -152,7 +193,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                     _buildTasksListView(
                       context,
                       pendingTasks,
-                      "No hay tareas pendientes.",
+                      'No hay tareas pendientes.',
                       projectId,
                       projectName,
                       isTV: isTV,
@@ -161,7 +202,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                     _buildTasksListView(
                       context,
                       completedTasks,
-                      "No hay tareas completadas.",
+                      'No hay tareas completadas.',
                       projectId,
                       projectName,
                       isTV: isTV,
@@ -208,7 +249,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                       size: 18,
                       color: Colors.white,
                     ),
-                    onPressed: () => Get.back(),
+                    onPressed: () => Get.back<Object>(),
                   ),
                   Expanded(
                     child: Text(
@@ -268,7 +309,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                           ),
                           SizedBox(height: 8),
                           Text(
-                            "¡Todo Hecho!",
+                            '¡Todo Hecho!',
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
@@ -333,7 +374,7 @@ class _TasksListScreenState extends State<TasksListScreen>
         backgroundColor: Colors.blueGrey[900],
         leading: GFIconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Get.offAllNamed(AppRoutes.PROJECTS_LIST),
+          onPressed: () => Get.offAllNamed<Object>(AppRoutes.PROJECTS_LIST),
           type: GFButtonType.transparent,
         ),
         // BARRA DE HERRAMIENTAS PARA CAMBIAR DE VISTA
@@ -345,7 +386,7 @@ class _TasksListScreenState extends State<TasksListScreen>
             onPressed: () => controller.navigateToAddTask(projectId: projectId),
             type: GFButtonType.transparent,
             focusColor: GFColors.PRIMARY.withValues(alpha: 0.3),
-            tooltip: "Nueva Tarea",
+            tooltip: 'Nueva Tarea',
           ),
         ],
       ),
@@ -364,13 +405,13 @@ class _TasksListScreenState extends State<TasksListScreen>
         // RENDERIZADO CONDICIONAL DE LA VISTA SELECCIONADA
         switch (controller.currentTvView.value) {
           case TaskViewType.kanban:
-            return _buildKanbanViewTV();
+            return KanbanViewTV(controller: controller);
           case TaskViewType.eisenhower:
-            return _buildEisenhowerViewTV();
+            return EisenhowerViewTV(controller: controller);
           case TaskViewType.timeline:
-            return _buildTimelineViewTV();
+            return TimelineViewTV(controller: controller);
           case TaskViewType.swimlanes:
-            return _buildSwimlanesViewTV();
+            return SwimlanesViewTV(controller: controller);
         }
       }),
     );
@@ -380,21 +421,21 @@ class _TasksListScreenState extends State<TasksListScreen>
     return Obx(
       () => Row(
         children: [
-          _viewSwitcherButton(Icons.view_kanban, TaskViewType.kanban, "Kanban"),
+          _viewSwitcherButton(Icons.view_kanban, TaskViewType.kanban, 'Kanban'),
           _viewSwitcherButton(
             Icons.grid_view_sharp,
             TaskViewType.eisenhower,
-            "Matriz",
+            'Matriz',
           ),
           _viewSwitcherButton(
             Icons.timeline,
             TaskViewType.timeline,
-            "Línea de Tiempo",
+            'Línea de Tiempo',
           ),
           _viewSwitcherButton(
             Icons.view_stream,
             TaskViewType.swimlanes,
-            "Por Miembro",
+            'Por Miembro',
           ),
         ],
       ),
@@ -414,356 +455,6 @@ class _TasksListScreenState extends State<TasksListScreen>
       tooltip: tooltip,
       focusColor: GFColors.PRIMARY.withValues(alpha: 0.3),
       hoverColor: GFColors.PRIMARY.withValues(alpha: 0.2),
-    );
-  }
-
-  // 1. VISTA KANBAN
-  Widget _buildKanbanViewTV() {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildKanbanColumn("PENDIENTES", controller.pendingTasks, false),
-          const SizedBox(width: 20),
-          _buildKanbanColumn("COMPLETADAS", controller.completedTasks, true),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKanbanColumn(
-    String title,
-    List<TaskModel> tasks,
-    bool isCompletedColumn,
-  ) {
-    // DragTarget permite que las tarjetas se suelten aquí
-    return Expanded(
-      child: DragTarget<TaskModel>(
-        onWillAccept: (task) =>
-            task != null && task.isCompleted != isCompletedColumn,
-        onAccept: (task) => controller.toggleTaskCompletion(task),
-        builder: (context, candidateData, rejectedData) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.blueGrey[900]?.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: candidateData.isNotEmpty
-                    ? GFColors.SUCCESS
-                    : Colors.transparent,
-                width: 2,
-              ),
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    itemCount: tasks.length,
-                    itemBuilder: (ctx, index) {
-                      final task = tasks[index];
-                      // Draggable hace que la tarjeta se pueda arrastrar
-                      return Draggable<TaskModel>(
-                        data: task,
-                        feedback: Material(
-                          elevation: 8.0,
-                          color: Colors.transparent,
-                          child: Opacity(
-                            opacity: 0.8,
-                            child: SizedBox(
-                              width: 350,
-                              child: _buildTaskCardTV(context, task),
-                            ),
-                          ),
-                        ),
-                        childWhenDragging: Opacity(
-                          opacity: 0.4,
-                          child: _buildTaskCardTV(context, task),
-                        ),
-                        child: _buildTaskCardTV(context, task),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // 2. VISTA MATRIZ DE EISENHOWER
-  Widget _buildEisenhowerViewTV() {
-    final tasks = controller.eisenhowerTasks;
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: GridView.count(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.5, // Ajusta esto para la proporción de las tarjetas
-        children: [
-          _buildEisenhowerQuadrant(
-            "Hacer (Urgente, Importante)",
-            tasks['important_urgent']!,
-            Colors.red.shade300,
-          ),
-          _buildEisenhowerQuadrant(
-            "Planificar (No Urgente, Importante)",
-            tasks['important_not_urgent']!,
-            Colors.orange.shade300,
-          ),
-          _buildEisenhowerQuadrant(
-            "Delegar (Urgente, No Importante)",
-            tasks['not_important_urgent']!,
-            Colors.blue.shade300,
-          ),
-          _buildEisenhowerQuadrant(
-            "Descartar (No Urgente, No Importante)",
-            tasks['not_important_not_urgent']!,
-            Colors.green.shade400,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEisenhowerQuadrant(
-    String title,
-    List<TaskModel> tasks,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: Colors.blueGrey[800],
-        borderRadius: BorderRadius.circular(12),
-        border: Border(left: BorderSide(color: color, width: 6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: color,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: tasks.isEmpty
-                ? const Center(
-                    child: Text(
-                      "Nada aquí",
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: tasks.length,
-                    itemBuilder: (ctx, i) => _buildMiniTaskTile(tasks[i]),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMiniTaskTile(TaskModel task) {
-    return Card(
-      color: Colors.blueGrey[700],
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          task.name,
-          style: const TextStyle(color: Colors.white),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-
-  // 3. VISTA LÍNEA DE TIEMPO
-  Widget _buildTimelineViewTV() {
-    final tasksByDay = controller.timelineTasks;
-    final sortedDays = tasksByDay.keys.toList()..sort();
-
-    if (sortedDays.isEmpty) {
-      return const Center(
-        child: Text(
-          "No hay tareas con fechas de entrega próximas.",
-          style: TextStyle(color: Colors.white70, fontSize: 18),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.all(20),
-      itemCount: sortedDays.length,
-      itemBuilder: (context, index) {
-        final day = sortedDays[index];
-        final tasks = tasksByDay[day]!;
-        return Container(
-          width: 250,
-          margin: const EdgeInsets.only(right: 16),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.blueGrey[800],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat('EEE, dd MMM').format(day),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Divider(color: Colors.white24),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (ctx, i) {
-                    final task = tasks[i];
-                    return GFListTile(
-                      titleText: task.name,
-                      subTitle: Card(
-                        color: _getPriorityColor(
-                          task.priority,
-                          context,
-                          isTV: true,
-                        ).withValues(alpha: 0.3),
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            task.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // 4. VISTA CARRILES (SWIMLANES)
-  Widget _buildSwimlanesViewTV() {
-    final tasksByMember = controller.tasksByMember;
-    final memberIds = tasksByMember.keys.toList();
-
-    if (memberIds.isEmpty) {
-      return const Center(
-        child: Text(
-          "No hay tareas asignadas.",
-          style: TextStyle(color: Colors.white70, fontSize: 18),
-        ),
-      );
-    }
-
-    // Usamos un ListView vertical para los carriles
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: memberIds.length,
-      itemBuilder: (context, index) {
-        final memberId = memberIds[index];
-        final tasks = tasksByMember[memberId]!;
-        return _buildSwimlane(memberId, tasks);
-      },
-    );
-  }
-
-  Widget _buildSwimlane(String memberId, List<TaskModel> tasks) {
-    return Container(
-      height: 220, // Altura fija para cada carril
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blueGrey[800]?.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Usamos un FutureBuilder para obtener el nombre del miembro de forma asíncrona
-          FutureBuilder<String>(
-            future: controller.getMemberName(memberId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const GFLoader(
-                  type: GFLoaderType.circle,
-                  size: GFSize.SMALL,
-                );
-              }
-              final memberName = snapshot.data ?? 'Desconocido';
-              return Row(
-                children: [
-                  GFAvatar(
-                    child: Text(
-                      memberName.isNotEmpty ? memberName[0].toUpperCase() : '?',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    memberName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          // ListView horizontal para las tarjetas de tareas
-          Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                return SizedBox(
-                  width: 300, // Ancho fijo para las tarjetas en el carril
-                  child: _buildMiniTaskTile(tasks[index]),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -822,7 +513,7 @@ class _TasksListScreenState extends State<TasksListScreen>
               padding: const EdgeInsets.all(8.0),
               child: Center(
                 child: Text(
-                  "No hay solicitudes pendientes.",
+                  'No hay solicitudes pendientes.',
                   style: TextStyle(
                     color: textColor.withValues(alpha: 0.7),
                     fontStyle: FontStyle.italic,
@@ -841,22 +532,31 @@ class _TasksListScreenState extends State<TasksListScreen>
                 if (request.data == null) return const SizedBox.shrink();
 
                 final requestData = request.data!;
-                final taskName = requestData['taskName'] ?? 'Tarea desconocida';
-                final requesterName = requestData['requesterName'] ?? 'Miembro';
+                final taskName =
+                    (requestData['taskName'] as String?) ?? 'Tarea desconocida';
+                final requesterName =
+                    (requestData['requesterName'] as String?) ?? 'Miembro';
                 final typeOfRequest =
                     (requestData['requestType'] as String?)?.capitalizeFirst ??
                     'Modificación';
-                String proposedChangesSummary = "";
-                if (typeOfRequest.toLowerCase() == "edición" &&
-                    requestData['proposedChanges'] != null) {
+
+                String proposedChangesSummary = '';
+                if (typeOfRequest.toLowerCase() == 'edición' &&
+                    requestData['proposedChanges'] != null &&
+                    requestData['proposedChanges'] is Map) {
+                  // <-- Comprobación de tipo añadida
+
+                  // Casteamos el mapa de cambios para un acceso seguro
                   final changesMap = Map<String, dynamic>.from(
-                    requestData['proposedChanges'],
+                    requestData['proposedChanges'] as Map,
                   );
-                  final newName = changesMap['name'];
+                  final newName =
+                      changesMap['name'] as String?; // Cast a String nulable
+
                   if (newName != null && newName != taskName) {
                     proposedChangesSummary = "Nuevo nombre: '$newName'";
                   } else {
-                    proposedChangesSummary = "Cambios en detalles";
+                    proposedChangesSummary = 'Cambios en detalles';
                   }
                 }
 
@@ -868,7 +568,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                   content: GFListTile(
                     color: isTV ? Colors.blueGrey[600] : Colors.white,
                     title: Text(
-                      "Solicitud para: $taskName",
+                      'Solicitud para: $taskName',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: textColor,
@@ -879,14 +579,14 @@ class _TasksListScreenState extends State<TasksListScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "De: $requesterName",
+                          'De: $requesterName',
                           style: TextStyle(
                             color: textColor.withValues(alpha: 0.8),
                             fontSize: isTV ? 15 : 13,
                           ),
                         ),
                         Text(
-                          "Acción: $typeOfRequest",
+                          'Acción: $typeOfRequest',
                           style: TextStyle(
                             color: textColor.withValues(alpha: 0.8),
                             fontSize: isTV ? 15 : 13,
@@ -912,7 +612,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                             color: Colors.green.shade400,
                             size: isTV ? 30 : 24,
                           ),
-                          tooltip: "Aprobar",
+                          tooltip: 'Aprobar',
                           onPressed: () => controller
                               .approveTaskModificationRequest(request),
                           type: GFButtonType.transparent,
@@ -923,7 +623,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                             color: Colors.red.shade400,
                             size: isTV ? 30 : 24,
                           ),
-                          tooltip: "Rechazar",
+                          tooltip: 'Rechazar',
                           onPressed: () =>
                               controller.rejectTaskModificationRequest(request),
                           type: GFButtonType.transparent,
@@ -980,7 +680,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                       projectId: projectId,
                       projectName: projectName,
                     ),
-                    text: "Añadir Tarea",
+                    text: 'Añadir Tarea',
                     icon: const Icon(Icons.add, color: Colors.white),
                   ),
                 ),
@@ -1009,7 +709,8 @@ class _TasksListScreenState extends State<TasksListScreen>
     final colorScheme = Theme.of(context).colorScheme;
     final priorityColor = _getPriorityColor(task.priority, context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    bool canInteractWithMenu = controller.isCurrentUserMemberForCurrentProject;
+    final bool canInteractWithMenu =
+        controller.isCurrentUserMemberForCurrentProject;
 
     return Card(
       elevation: task.isCompleted ? 1.0 : 2.5,
@@ -1028,7 +729,7 @@ class _TasksListScreenState extends State<TasksListScreen>
             controller.navigateToEditTask(task);
           } else if (task.isCompleted) {
             Get.snackbar(
-              "Tarea Completada",
+              'Tarea Completada',
               "'${task.name}' ya está marcada como completada.",
               snackPosition: SnackPosition.BOTTOM,
               duration: const Duration(seconds: 2),
@@ -1130,7 +831,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                   onSelected: (value) => _handleTaskMenuAction(value, task),
                   itemBuilder: (ctx) =>
                       _taskMenuItems(context, task, isTV: false),
-                  tooltip: "Más opciones",
+                  tooltip: 'Más opciones',
                 ),
             ],
           ),
@@ -1142,7 +843,8 @@ class _TasksListScreenState extends State<TasksListScreen>
   Widget _buildTaskCardTV(BuildContext context, TaskModel task) {
     final priorityColor = _getPriorityColor(task.priority, context, isTV: true);
     final focusNode = FocusNode();
-    bool canInteractWithMenu = controller.isCurrentUserMemberForCurrentProject;
+    final bool canInteractWithMenu =
+        controller.isCurrentUserMemberForCurrentProject;
 
     return FocusableActionDetector(
       focusNode: focusNode,
@@ -1249,7 +951,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                   itemBuilder: (ctx) =>
                       _taskMenuItems(context, task, isTV: true),
                   color: Colors.blueGrey[700],
-                  tooltip: "Más opciones",
+                  tooltip: 'Más opciones',
                 ),
             ],
           ),
@@ -1278,13 +980,13 @@ class _TasksListScreenState extends State<TasksListScreen>
             ),
             const SizedBox(height: 20),
             Text(
-              "No Hay Tareas",
+              'No Hay Tareas',
               style: Get.textTheme.headlineSmall?.copyWith(color: titleColor),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
             Text(
-              "Este proyecto aún no tiene tareas. ¡Añade algunas!",
+              'Este proyecto aún no tiene tareas. ¡Añade algunas!',
               style: Get.textTheme.bodyLarge?.copyWith(color: textColor),
               textAlign: TextAlign.center,
             ),
@@ -1293,7 +995,7 @@ class _TasksListScreenState extends State<TasksListScreen>
               GFButton(
                 onPressed: () =>
                     controller.navigateToAddTask(projectId: projectId),
-                text: "Añadir Primera Tarea",
+                text: 'Añadir Primera Tarea',
                 icon: const Icon(Icons.add_circle_outline, color: Colors.white),
                 type: isTV ? GFButtonType.outline2x : GFButtonType.solid,
                 textColor: isTV ? Colors.white : null,
@@ -1314,7 +1016,7 @@ class _TasksListScreenState extends State<TasksListScreen>
     final textColor = isTV
         ? Colors.white
         : Theme.of(context).textTheme.bodyLarge?.color;
-    List<PopupMenuEntry<String>> items = [];
+    final List<PopupMenuEntry<String>> items = [];
     final bool isMember = controller.isCurrentUserMemberForCurrentProject;
     final bool isAdmin = controller.isCurrentUserAdminForCurrentProject;
 
@@ -1362,7 +1064,7 @@ class _TasksListScreenState extends State<TasksListScreen>
           enabled: false,
           child: ListTile(
             title: Text(
-              "No hay acciones",
+              'No hay acciones',
               style: TextStyle(color: Colors.grey[isTV ? 300 : 500]),
             ),
           ),
@@ -1388,7 +1090,7 @@ class _TasksListScreenState extends State<TasksListScreen>
             ),
             const SizedBox(height: 15),
             Text(
-              "Error al Cargar Tareas",
+              'Error al Cargar Tareas',
               style: Get.textTheme.headlineSmall?.copyWith(color: titleColor),
               textAlign: TextAlign.center,
             ),
@@ -1403,7 +1105,7 @@ class _TasksListScreenState extends State<TasksListScreen>
               onPressed: () => controller.loadTasksForProject(
                 controller.currentProjectId.value,
               ),
-              text: "Reintentar",
+              text: 'Reintentar',
               icon: const Icon(Icons.refresh, color: Colors.white),
               type: isTV ? GFButtonType.outline2x : GFButtonType.solid,
               textColor: isTV ? Colors.white : null,

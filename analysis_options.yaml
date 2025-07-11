@@ -1,4 +1,67 @@
+# Incluye las reglas recomendadas por el equipo de Flutter. Es una base excelente.
 include: package:flutter_lints/flutter.yaml
+
+# Las reglas de linter son las que te ayudarán a escribir código más limpio y consistente.
+# Puedes encontrar la lista completa aquí: https://dart-lang.github.io/linter/lints/
+linter:
+  rules:
+    # --- Estilo y Consistencia ---
+    - always_declare_return_types # Exige que siempre especifiques el tipo de retorno de las funciones.
+    - prefer_const_constructors # Recomienda usar `const` siempre que sea posible. Fundamental para el rendimiento.
+    - prefer_const_declarations # Similar, para declaraciones de variables.
+    - prefer_final_fields # Recomienda que los campos de una clase que no se reasignan sean `final`.
+    - prefer_final_locals # Recomienda que las variables locales que no se reasignan sean `final`.
+    - sort_child_properties_last # En los widgets, la propiedad `child` o `children` debe ir al final. Mejora la legibilidad.
+    - avoid_print # Desaconseja el uso de `print()`. En producción, deberías usar un logger.
+    - prefer_single_quotes # Fuerza el uso de comillas simples para strings, para mantener la consistencia.
+    - slash_for_doc_comments # Usa /// para comentarios de documentación en lugar de /** ... */.
+    - curly_braces_in_flow_control_structures # Siempre usa llaves {} en los if, for, while, etc. Evita errores.
+    
+    # --- Limpieza y Buenas Prácticas ---
+    - avoid_unnecessary_containers # Te avisa si estás usando un `Container` sin ninguna decoración, padding, etc.
+    - unnecessary_const # Te avisa si un `const` es redundante.
+    - unnecessary_new # `new` es obsoleto en Dart. Esta regla te ayuda a eliminarlo.
+    - unnecessary_this # Te avisa si el uso de `this.` es redundante.
+    - no_leading_underscores_for_local_identifiers # Evita que uses `_` para variables locales, donde no tiene sentido.
+    - package_prefixed_library_names # Fomenta la buena práctica de nombrar librerías con prefijo de paquete.
+    
+    # --- Potencial de Errores y Seguridad ---
+    - await_only_futures # Asegura que solo uses `await` en funciones que devuelven un `Future`.
+    - empty_catches # Advierte sobre bloques `catch` vacíos, que pueden ocultar errores importantes.
+    - no_duplicate_case_values # Evita errores en sentencias `switch`.
+    - prefer_is_not_empty # Recomienda usar `isNotEmpty` en lugar de `!isEmpty`, que es más legible.
+    - unawaited_futures # ¡MUY IMPORTANTE! Te avisa si llamas a una función async sin usar `await` o `.then()`. Evita muchos bugs.
+    - use_build_context_synchronously # ¡CRÍTICO! Te advierte si usas un `BuildContext` después de una operación `async`, lo cual puede causar crashes.
+    
+    # --- Reglas de Dart 3 ---
+    - use_super_parameters # Fomenta el uso de la nueva sintaxis de `super.` en constructores, que es más limpia.
+    - prefer_final_in_for_each # Recomienda usar `final` para los elementos en un bucle for-each.
+
+# La sección del analizador te permite configurar la severidad de los errores.
 analyzer:
+  # Activa las características de Dart 3
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+      
+  # Esto te permite "promocionar" ciertos lints a errores o advertencias.
+  # Por ejemplo, podemos hacer que 'unawaited_futures' sea un error y no solo una advertencia.
   errors:
+    # Ignoramos la regla que tenías, aunque personalmente recomiendo arreglarla en lugar de ignorarla.
+    # Los nombres de constantes deben ser en lowerCamelCase, por ejemplo: `gfColors` en lugar de `GFColors`.
+    # Si GFColors es una clase, entonces el error es otro. Si es una constante, debería ser `gfColors`.
+    # Pero para mantener tu preferencia, la dejamos aquí.
     constant_identifier_names: ignore
+
+    # Ejemplos de cómo podrías hacer algunas reglas más estrictas:
+    # unawaited_futures: error
+    # use_build_context_synchronously: error
+    # avoid_print: error
+    
+  # Excluir archivos generados automáticamente del análisis.
+  # Esto es fundamental para no recibir errores de archivos que no controlas.
+  exclude:
+    - "**/*.g.dart" # Excluye archivos generados por build_runner (json_serializable, freezed, etc.)
+    - "**/*.freezed.dart"
+    - "lib/generated_plugin_registrant.dart"

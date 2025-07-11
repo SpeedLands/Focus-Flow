@@ -20,8 +20,12 @@ class PomodoroTvDashboard extends StatelessWidget {
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(sideTitles: _daysTitles),
           leftTitles: AxisTitles(sideTitles: _sideNumericTitles),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         lineBarsData: [
           LineChartBarData(
@@ -29,7 +33,7 @@ class PomodoroTvDashboard extends StatelessWidget {
             isCurved: true,
             barWidth: 4,
             color: Colors.orangeAccent,
-            dotData: FlDotData(show: true),
+            dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(show: false),
           ),
         ],
@@ -60,8 +64,12 @@ class PomodoroTvDashboard extends StatelessWidget {
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(sideTitles: _daysTitles),
           leftTitles: AxisTitles(sideTitles: _sideNumericTitles),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         barGroups: barGroups,
       ),
@@ -91,8 +99,12 @@ class PomodoroTvDashboard extends StatelessWidget {
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(sideTitles: _daysTitles),
           leftTitles: AxisTitles(sideTitles: _sideNumericTitles),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         barGroups: barGroups,
       ),
@@ -114,11 +126,11 @@ class PomodoroTvDashboard extends StatelessWidget {
         dataSets: [
           RadarDataSet(
             borderColor: Colors.purpleAccent,
-            fillColor: Colors.purpleAccent.withOpacity(0.4),
+            fillColor: Colors.purpleAccent.withValues(alpha: 0.4),
             borderWidth: 2,
             entryRadius: 3,
             dataEntries: [
-              RadarEntry(value: last.workedMinutes / 60),   // horas trabajadas
+              RadarEntry(value: last.workedMinutes / 60), // horas trabajadas
               RadarEntry(value: last.breakMinutes.toDouble()),
               RadarEntry(value: last.pomodorosCompleted.toDouble()),
             ],
@@ -130,26 +142,26 @@ class PomodoroTvDashboard extends StatelessWidget {
 
   /* ────────────── Helpers de ejes ────────────── */
   SideTitles get _daysTitles => SideTitles(
-        showTitles: true,
-        reservedSize: 30,
-        getTitlesWidget: (value, _) {
-          final i = value.toInt();
-          if (i < 0 || i >= stats.length) return const SizedBox.shrink();
-          return Text(
-            DateFormat.E().format(stats[i].start), // “Mon”, “Tue”, …
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
-          );
-        },
+    showTitles: true,
+    reservedSize: 30,
+    getTitlesWidget: (value, _) {
+      final i = value.toInt();
+      if (i < 0 || i >= stats.length) return const SizedBox.shrink();
+      return Text(
+        DateFormat.E().format(stats[i].start), // “Mon”, “Tue”, …
+        style: const TextStyle(color: Colors.white70, fontSize: 12),
       );
+    },
+  );
 
   SideTitles get _sideNumericTitles => SideTitles(
-        showTitles: true,
-        reservedSize: 28,
-        getTitlesWidget: (value, _) => Text(
-          value.toInt().toString(),
-          style: const TextStyle(color: Colors.white54, fontSize: 10),
-        ),
-      );
+    showTitles: true,
+    reservedSize: 28,
+    getTitlesWidget: (value, _) => Text(
+      value.toInt().toString(),
+      style: const TextStyle(color: Colors.white54, fontSize: 10),
+    ),
+  );
 
   /* ────────────── Build ────────────── */
   @override
@@ -168,19 +180,23 @@ class PomodoroTvDashboard extends StatelessWidget {
   }
 
   Widget _card(String title, Widget chart) => Card(
-        color: Colors.black87,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              Text(title,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Expanded(child: chart),
-            ],
+    color: Colors.black87,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      );
+          const SizedBox(height: 8),
+          Expanded(child: chart),
+        ],
+      ),
+    ),
+  );
 }

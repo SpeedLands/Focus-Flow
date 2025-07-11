@@ -20,7 +20,7 @@ class TvProjectsView extends StatelessWidget {
         automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFF1a2436),
         title: const GFTypography(
-          text: "Panel de Proyectos",
+          text: 'Panel de Proyectos',
           type: GFTypographyType.typo3,
           textColor: GFColors.WHITE,
           showDivider: false,
@@ -28,14 +28,14 @@ class TvProjectsView extends StatelessWidget {
         actions: [
           GFIconButton(
             icon: const Icon(Icons.group_add_outlined, color: Colors.white),
-            tooltip: "Unirse con Código",
+            tooltip: 'Unirse con Código',
             onPressed: () => controller.showJoinWithCodeDialog(context),
             hoverColor: GFColors.PRIMARY.withValues(alpha: 0.3),
             focusColor: GFColors.SUCCESS,
           ),
           GFIconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
-            tooltip: "Refrescar Datos",
+            tooltip: 'Refrescar Datos',
             onPressed: () => controller.reloadProjects(),
             hoverColor: GFColors.PRIMARY.withValues(alpha: 0.3),
             focusColor: GFColors.SUCCESS,

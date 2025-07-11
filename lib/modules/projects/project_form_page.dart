@@ -25,7 +25,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
         ),
         leading: GFIconButton(
           icon: Icon(Icons.arrow_back_ios, color: isTV ? Colors.white : null),
-          onPressed: () => Get.offAllNamed(AppRoutes.PROJECTS_LIST),
+          onPressed: () => Get.offAllNamed<Object>(AppRoutes.PROJECTS_LIST),
         ),
         backgroundColor: GFColors.PRIMARY,
         elevation: isTV ? 0 : null,
@@ -87,7 +87,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
             SizedBox(height: isTV ? 35.0 : 25.0),
 
             Text(
-              "Color del Proyecto:",
+              'Color del Proyecto:',
               style: isTV ? tvLabelStyle : mobileLabelStyle,
             ),
             SizedBox(height: isTV ? 15.0 : 10.0),
@@ -95,7 +95,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
             SizedBox(height: isTV ? 35.0 : 25.0),
 
             Text(
-              "Icono del Proyecto:",
+              'Icono del Proyecto:',
               style: isTV ? tvLabelStyle : mobileLabelStyle,
             ),
             SizedBox(height: isTV ? 15.0 : 10.0),
@@ -108,7 +108,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
                     ? null
                     : controller.saveProject,
                 text: controller.isSavingProject.value
-                    ? (controller.isEditing ? "Actualizando..." : "Creando...")
+                    ? (controller.isEditing ? 'Actualizando...' : 'Creando...')
                     : (controller.isEditing
                           ? 'Actualizar Proyecto'
                           : 'Crear Proyecto'),
@@ -227,7 +227,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
           itemBuilder: (context, index) {
             final color = controller.predefinedColors[index];
             return Obx(() {
-              bool isSelected =
+              final bool isSelected =
                   controller.selectedColor.value.toARGB32() == color.toARGB32();
               return FocusableActionDetector(
                 focusNode: FocusNode(),
@@ -271,7 +271,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
         spacing: 10.0,
         runSpacing: 10.0,
         children: controller.predefinedColors.map((color) {
-          bool isSelected =
+          final bool isSelected =
               controller.selectedColor.value.toARGB32() == color.toARGB32();
           return GestureDetector(
             onTap: () => controller.selectedColor.value = color,
@@ -332,7 +332,8 @@ class ProjectFormScreen extends GetView<ProjectController> {
           final String iconName = iconMap['name'] as String;
           final IconData iconData = iconMap['icon'] as IconData;
           return Obx(() {
-            bool isSelected = controller.selectedIconName.value == iconName;
+            final bool isSelected =
+                controller.selectedIconName.value == iconName;
             return FocusableActionDetector(
               focusNode: FocusNode(),
               actions: <Type, Action<Intent>>{
@@ -373,7 +374,7 @@ class ProjectFormScreen extends GetView<ProjectController> {
         children: controller.predefinedIcons.map((iconMap) {
           final String iconName = iconMap['name'] as String;
           final IconData iconData = iconMap['icon'] as IconData;
-          bool isSelected = controller.selectedIconName.value == iconName;
+          final bool isSelected = controller.selectedIconName.value == iconName;
           return GestureDetector(
             onTap: () => controller.selectedIconName.value = iconName,
             child: Container(

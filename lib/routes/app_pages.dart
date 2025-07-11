@@ -26,42 +26,42 @@ class AppPages {
   static const INITIAL = AppRoutes.SPLASH;
 
   static final routes = [
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.LOGIN,
-      page: () => LoginScreen(),
+      page: () => const LoginScreen(),
       bindings: [AuthBinding()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.REGISTER,
-      page: () => RegisterScreen(),
+      page: () => const RegisterScreen(),
       binding: AuthBinding(),
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.HOME,
-      page: () => HomeScreen(),
+      page: () => const HomeScreen(),
       bindings: [HomeBinding(), AuthBinding(), NotificationBinding()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.PROJECTS_LIST,
-      page: () => ProjectsScreen(),
+      page: () => const ProjectsScreen(),
       bindings: [AuthBinding(), ProjectBinding(), NotificationBinding()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.PROJECT_FORM,
-      page: () => ProjectFormScreen(),
+      page: () => const ProjectFormScreen(),
       bindings: [AuthBinding(), ProjectBinding(), NotificationBinding()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.TASKS_LIST,
-      page: () => TasksListScreen(),
+      page: () => const TasksListScreen(),
       bindings: [AuthBinding(), ProjectBinding(), TaskBinding()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.TASK_FORM,
-      page: () => TaskFormScreen(),
+      page: () => const TaskFormScreen(),
       bindings: [AuthBinding(), ProjectBinding(), TaskBinding()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.NOTIFICATIONS_LIST,
       page: () => const NotificationListScreen(),
       bindings: [
@@ -71,29 +71,29 @@ class AppPages {
         ProjectBinding(),
       ],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.USER_SETTINGS,
       page: () => UserSettingsScreen(),
       bindings: [AuthBinding()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.POMODORO_LIST,
-      page: () => PomodoroConfigListView(),
+      page: () => const PomodoroConfigListView(),
       bindings: [AuthBinding(), PomodoroBinidng()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.POMODORO_FORM,
-      page: () => PomodoroConfigFormScreen(),
+      page: () => const PomodoroConfigFormScreen(),
       bindings: [AuthBinding(), PomodoroBinidng()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.POMODORO_TIMER,
-      page: () => PomodoroTimerScreen(),
+      page: () => const PomodoroTimerScreen(),
       bindings: [AuthBinding(), PomodoroBinidng()],
     ),
-    GetPage(
+    GetPage<void>(
       name: AppRoutes.POMODORO_LIST_ANA,
-      page: () => PomodoroConfigListViewAna(),
+      page: () => const PomodoroConfigListViewAna(),
       bindings: [AuthBinding(), PomodoroBinidngAna()],
     ),
   ];

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:focus_flow/modules/pomodoro/pomodoro_controller.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:simple_animations/simple_animations.dart';
 
 class PomodoroTimerScreen extends GetView<PomodoroController> {
   const PomodoroTimerScreen({super.key});
@@ -16,13 +17,13 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
             controller.selectConfigForTimer(controller.configs.first);
           } else if (config == null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              Get.back();
+              Get.back<Object>();
               Get.snackbar(
                 'Error',
                 'No hay configuraciones Pomodoro disponibles.',
               );
             });
-            return const Text("Sin configuración.");
+            return const Text('Sin configuración.');
           }
 
           return Column(
@@ -76,361 +77,6 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
     );
   }
 
-  // pomodoro_timer_screen.dart
-
-  Widget _buildTvPomodoroScreen(BuildContext context) {
-    // Asegurarse de que hay una configuración seleccionada, igual que en mobile.
-    if (controller.selectedConfig.value == null) {
-      if (controller.configs.isNotEmpty) {
-        controller.selectConfigForTimer(controller.configs.first);
-      } else {
-        // Este caso es improbable si se llega desde una lista, pero es un buen fallback.
-        return const Scaffold(
-          backgroundColor: Color(0xFF101D25),
-          body: Center(
-            child: Text(
-              "No hay configuraciones de Pomodoro disponibles.",
-              style: TextStyle(color: Colors.white70, fontSize: 18),
-            ),
-          ),
-        );
-      }
-    }
-
-    return Scaffold(
-      backgroundColor: const Color(
-        0xFF101D25,
-      ), // Un color de fondo oscuro para TV
-      body: Obx(
-        () => Stack(
-          children: [
-            // Contenido principal centrado
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 1. ARO DE PROGRESO CIRCULAR
-                  _buildCircularTimerTV(),
-                  const SizedBox(height: 40),
-                  // 2. INDICADOR DE RONDAS
-                  _buildRoundsIndicatorTV(),
-                  const SizedBox(height: 50),
-                  // Botones de control
-                  _buildControlButtonsTV(),
-                ],
-              ),
-            ),
-            // 3. TARJETA DE INFORMACIÓN ESTÁTICA
-            // _buildInfoCardTV(),
-            // // 4. BARRA DE CICLO
-            _buildCycleBarTV(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ---- WIDGETS AUXILIARES PARA LA VISTA DE TV ----
-
-  // 1. WIDGET PARA EL TEMPORIZADOR CIRCULAR
-  Widget _buildCircularTimerTV() {
-    final color = _getTimerColor(controller.timerState.value);
-
-    return SizedBox(
-      width: 350,
-      height: 350,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Aro de fondo (el "track")
-          CircularProgressIndicator(
-            value: 1.0,
-            strokeWidth: 20,
-            backgroundColor: Colors.blueGrey[800],
-            color: color,
-          ),
-          // Aro de progreso principal
-          CircularProgressIndicator(
-            value: controller.progressPercentage,
-            strokeWidth: 20,
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-            backgroundColor:
-                Colors.transparent, // Transparente para ver el fondo
-          ),
-          // Contenido en el centro (tiempo y estado)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GFTypography(
-                  text: controller.formattedTime,
-                  type: GFTypographyType.typo1,
-                  textColor: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-                const SizedBox(height: 8),
-                GFTypography(
-                  text: controller.currentTimerStateLabel.toUpperCase(),
-                  type: GFTypographyType.typo5,
-                  textColor: Colors.white70,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 2. WIDGET PARA EL INDICADOR DE RONDAS
-  Widget _buildRoundsIndicatorTV() {
-    final config = controller.selectedConfig.value;
-    if (config == null) return const SizedBox.shrink();
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(config.rounds, (index) {
-        final roundNumber = index + 1;
-        final isCompleted = roundNumber <= controller.currentRound.value;
-        // La ronda que precede al descanso largo
-        final isLongBreakNext =
-            roundNumber == config.rounds && config.longBreak != null;
-
-        Color color = isCompleted
-            ? (isLongBreakNext ? GFColors.WARNING : GFColors.PRIMARY)
-            : Colors.blueGrey[700]!;
-
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          width: 40,
-          height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(5),
-          ),
-        );
-      }),
-    );
-  }
-
-  // 3. WIDGET PARA LA TARJETA DE INFORMACIÓN ESTÁTICA
-  Widget _buildInfoCardTV() {
-    final config = controller.selectedConfig.value;
-    if (config == null) return const SizedBox.shrink();
-
-    return Align(
-      alignment: Alignment.topLeft,
-      child: GFCard(
-        margin: const EdgeInsets.all(24),
-        color: Colors.blueGrey[800]?.withOpacity(0.8),
-        padding: const EdgeInsets.all(16),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GFListTile(
-              color: Colors.transparent,
-              padding: EdgeInsets.zero,
-              margin: EdgeInsets.zero,
-              avatar: GFAvatar(
-                backgroundColor: _getTimerColor(
-                  controller.timerState.value,
-                ).withOpacity(0.5),
-                child: const Icon(Icons.timer_outlined, color: Colors.white),
-              ),
-              title: Text(
-                config.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            if (config.goal != null && config.goal!.isNotEmpty) ...[
-              const Divider(color: Colors.white24, height: 20),
-              Text(
-                "OBJETIVO:",
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 12,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                config.goal!,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 4. WIDGET PARA LA BARRA DE CICLO
-  Widget _buildCycleBarTV() {
-    final config = controller.selectedConfig.value;
-    if (config == null) return const SizedBox.shrink();
-
-    final bool isWorkActive =
-        controller.timerState.value == PomodoroTimerState.work ||
-        (controller.timerState.value == PomodoroTimerState.paused &&
-            controller.stateBeforePause == PomodoroTimerState.work);
-    final bool isBreakActive =
-        !isWorkActive &&
-        controller.timerState.value != PomodoroTimerState.idle &&
-        controller.timerState.value != PomodoroTimerState.finished;
-
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 30),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _cycleSegment(
-              "Trabajo",
-              "${config.workTime ~/ 60} min",
-              isWorkActive,
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Icon(Icons.arrow_forward, color: Colors.white54, size: 20),
-            ),
-            _cycleSegment(
-              "Descanso",
-              "${config.shortBreak ~/ 60} min",
-              isBreakActive,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _cycleSegment(String label, String duration, bool isActive) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isActive
-            ? _getTimerColor(controller.timerState.value).withOpacity(0.9)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            duration,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // WIDGET PARA LOS BOTONES DE CONTROL
-  Widget _buildControlButtonsTV() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Botón de Reiniciar
-        GFButton(
-          onPressed: controller.resetTimer,
-          text: "Reiniciar",
-          icon: const Icon(Icons.replay, color: Colors.white),
-          type: GFButtonType.outline2x,
-          size: GFSize.LARGE,
-          focusColor: GFColors.WARNING.withOpacity(0.3),
-          hoverColor: GFColors.WARNING.withOpacity(0.2),
-          color: GFColors.WARNING,
-        ),
-        const SizedBox(width: 24),
-        // Botón Principal (Iniciar/Pausar/Reanudar)
-        if (controller.canStart || controller.canResume)
-          GFButton(
-            onPressed: controller.startPauseTimer,
-            text: controller.timerState.value == PomodoroTimerState.paused
-                ? "Reanudar"
-                : "Iniciar",
-            icon: Icon(
-              controller.timerState.value == PomodoroTimerState.paused
-                  ? Icons.play_arrow
-                  : Icons.play_circle,
-              color: Colors.black,
-            ),
-            size: GFSize.LARGE,
-            color: GFColors.SUCCESS,
-            focusColor: GFColors.SUCCESS.withOpacity(0.3),
-            hoverColor: GFColors.SUCCESS.withOpacity(0.2),
-            textColor: Colors.black,
-          ),
-        if (controller.canPause)
-          GFButton(
-            onPressed: controller.startPauseTimer,
-            text: "Pausar",
-            icon: const Icon(Icons.pause, color: Colors.white),
-            size: GFSize.LARGE,
-            color: GFColors.FOCUS,
-            focusColor: GFColors.FOCUS.withOpacity(0.3),
-            hoverColor: GFColors.FOCUS.withOpacity(0.2),
-          ),
-        const SizedBox(width: 24),
-        // Botón de Saltar
-        GFButton(
-          onPressed: controller.skipToNextState,
-          text: "Saltar",
-          icon: const Icon(Icons.skip_next, color: Colors.white),
-          type: GFButtonType.outline2x,
-          size: GFSize.LARGE,
-          focusColor: GFColors.INFO.withOpacity(0.3),
-          hoverColor: GFColors.INFO.withOpacity(0.2),
-          color: GFColors.INFO,
-        ),
-      ],
-    );
-  }
-
-  // FUNCIÓN AUXILIAR PARA OBTENER EL COLOR SEGÚN EL ESTADO
-  Color _getTimerColor(PomodoroTimerState state) {
-    PomodoroTimerState stateForColor = state;
-    if (state == PomodoroTimerState.paused) {
-      stateForColor = controller.stateBeforePause ?? PomodoroTimerState.work;
-    }
-
-    switch (stateForColor) {
-      case PomodoroTimerState.work:
-        return GFColors.DANGER; // Rojo para trabajo
-      case PomodoroTimerState.shortBreak:
-        return GFColors.SUCCESS; // Verde para descanso corto
-      case PomodoroTimerState.longBreak:
-        return GFColors.INFO; // Azul para descanso largo
-      default:
-        return GFColors.SECONDARY; // Un color neutral para otros estados
-    }
-  }
-
   Widget _buildMobilePomodoroScreen(BuildContext context) {
     if (controller.selectedConfig.value == null &&
         controller.configs.isNotEmpty) {
@@ -438,11 +84,11 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
     } else if (controller.selectedConfig.value == null &&
         controller.configs.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.back();
+        Get.back<Object>();
         Get.snackbar('Error', 'No hay configuraciones Pomodoro disponibles.');
       });
       return const Scaffold(
-        body: Center(child: Text("No hay configuración seleccionada.")),
+        body: Center(child: Text('No hay configuración seleccionada.')),
       );
     }
 
@@ -455,9 +101,9 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Get.back();
+              Get.back<Object>();
             },
-            tooltip: "Configuraciones",
+            tooltip: 'Configuraciones',
           ),
         ],
       ),
@@ -465,7 +111,7 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
         child: Obx(() {
           if (controller.selectedConfig.value == null) {
             return const Text(
-              "Selecciona una configuración desde la lista para comenzar.",
+              'Selecciona una configuración desde la lista para comenzar.',
             );
           }
           return Column(
@@ -570,6 +216,331 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
     );
   }
 
+  Widget _buildTvPomodoroScreen(BuildContext context) {
+    // Comprobaciones iniciales, igual que en la versión móvil
+    if (controller.selectedConfig.value == null) {
+      // Usamos un post frame callback para no causar errores durante el build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (controller.configs.isNotEmpty) {
+          controller.selectConfigForTimer(controller.configs.first);
+        } else {
+          Get.back<Object>();
+          Get.snackbar('Error', 'No hay configuraciones Pomodoro disponibles.');
+        }
+      });
+      // Mientras tanto, mostramos un loader
+      return const Scaffold(
+        backgroundColor: Color(0xFF101D25),
+        body: Center(child: GFLoader(type: GFLoaderType.circle)),
+      );
+    }
+
+    // El cuerpo principal de nuestra nueva UI de TV
+    return Obx(() {
+      final state = controller.timerState.value;
+      final isWork =
+          state == PomodoroTimerState.work ||
+          (state == PomodoroTimerState.paused &&
+              controller.stateBeforePause == PomodoroTimerState.work);
+      return Scaffold(
+        body: Stack(
+          children: [
+            AnimatedBackground(isWork: isWork),
+
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(40.0),
+                child: Column(
+                  children: [
+                    _buildHeaderTV(),
+                    const Spacer(),
+                    _buildProgressRingTV(), // Ya lo teníamos
+                    const Spacer(),
+                    _buildControlsAndRoundsTV(), // Ya lo teníamos
+                  ],
+                ),
+              ),
+            ),
+
+            // Elemento 8: Indicador de Próxima Etapa
+            Positioned(
+              top: 120,
+              right: 40,
+              child: _buildNextStageIndicatorTV(),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  // --- WIDGETS AUXILIARES PARA LA VISTA DE TV ---
+
+  Widget _buildHeaderTV() {
+    return Obx(() {
+      final config = controller.selectedConfig.value;
+      if (config == null) return const SizedBox.shrink();
+
+      return Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _infoChip(
+                'Trabajo: ${config.workTime ~/ 60}m',
+                Icons.work_outline,
+              ),
+              _infoChip(
+                'Descanso: ${config.shortBreak ~/ 60}m',
+                Icons.free_breakfast_outlined,
+              ),
+              if (config.longBreak != null)
+                _infoChip(
+                  'Largo: ${config.longBreak! ~/ 60}m',
+                  Icons.king_bed_outlined,
+                ),
+            ],
+          ),
+          if (config.goal != null && config.goal!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: Text(
+                'Meta: ${config.goal}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w500,
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ],
+      );
+    });
+  }
+
+  Widget _infoChip(String text, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white54, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: const TextStyle(color: Colors.white54, fontSize: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Elemento 2: Aro de Progreso Gigante
+  Widget _buildProgressRingTV() {
+    return Obx(() {
+      final state = controller.timerState.value;
+      final isWork =
+          state == PomodoroTimerState.work ||
+          (state == PomodoroTimerState.paused &&
+              controller.stateBeforePause == PomodoroTimerState.work);
+      final color = isWork ? Colors.tealAccent : Colors.orangeAccent;
+
+      return SizedBox(
+        width: 350,
+        height: 350,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CircularProgressIndicator(
+              value: 1.0,
+              strokeWidth: 20,
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                color.withValues(alpha: 0.2),
+              ),
+            ),
+            // Círculo de progreso
+            CircularProgressIndicator(
+              value: controller.progressPercentage,
+              strokeWidth: 20,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              strokeCap: StrokeCap.round,
+            ),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    controller.formattedTime,
+                    style: const TextStyle(
+                      fontSize: 90,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w300,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // --- TRANSICIÓN ANIMADA PARA EL TEXTO DE ESTADO ---
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(scale: animation, child: child),
+                      );
+                    },
+                    child: Text(
+                      // Usamos un Key para que AnimatedSwitcher sepa que el widget cambió
+                      key: ValueKey<String>(controller.currentTimerStateLabel),
+                      controller.currentTimerStateLabel.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.white.withValues(alpha: 0.8),
+                        letterSpacing: 4,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  // Elemento 3: Controles y Visualizador de Rondas
+  Widget _buildControlsAndRoundsTV() {
+    return Column(
+      children: [
+        // Elemento 4: Visualizador de Rondas
+        Obx(() {
+          final config = controller.selectedConfig.value;
+          if (config == null) return const SizedBox.shrink();
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(config.rounds, (index) {
+              final isCompleted = index < controller.currentRound.value - 1;
+              final isCurrent =
+                  index == controller.currentRound.value - 1 &&
+                  controller.timerState.value != PomodoroTimerState.idle;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Icon(
+                  isCompleted
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: isCurrent ? Colors.tealAccent : Colors.white24,
+                  size: 30,
+                ),
+              );
+            }),
+          );
+        }),
+        const SizedBox(height: 40),
+        // Botones de control
+        Obx(
+          () => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _controlButtonTV(
+                icon: Icons.replay,
+                label: 'Reiniciar',
+                onPressed:
+                    controller.timerState.value != PomodoroTimerState.idle &&
+                        controller.timerState.value !=
+                            PomodoroTimerState.finished
+                    ? controller.resetTimer
+                    : null,
+              ),
+              const SizedBox(width: 40),
+              if (controller.canStart || controller.canResume)
+                _controlButtonTV(
+                  icon: Icons.play_arrow,
+                  label:
+                      controller.timerState.value == PomodoroTimerState.paused
+                      ? 'Reanudar'
+                      : 'Iniciar',
+                  onPressed: controller.startPauseTimer,
+                  isPrimary: true,
+                ),
+              if (controller.canPause)
+                _controlButtonTV(
+                  icon: Icons.pause,
+                  label: 'Pausar',
+                  onPressed: controller.startPauseTimer,
+                  isPrimary: true,
+                ),
+              const SizedBox(width: 40),
+              _controlButtonTV(
+                icon: Icons.skip_next,
+                label: 'Saltar',
+                onPressed:
+                    controller.timerState.value != PomodoroTimerState.idle &&
+                        controller.timerState.value !=
+                            PomodoroTimerState.finished
+                    ? controller.skipToNextState
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNextStageIndicatorTV() {
+    return Obx(() {
+      final nextStateLabel =
+          controller.nextTimerStateLabel; // Necesitas crear este getter
+      if (nextStateLabel.isEmpty) return const SizedBox.shrink();
+
+      return Opacity(
+        opacity: 0.7,
+        child: Chip(
+          avatar: const Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: Colors.white70,
+          ),
+          label: Text(
+            'Siguiente: $nextStateLabel',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          backgroundColor: Colors.white.withValues(alpha: 0.1),
+        ),
+      );
+    });
+  }
+
+  Widget _controlButtonTV({
+    required IconData icon,
+    required String label,
+    VoidCallback? onPressed,
+    bool isPrimary = false,
+  }) {
+    return GFButton(
+      onPressed: onPressed,
+      text: label,
+      icon: Icon(icon, color: onPressed != null ? Colors.white : Colors.grey),
+      size: GFSize.LARGE,
+      shape: GFButtonShape.pills,
+      color: isPrimary ? GFColors.SUCCESS : GFColors.TRANSPARENT,
+      type: isPrimary ? GFButtonType.solid : GFButtonType.outline,
+      textColor: onPressed != null ? Colors.white : Colors.grey,
+      focusColor: GFColors.PRIMARY.withValues(alpha: 0.4),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = Get.width;
@@ -583,5 +554,30 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
     } else {
       return _buildMobilePomodoroScreen(context);
     }
+  }
+}
+
+class AnimatedBackground extends StatelessWidget {
+  final bool isWork;
+  const AnimatedBackground({super.key, required this.isWork});
+
+  @override
+  Widget build(BuildContext context) {
+    // Usamos MirrorAnimation para que la animación vaya y vuelva suavemente
+    return MirrorAnimationBuilder<Color?>(
+      tween: isWork
+          ? ColorTween(
+              begin: const Color(0xFF0D47A1),
+              end: const Color(0xFF1565C0),
+            ) // Tonos azules para trabajo
+          : ColorTween(
+              begin: const Color(0xFF1B5E20),
+              end: const Color(0xFF2E7D32),
+            ), // Tonos verdes para descanso
+      duration: const Duration(seconds: 10),
+      builder: (context, value, child) {
+        return Container(color: value as Color);
+      },
+    );
   }
 }

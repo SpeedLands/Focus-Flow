@@ -9,7 +9,7 @@ class ProjectProvider {
   final FirestoreService _firestoreService;
   final AuthProviderApp _authProviderApp;
 
-  final String _collectionName = "projects";
+  final String _collectionName = 'projects';
 
   ProjectProvider(this._firestoreService, this._authProviderApp);
 
@@ -22,7 +22,7 @@ class ProjectProvider {
     final now = Timestamp.now();
     final newProject = project.copyWith(
       adminUserId: currentUser.uid,
-      userRoles: [_userRoleString(currentUser.uid, "admin")],
+      userRoles: [_userRoleString(currentUser.uid, 'admin')],
       createdAt: now,
       updatedAt: now,
     );
@@ -61,20 +61,20 @@ class ProjectProvider {
     final currentUser = _authProviderApp.currentUser;
     if (currentUser == null) return const Stream.empty();
 
-    final adminRole = _userRoleString(currentUser.uid, "admin");
-    final memberRole = _userRoleString(currentUser.uid, "member");
+    final adminRole = _userRoleString(currentUser.uid, 'admin');
+    final memberRole = _userRoleString(currentUser.uid, 'member');
 
     return _firestoreService
         .listenToCollectionFiltered(
           _collectionName,
           filters: [
             QueryFilter(
-              field: "userRoles",
+              field: 'userRoles',
               operator: FilterOperator.arrayContainsAny,
               value: [adminRole, memberRole],
             ),
           ],
-          orderByField: "createdAt",
+          orderByField: 'createdAt',
           descending: true,
         )
         .map(
@@ -90,11 +90,11 @@ class ProjectProvider {
 
   Future<String> generateAccessCode(String projectId) async {
     final currentUser = _authProviderApp.currentUser;
-    if (currentUser == null) return "";
+    if (currentUser == null) return '';
 
     final doc = await getProjectById(projectId);
     if (doc == null || doc.adminUserId != currentUser.uid) {
-      throw Exception("No tienes permisos para generar código.");
+      throw Exception('No tienes permisos para generar código.');
     }
 
     const String chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -117,10 +117,10 @@ class ProjectProvider {
     final currentUser = _authProviderApp.currentUser;
 
     if (currentUser == null) {
-      throw Exception("Usuario no autenticado. Inicia sesión para unirte.");
+      throw Exception('Usuario no autenticado. Inicia sesión para unirte.');
     }
     if (accessCode.trim().isEmpty) {
-      throw Exception("Por favor, ingresa un código de acceso.");
+      throw Exception('Por favor, ingresa un código de acceso.');
     }
 
     final results = await _firestoreService.getDocumentsWhere(
@@ -131,15 +131,15 @@ class ProjectProvider {
     );
 
     if (results == null || results.isEmpty) {
-      throw Exception("Código de acceso inválido o el proyecto no existe.");
+      throw Exception('Código de acceso inválido o el proyecto no existe.');
     }
 
     final doc = results.first;
-    ProjectModel project = ProjectModel.fromFirestore(
+    final ProjectModel project = ProjectModel.fromFirestore(
       doc as DocumentSnapshot<Map<String, dynamic>>,
     );
 
-    final userRoleToAdd = _userRoleString(currentUser.uid, "member");
+    final userRoleToAdd = _userRoleString(currentUser.uid, 'member');
 
     if (project.adminUserId == currentUser.uid) {
       return project;
@@ -161,11 +161,13 @@ class ProjectProvider {
     );
 
     if (updateSuccess) {
-      List<String> updatedUserRoles = List<String>.from(project.userRoles);
+      final List<String> updatedUserRoles = List<String>.from(
+        project.userRoles,
+      );
       updatedUserRoles.add(userRoleToAdd);
       return project.copyWith(userRoles: updatedUserRoles);
     } else {
-      throw Exception("No se pudo unir al proyecto. Inténtalo de nuevo.");
+      throw Exception('No se pudo unir al proyecto. Inténtalo de nuevo.');
     }
   }
 
@@ -180,12 +182,12 @@ class ProjectProvider {
       (r) => r.startsWith('${currentUser.uid}:'),
       orElse: () => '',
     );
-    if (currentRole.isEmpty) throw Exception("No eres miembro.");
+    if (currentRole.isEmpty) throw Exception('No eres miembro.');
 
-    final uniqueMembers = doc.userRoles.map((e) => e.split(":").first).toSet();
+    final uniqueMembers = doc.userRoles.map((e) => e.split(':').first).toSet();
 
     if (doc.adminUserId == currentUser.uid && uniqueMembers.length > 1) {
-      throw Exception("Transfiere la administración antes de salir.");
+      throw Exception('Transfiere la administración antes de salir.');
     }
 
     if (doc.adminUserId == currentUser.uid && uniqueMembers.length == 1) {

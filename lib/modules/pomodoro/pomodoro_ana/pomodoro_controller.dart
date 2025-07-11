@@ -19,7 +19,7 @@ class PomodoroControllerAna extends GetxController {
   // ───────── Configuraciones Pomodoro ─────────
   final RxList<PomodoroConfig> configs = <PomodoroConfig>[].obs;
   final Rx<PomodoroConfig?> selectedConfig = Rx<PomodoroConfig?>(null);
-  StreamSubscription? _configSubscription;
+  StreamSubscription<List<PomodoroConfig>>? _configSubscription;
   RxBool isLoadingConfigs = true.obs;
   RxBool isSavingConfig = false.obs;
 
@@ -40,7 +40,6 @@ class PomodoroControllerAna extends GetxController {
   String? editingConfigId;
 
   PomodoroTimerState? _stateBeforePause;
-  late Worker _authEverWorker;
 
   // ───────── INIT ─────────
   @override
@@ -48,7 +47,7 @@ class PomodoroControllerAna extends GetxController {
     super.onInit();
 
     // escuchar autenticación
-    _authEverWorker = ever(_authController.currentUser, (user) {
+    ever(_authController.currentUser, (user) {
       if (user != null) {
         _listenToConfigs(user.uid);
         _initFormControllers();
@@ -99,7 +98,7 @@ class PomodoroControllerAna extends GetxController {
             }
             isLoadingConfigs.value = false;
           },
-          onError: (e) {
+          onError: (Object e) {
             isLoadingConfigs.value = false;
             Get.snackbar('Error', 'No se pudieron cargar configs: $e');
           },
@@ -153,11 +152,11 @@ class PomodoroControllerAna extends GetxController {
 
       if (editingConfigId == null) {
         await _pomodoroProvider.addConfig(cfg, uid);
-        Get.back();
+        Get.back<Object>();
         Get.snackbar('Éxito', 'Configuración añadida.');
       } else {
         await _pomodoroProvider.updateConfig(cfg, uid);
-        Get.back();
+        Get.back<Object>();
         Get.snackbar('Éxito', 'Configuración actualizada.');
         if (selectedConfig.value?.id == editingConfigId) {
           selectConfigForTimer(cfg);

@@ -51,7 +51,7 @@ class ProjectCardMobile extends StatelessWidget {
                     children: [
                       Text(
                         project.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: GFColors.DARK,
                           fontWeight: FontWeight.bold,
                         ),
@@ -59,7 +59,7 @@ class ProjectCardMobile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (isAdmin)
-                        Text(
+                        const Text(
                           'Administrador',
                           style: TextStyle(
                             color: GFColors.PRIMARY,
@@ -88,12 +88,12 @@ class ProjectCardMobile extends StatelessWidget {
               const SizedBox(height: 8.0),
               Text(
                 project.description!,
-                style: TextStyle(color: GFColors.FOCUS),
+                style: const TextStyle(color: GFColors.FOCUS),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 12.0),
-              Text("$memberCount miembro(s)"),
+              Text('$memberCount miembro(s)'),
             ],
           ],
         ),
@@ -112,7 +112,7 @@ class ProjectCardMobile extends StatelessWidget {
     switch (value) {
       case 'tasks':
         controller.setCurrentProjectRole(project);
-        Get.toNamed(
+        Get.toNamed<Object>(
           AppRoutes.TASKS_LIST,
           arguments: {'projectId': project.id, 'projectName': project.name},
         );
@@ -122,8 +122,8 @@ class ProjectCardMobile extends StatelessWidget {
           controller.navigateToEditProject(project);
         } else {
           Get.snackbar(
-            "Permiso Denegado",
-            "Solo el admin puede editar detalles.",
+            'Permiso Denegado',
+            'Solo el admin puede editar detalles.',
           );
         }
         break;
@@ -132,18 +132,18 @@ class ProjectCardMobile extends StatelessWidget {
           controller.showInviteUserDialog(context, project.id!);
         } else {
           Get.snackbar(
-            "Permiso Denegado",
-            "Solo el admin puede invitar miembros.",
+            'Permiso Denegado',
+            'Solo el admin puede invitar miembros.',
           );
         }
         break;
       case 'manage_members':
         if (isAdmin) {
-          Get.snackbar("Próximamente", "Pantalla para gestionar miembros.");
+          Get.snackbar('Próximamente', 'Pantalla para gestionar miembros.');
         } else {
           Get.snackbar(
-            "Permiso Denegado",
-            "No tienes permiso para gestionar miembros.",
+            'Permiso Denegado',
+            'No tienes permiso para gestionar miembros.',
           );
         }
         break;
@@ -153,8 +153,8 @@ class ProjectCardMobile extends StatelessWidget {
           controller.showAccessCodeDialog();
         } else {
           Get.snackbar(
-            "Permiso Denegado",
-            "Solo el admin puede ver el código de acceso.",
+            'Permiso Denegado',
+            'Solo el admin puede ver el código de acceso.',
           );
         }
         break;
@@ -163,8 +163,8 @@ class ProjectCardMobile extends StatelessWidget {
           controller.performLeaveProject(project.id!);
         } else if (isAdmin) {
           Get.snackbar(
-            "Acción no permitida",
-            "El administrador no puede abandonar el proyecto. Transfiere la administración o elimina el proyecto.",
+            'Acción no permitida',
+            'El administrador no puede abandonar el proyecto. Transfiere la administración o elimina el proyecto.',
           );
         }
         break;
@@ -184,7 +184,7 @@ class ProjectCardMobile extends StatelessWidget {
     final textColor = isTV
         ? Colors.white
         : Theme.of(context).textTheme.bodyLarge?.color;
-    List<PopupMenuEntry<String>> items = [
+    final List<PopupMenuEntry<String>> items = [
       PopupMenuItem<String>(
         value: 'tasks',
         child: ListTile(

@@ -14,9 +14,17 @@ class TaskFormScreen extends GetView<TaskController> {
     final screenWidth = Get.width;
     final isTV = screenWidth > 800 && Get.height > 500;
     final isEditing = controller.isEditingTask;
-    final Map<String, dynamic> args = Get.arguments ?? {};
-    final String? initialProjectId = args['projectId'];
-    final String? projectName = args['projectName'] ?? 'Tareas';
+    final dynamic arguments = Get.arguments;
+
+    // 2. Comprobamos si es un mapa y hacemos el cast seguro.
+    final Map<String, dynamic> args = (arguments is Map<String, dynamic>)
+        ? arguments // Si es un mapa, lo usamos
+        : {}; // Si no (o si es null), usamos un mapa vacío.
+
+    // 3. Ahora que 'args' es un Map tipado, podemos acceder a sus claves de forma segura.
+    final String? initialProjectId =
+        args['projectId'] as String?; // Cast a String?
+    final String projectName = (args['projectName'] as String?) ?? 'Tareas';
     if (!isEditing &&
         initialProjectId != null &&
         controller.currentProjectId.value != initialProjectId) {
@@ -30,7 +38,7 @@ class TaskFormScreen extends GetView<TaskController> {
       appBar: GFAppBar(
         backgroundColor: GFColors.PRIMARY,
         title: Text(
-          isEditing ? "Editar Tarea" : "Nueva Tarea",
+          isEditing ? 'Editar Tarea' : 'Nueva Tarea',
           style: TextStyle(color: isTV ? Colors.white : Colors.white),
         ),
         leading: GFIconButton(
@@ -38,7 +46,7 @@ class TaskFormScreen extends GetView<TaskController> {
             Icons.arrow_back_ios,
             color: isTV ? Colors.white : Colors.white,
           ),
-          onPressed: () => Get.offAllNamed(
+          onPressed: () => Get.offAllNamed<Object>(
             AppRoutes.TASKS_LIST,
             arguments: {
               'projectId': initialProjectId,
@@ -74,8 +82,8 @@ class TaskFormScreen extends GetView<TaskController> {
           children: <Widget>[
             _buildTextFormField(
               controller: controller.taskNameController,
-              labelText: "Nombre de la Tarea",
-              hintText: "Ej: Revisar diseño UI",
+              labelText: 'Nombre de la Tarea',
+              hintText: 'Ej: Revisar diseño UI',
               prefixIcon: Icons.task_alt_outlined,
               isTV: isTV,
               validator: (value) {
@@ -90,8 +98,8 @@ class TaskFormScreen extends GetView<TaskController> {
 
             _buildTextFormField(
               controller: controller.taskDescriptionController,
-              labelText: "Descripción (Opcional)",
-              hintText: "Detalles adicionales...",
+              labelText: 'Descripción (Opcional)',
+              hintText: 'Detalles adicionales...',
               prefixIcon: Icons.notes_outlined,
               maxLines: isTV ? 4 : 3,
               isTV: isTV,
@@ -104,13 +112,13 @@ class TaskFormScreen extends GetView<TaskController> {
             ),
             SizedBox(height: isTV ? 35.0 : 25.0),
 
-            Text("Prioridad:", style: isTV ? tvLabelStyle : mobileLabelStyle),
+            Text('Prioridad:', style: isTV ? tvLabelStyle : mobileLabelStyle),
             SizedBox(height: isTV ? 15.0 : 10.0),
             _buildPrioritySelector(context, isTV),
             SizedBox(height: isTV ? 35.0 : 25.0),
 
             Text(
-              "Fecha de Vencimiento (Opcional):",
+              'Fecha de Vencimiento (Opcional):',
               style: isTV ? tvLabelStyle : mobileLabelStyle,
             ),
             SizedBox(height: isTV ? 15.0 : 10.0),
@@ -124,8 +132,8 @@ class TaskFormScreen extends GetView<TaskController> {
                     : controller.saveTask,
                 text: controller.isSavingTask.value
                     ? (controller.isEditingTask
-                          ? "Actualizando..."
-                          : "Creando...")
+                          ? 'Actualizando...'
+                          : 'Creando...')
                     : (controller.isEditingTask
                           ? 'Actualizar Tarea'
                           : 'Crear Tarea'),
@@ -285,7 +293,7 @@ class TaskFormScreen extends GetView<TaskController> {
             padding: const EdgeInsets.all(15),
             borderRadius: BorderRadius.circular(10),
             elevation: 0,
-            border: BorderSide(color: Colors.black12, width: 1),
+            border: const BorderSide(color: Colors.black12, width: 1),
             dropdownButtonColor: GFColors.WHITE,
             value: controller.selectedPriority.value,
             style: TextStyle(color: colorScheme.onSurface),
@@ -355,7 +363,10 @@ class TaskFormScreen extends GetView<TaskController> {
                       color: Colors.white,
                     ),
                   ),
-                  Icon(Icons.calendar_month_outlined, color: Colors.white70),
+                  const Icon(
+                    Icons.calendar_month_outlined,
+                    color: Colors.white70,
+                  ),
                 ],
               ),
             ),

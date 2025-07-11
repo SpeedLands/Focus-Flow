@@ -31,12 +31,29 @@ class PomodoroConfig {
   static PomodoroConfig fromJson(String id, Map<String, dynamic> json) {
     return PomodoroConfig(
       id: id,
-      workTime: json['workTime'],
-      shortBreak: json['shortBreak'],
-      longBreak: json['longBreak'],
-      rounds: json['rounds'],
-      goal: json['goal'],
-      name: json['name'],
+
+      // Para números enteros (int)
+      // Hacemos cast a 'num' primero que es más flexible (acepta int y double)
+      // y luego lo convertimos a int.
+      workTime:
+          (json['workTime'] as num?)?.toInt() ??
+          25, // Valor por defecto: 25 minutos
+      shortBreak:
+          (json['shortBreak'] as num?)?.toInt() ??
+          5, // Valor por defecto: 5 minutos
+      longBreak:
+          (json['longBreak'] as num?)?.toInt() ??
+          15, // Valor por defecto: 15 minutos
+      rounds:
+          (json['rounds'] as num?)?.toInt() ?? 4, // Valor por defecto: 4 rondas
+      // Si 'goal' también es un int
+      goal:
+          (json['goal'] as String?)?.toString() ??
+          '', // Valor por defecto: 1 meta
+      // Para Strings
+      name:
+          (json['name'] as String?) ??
+          'Configuración Pomodoro', // Valor por defecto
     );
   }
 

@@ -16,13 +16,13 @@ class PomodoroTimerScreen extends GetView<PomodoroControllerAna> {
             controller.selectConfigForTimer(controller.configs.first);
           } else if (config == null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              Get.back();
+              Get.back<Object>();
               Get.snackbar(
                 'Error',
                 'No hay configuraciones Pomodoro disponibles.',
               );
             });
-            return const Text("Sin configuración.");
+            return const Text('Sin configuración.');
           }
 
           return Column(
@@ -104,11 +104,11 @@ class PomodoroTimerScreen extends GetView<PomodoroControllerAna> {
     } else if (controller.selectedConfig.value == null &&
         controller.configs.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.back();
+        Get.back<Object>();
         Get.snackbar('Error', 'No hay configuraciones Pomodoro disponibles.');
       });
       return const Scaffold(
-        body: Center(child: Text("No hay configuración seleccionada.")),
+        body: Center(child: Text('No hay configuración seleccionada.')),
       );
     }
 
@@ -121,9 +121,9 @@ class PomodoroTimerScreen extends GetView<PomodoroControllerAna> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Get.back();
+              Get.back<Object>();
             },
-            tooltip: "Configuraciones",
+            tooltip: 'Configuraciones',
           ),
         ],
       ),
@@ -131,7 +131,7 @@ class PomodoroTimerScreen extends GetView<PomodoroControllerAna> {
         child: Obx(() {
           if (controller.selectedConfig.value == null) {
             return const Text(
-              "Selecciona una configuración desde la lista para comenzar.",
+              'Selecciona una configuración desde la lista para comenzar.',
             );
           }
           return Column(

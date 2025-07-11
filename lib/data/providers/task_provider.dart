@@ -10,8 +10,8 @@ class TaskProvider {
 
   TaskProvider(this._firestoreService, this._authProviderApp);
 
-  String get _projectsCollection => "projects";
-  String get _tasksSubcollection => "tasks";
+  String get _projectsCollection => 'projects';
+  String get _tasksSubcollection => 'tasks';
 
   Future<bool> _isUserMember(String userId, ProjectModel project) {
     return Future.value(
@@ -41,8 +41,6 @@ class TaskProvider {
       );
       return snapshot;
     } catch (e) {
-      // Manejar el error apropiadamente
-      print("Error getting total tasks count: $e");
       return 0;
     }
   }
@@ -53,7 +51,7 @@ class TaskProvider {
 
     final project = await _getProject(projectId);
     if (project == null || !(await _isUserMember(currentUser.uid, project))) {
-      throw Exception("No autorizado");
+      throw Exception('No autorizado');
     }
 
     final taskData = task.copyWith(
@@ -113,7 +111,7 @@ class TaskProvider {
 
     final project = await _getProject(task.projectId);
     if (project == null || project.adminUserId != currentUser.uid) {
-      throw Exception("Solo el admin puede editar detalles");
+      throw Exception('Solo el admin puede editar detalles');
     }
 
     final updated = task.copyWith(updatedAt: Timestamp.now());
@@ -135,7 +133,7 @@ class TaskProvider {
 
     final project = await _getProject(projectId);
     if (project == null || !(await _isUserMember(currentUser.uid, project))) {
-      throw Exception("No autorizado");
+      throw Exception('No autorizado');
     }
 
     final updateData = {
@@ -158,7 +156,7 @@ class TaskProvider {
 
     final project = await _getProject(projectId);
     if (project == null || project.adminUserId != currentUser.uid) {
-      throw Exception("No autorizado");
+      throw Exception('No autorizado');
     }
 
     await _firestoreService.deleteDocument(

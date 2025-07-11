@@ -28,18 +28,15 @@ class MessagingService {
     try {
       return await firebaseMessaging.getToken(vapidKey: vapidKey);
     } catch (e) {
-      debugPrint("Error obteniendo token FCM: $e");
+      debugPrint('Error obteniendo token FCM: $e');
       return null;
     }
   }
 
   Future<void> requestPermission() async {
     try {
-      NotificationSettings settings = await firebaseMessaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      final NotificationSettings settings = await firebaseMessaging
+          .requestPermission(alert: true, badge: true, sound: true);
 
       switch (settings.authorizationStatus) {
         case AuthorizationStatus.authorized:
@@ -55,7 +52,7 @@ class MessagingService {
           debugPrint('🔍 Estado de permiso FCM desconocido');
       }
     } catch (e) {
-      debugPrint("Error solicitando permiso FCM: $e");
+      debugPrint('Error solicitando permiso FCM: $e');
     }
   }
 
@@ -80,14 +77,14 @@ class MessagingService {
     final data = message.data;
 
     if (notification != null) {
-      final type = data['type'];
+      final type = data['type'] as String?;
       final payload = jsonEncode(data);
 
       if (type == 'project_invitation') {
         // Mostrar con botones
         NotificationsService().showNotificationWithActions(
-          title: notification.title ?? "Notificación",
-          body: notification.body ?? "",
+          title: notification.title ?? 'Notificación',
+          body: notification.body ?? '',
           channelId: 'general_foreground',
           channelName: 'Mensajes en foreground',
           channelDescription:
@@ -97,8 +94,8 @@ class MessagingService {
       } else {
         // Mostrar sin botones
         NotificationsService().showBasicNotification(
-          title: notification.title ?? "Notificación",
-          body: notification.body ?? "",
+          title: notification.title ?? 'Notificación',
+          body: notification.body ?? '',
           channelId: 'general_foreground',
           channelName: 'Mensajes en foreground',
           channelDescription:
@@ -115,10 +112,10 @@ class MessagingService {
     bool isTerminatedOpen = false,
   }) async {
     final data = message.data;
-    final String? screen = data['screen'];
+    final String? screen = data['screen'] as String?;
     if (screen != null) {
-      debugPrint("📲 Navegando a $screen con datos: $data");
-      await Future.delayed(const Duration(milliseconds: 600));
+      debugPrint('📲 Navegando a $screen con datos: $data');
+      await Future<void>.delayed(const Duration(milliseconds: 600));
       // Aquí deberías hacer la navegación real con tu sistema de rutas (ej: Get.toNamed)
     }
   }

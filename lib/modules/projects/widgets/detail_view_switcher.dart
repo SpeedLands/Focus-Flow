@@ -60,7 +60,7 @@ class DetailViewSwitcherState extends State<DetailViewSwitcher>
       Icons.people_outline,
       Icons.vpn_key_outlined,
     ];
-    final labels = ["Resumen", "Actividad", "Miembros", "Acceso"];
+    final labels = ['Resumen', 'Actividad', 'Miembros', 'Acceso'];
 
     // --- CÓDIGO CORREGIDO DE GFSegmentTabs ---
     return GFSegmentTabs(

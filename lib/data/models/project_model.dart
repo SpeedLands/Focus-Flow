@@ -30,15 +30,36 @@ class ProjectModel {
       Color(int.parse(colorHex.replaceFirst('#', '0xff')));
 
   static String colorToHex(Color color) {
-    return '#${color.value.toRadixString(16).substring(2).padLeft(6, '0')}';
+    // Obtenemos el valor entero (0-255) de cada componente usando la fórmula del linter.
+    final int rInt = (color.r * 255.0).round() & 0xff;
+    final int gInt = (color.g * 255.0).round() & 0xff;
+    final int bInt = (color.b * 255.0).round() & 0xff;
+
+    // Convertimos cada entero a su representación hexadecimal.
+    final r = rInt.toRadixString(16).padLeft(2, '0');
+    final g = gInt.toRadixString(16).padLeft(2, '0');
+    final b = bInt.toRadixString(16).padLeft(2, '0');
+
+    // Los unimos en el formato #RRGGBB.
+    return '#$r$g$b';
   }
 
   factory ProjectModel.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
   ) {
-    final data = snapshot.data()!;
+    final data = snapshot.data();
+
+    // Guarda de seguridad
+    if (data == null) {
+      throw StateError(
+        'El documento del proyecto ${snapshot.id} no tiene datos.',
+      );
+    }
+
+    // Lógica segura para userRoles (la que tenías es muy buena)
     List<String> userRolesList = [];
     if (data['userRoles'] != null && data['userRoles'] is List) {
+      // Usamos List.from para crear una nueva lista y whereType para filtrar solo los Strings.
       userRolesList = List<String>.from(
         (data['userRoles'] as List).whereType<String>(),
       );
@@ -46,15 +67,25 @@ class ProjectModel {
 
     return ProjectModel(
       id: snapshot.id,
-      name: data['name'] ?? 'Sin Nombre',
-      description: data['description'],
-      colorHex: data['colorHex'] ?? '#9E9E9E',
-      iconName: data['iconName'] ?? 'default_icon',
-      adminUserId: data['adminUserId'] ?? '',
+
+      // Campos String requeridos
+      name: (data['name'] as String?) ?? 'Sin Nombre',
+      colorHex: (data['colorHex'] as String?) ?? '#9E9E9E',
+      iconName: (data['iconName'] as String?) ?? 'default_icon',
+      adminUserId: (data['adminUserId'] as String?) ?? '',
+
+      // Lista de Strings (ya manejada de forma segura arriba)
       userRoles: userRolesList,
-      accessCode: data['accessCode'],
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      updatedAt: data['updatedAt'],
+
+      // Campos String que pueden ser nulos en el modelo
+      description: data['description'] as String?,
+      accessCode: data['accessCode'] as String?,
+
+      // Campos Timestamp
+      createdAt: (data['createdAt'] as Timestamp?) ?? Timestamp.now(),
+      updatedAt:
+          data['updatedAt']
+              as Timestamp?, // Este es nulable, así que no necesita valor por defecto
     );
   }
 

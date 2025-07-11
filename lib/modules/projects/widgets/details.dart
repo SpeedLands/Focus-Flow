@@ -2,8 +2,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_flow/data/models/project_model.dart';
 import 'package:focus_flow/modules/projects/project_controller.dart';
+import 'package:focus_flow/modules/projects/widgets/code_view.dart';
 import 'package:focus_flow/modules/projects/widgets/detail_view_switcher.dart';
-import 'package:focus_flow/routes/app_routes.dart';
+import 'package:focus_flow/modules/projects/widgets/members_card.dart';
+import 'package:focus_flow/modules/projects/widgets/recent_activity.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 
@@ -59,15 +61,17 @@ class Details extends StatelessWidget {
       case 0:
         return _buildTaskStatusBarChartTv(context);
       case 1:
-        return _buildRecentActivityFeedTv(context, controller);
+        return RecentActivityFeedTv(
+          controller: controller,
+        ); //_buildRecentActivityFeedTv(context, controller);
       case 2:
-        return _buildMemberStatusTv(context);
+        return MemberStatusGridTv(controller: controller);
       case 3:
-        return _buildAccessCodeViewTv(context);
+        return AccessCodeViewTv(controller: controller);
       default:
         return const Center(
           child: Text(
-            "Vista no disponible",
+            'Vista no disponible',
             style: TextStyle(color: Colors.white),
           ),
         );
@@ -309,178 +313,6 @@ class Details extends StatelessWidget {
         const SizedBox(width: 8),
         Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
       ],
-    );
-  }
-
-  Widget _buildRecentActivityFeedTv(
-    BuildContext context,
-    ProjectController controller,
-  ) {
-    final project = controller.selectedProjectForTv.value;
-    return Obx(() {
-      if (controller.recentActivity.isEmpty) {
-        return Center(
-          child: Column(
-            children: [
-              Text(
-                "No hay actividad reciente en este proyecto",
-                style: TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 24),
-              GFButton(
-                hoverColor: GFColors.INFO,
-                size: GFSize.LARGE,
-                shape: GFButtonShape.pills,
-                text: 'Ver todas las Tareas',
-                onPressed: () {
-                  controller.setCurrentProjectRole(project!);
-                  Get.toNamed(
-                    AppRoutes.TASKS_LIST,
-                    arguments: {
-                      'projectId': project.id,
-                      'projectName': project.name,
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      }
-      return Column(
-        children: [
-          GFButton(
-            hoverColor: GFColors.INFO,
-            size: GFSize.LARGE,
-            shape: GFButtonShape.pills,
-            text: 'Ver todas las Tareas',
-            onPressed: () {
-              controller.setCurrentProjectRole(project!);
-              Get.toNamed(
-                AppRoutes.TASKS_LIST,
-                arguments: {
-                  'projectId': project.id,
-                  'projectName': project.name,
-                },
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: ListView.builder(
-              itemCount: controller.recentActivity.length,
-              itemBuilder: (ctx, index) {
-                final activity = controller.recentActivity[index];
-                return GFListTile(
-                  color: Color(0xFF1a2436),
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  title: Text(
-                    activity['text'],
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  subTitle: Text(
-                    "Por: ${activity['user']} - ${activity['time'].toDate()}",
-                    style: const TextStyle(color: Colors.white60),
-                  ),
-                  icon: const Icon(
-                    Icons.check_circle_outline,
-                    color: GFColors.SUCCESS,
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      );
-    });
-  }
-
-  Widget _buildMemberStatusTv(BuildContext context) {
-    final project = controller.selectedProjectForTv.value!;
-    final members = project.userRoles
-        .map((role) => role.split(':').first)
-        .toSet()
-        .toList();
-
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 400,
-        childAspectRatio: 2,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-      ),
-      itemCount: members.length,
-      itemBuilder: (ctx, index) {
-        final userId = members[index];
-        final bool isAdmin = project.adminUserId == userId;
-        return GFCard(
-          color: Colors.white.withValues(alpha: 0.1),
-          content: ListTile(
-            leading: GFAvatar(
-              child: Text(userId.substring(0, 2).toUpperCase()),
-            ),
-            title: Text(
-              isAdmin ? "Admin" : "Miembro",
-              style: TextStyle(
-                color: isAdmin ? GFColors.PRIMARY : Colors.white,
-              ),
-            ),
-            subtitle: Text(
-              userId,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAccessCodeViewTv(BuildContext context) {
-    final project = controller.selectedProjectForTv.value!;
-    final bool isAdmin = controller.isCurrentUserAdmin(project);
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            "Código de Acceso al Proyecto",
-            style: TextStyle(color: Colors.white70, fontSize: 24),
-          ),
-          const SizedBox(height: 20),
-          if (isAdmin)
-            Obx(
-              () => SelectableText(
-                controller.generatedAccessCode.value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 80,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 8,
-                ),
-              ),
-            ),
-          if (!isAdmin)
-            const Text(
-              "Solo los administradores pueden ver y generar el código.",
-              style: TextStyle(color: GFColors.WARNING, fontSize: 18),
-            ),
-          const SizedBox(height: 30),
-          if (isAdmin)
-            GFButton(
-              onPressed: () =>
-                  controller.performGenerateAccessCode(project.id!),
-              text: "Generar / Ver Código",
-              icon: const Icon(Icons.refresh, color: Colors.white),
-              size: GFSize.LARGE,
-              type: GFButtonType.outline2x,
-              color: Colors.white,
-              hoverColor: project.projectColor.withValues(alpha: 0.3),
-              focusColor: project.projectColor,
-            ),
-        ],
-      ),
     );
   }
 }

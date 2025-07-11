@@ -68,7 +68,8 @@ class ProjectController extends GetxController {
   final RxList<AppNotificationModel> pendingProjectDeletionRequests =
       <AppNotificationModel>[].obs;
   final RxBool isLoadingDeletionRequests = false.obs;
-  StreamSubscription? _pendingDeletionRequestsSubscription;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+  _pendingDeletionRequestsSubscription;
 
   final List<Color> predefinedColors = [
     Colors.red,
@@ -106,7 +107,7 @@ class ProjectController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    debugPrint("[ProjectController] onInit CALLED");
+    debugPrint('[ProjectController] onInit CALLED');
 
     ever(_authController.currentUser, (firebaseUser) {
       if (firebaseUser != null) {
@@ -134,7 +135,7 @@ class ProjectController extends GetxController {
     projects.clear();
     isLoadingProjects.value = false;
     projectListError.value =
-        "Usuario no autenticado. Inicia sesión para ver tus proyectos.";
+        'Usuario no autenticado. Inicia sesión para ver tus proyectos.';
 
     projectInvitations.clear();
     isLoadingInvitations.value = false;
@@ -155,26 +156,26 @@ class ProjectController extends GetxController {
       _fetchPendingProjectDeletionRequestsForCurrentUserAdmin();
     } else {
       debugPrint(
-        "[ProjectController] reloadProjects - Cannot reload, user not authenticated.",
+        '[ProjectController] reloadProjects - Cannot reload, user not authenticated.',
       );
     }
   }
 
   void showInviteUserDialog(BuildContext context, String projectId) {
     inviteEmailController.clear();
-    Get.defaultDialog(
-      title: "Invitar Usuario al Proyecto",
+    Get.defaultDialog<void>(
+      title: 'Invitar Usuario al Proyecto',
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            "Ingresa el correo electrónico del usuario que quieres invitar.",
+            'Ingresa el correo electrónico del usuario que quieres invitar.',
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: inviteEmailController,
             decoration: const InputDecoration(
-              labelText: "Email del Invitado",
+              labelText: 'Email del Invitado',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.email_outlined),
             ),
@@ -186,11 +187,11 @@ class ProjectController extends GetxController {
       ),
       confirm: ElevatedButton(
         onPressed: () => performInviteUser(projectId),
-        child: const Text("ENVIAR INVITACIÓN"),
+        child: const Text('ENVIAR INVITACIÓN'),
       ),
       cancel: ElevatedButton(
-        onPressed: () => Get.back(),
-        child: const Text("CANCELAR"),
+        onPressed: () => Get.back<Object>(),
+        child: const Text('CANCELAR'),
       ),
     );
   }
@@ -199,7 +200,7 @@ class ProjectController extends GetxController {
     isLoadingProjects.value = true;
     projectListError.value = '';
     debugPrint(
-      "[ProjectController] _bindProjectsStream - Binding projects stream.",
+      '[ProjectController] _bindProjectsStream - Binding projects stream.',
     );
 
     projects.bindStream(
@@ -223,12 +224,12 @@ class ProjectController extends GetxController {
             }
             return projectList;
           })
-          .handleError((error, stackTrace) {
+          .handleError((Object error, Object stackTrace) {
             debugPrint(
-              "[ProjectController] Error in projects stream: $error\n$stackTrace",
+              '[ProjectController] Error in projects stream: $error\n$stackTrace',
             );
             projectListError.value =
-                "Error al cargar proyectos: ${error.toString()}";
+                'Error al cargar proyectos: ${error.toString()}';
             isLoadingProjects.value = false;
             return <ProjectModel>[];
           }),
@@ -236,13 +237,13 @@ class ProjectController extends GetxController {
   }
 
   void showAccessCodeDialog() {
-    Get.defaultDialog(
-      title: "Código de Acceso del Proyecto",
+    Get.defaultDialog<void>(
+      title: 'Código de Acceso del Proyecto',
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            "Este es el código de acceso del proyecto. Puedes compartirlo con otros usuarios para que se unan.",
+            'Este es el código de acceso del proyecto. Puedes compartirlo con otros usuarios para que se unan.',
           ),
           const SizedBox(height: 16),
           Obx(
@@ -254,12 +255,12 @@ class ProjectController extends GetxController {
           const SizedBox(height: 16),
           ElevatedButton.icon(
             icon: const Icon(Icons.copy),
-            label: const Text("Copiar Código"),
+            label: const Text('Copiar Código'),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: generatedAccessCode.value));
               Get.snackbar(
-                "Código Copiado",
-                "El código de acceso ha sido copiado al portapapeles.",
+                'Código Copiado',
+                'El código de acceso ha sido copiado al portapapeles.',
                 snackPosition: SnackPosition.BOTTOM,
                 duration: const Duration(seconds: 2),
               );
@@ -268,8 +269,8 @@ class ProjectController extends GetxController {
         ],
       ),
       confirm: ElevatedButton(
-        onPressed: () => Get.back(),
-        child: const Text("CERRAR"),
+        onPressed: () => Get.back<Object>(),
+        child: const Text('CERRAR'),
       ),
     );
   }
@@ -309,7 +310,7 @@ class ProjectController extends GetxController {
           break;
       }
     } catch (e) {
-      debugPrint("Error fetching TV details: $e");
+      debugPrint('Error fetching TV details: $e');
       // Opcional: mostrar un snackbar de error
     } finally {
       isLoadingTvDetails.value = false;
@@ -373,7 +374,7 @@ class ProjectController extends GetxController {
   void _bindProjectInvitationsStream() {
     isLoadingInvitations.value = true;
     debugPrint(
-      "[ProjectController] _bindProjectInvitationsStream - Binding invitations stream.",
+      '[ProjectController] _bindProjectInvitationsStream - Binding invitations stream.',
     );
     projectInvitations.bindStream(
       _projectInvitationProvider
@@ -382,9 +383,9 @@ class ProjectController extends GetxController {
             isLoadingInvitations.value = false;
             return invitations;
           })
-          .handleError((error, stackTrace) {
+          .handleError((Object error, Object stackTrace) {
             debugPrint(
-              "[ProjectController] Error in project invitations stream: $error\n$stackTrace",
+              '[ProjectController] Error in project invitations stream: $error\n$stackTrace',
             );
             isLoadingInvitations.value = false;
             return <ProjectInvitationModel>[];
@@ -395,7 +396,7 @@ class ProjectController extends GetxController {
   String? getCurrentUserRoleInProject(ProjectModel? project) {
     final currentUserId = _authController.currentUser.value?.uid;
     if (project == null || currentUserId == null) return null;
-    for (String roleEntry in project.userRoles) {
+    for (final String roleEntry in project.userRoles) {
       if (roleEntry.startsWith('$currentUserId:')) {
         return roleEntry.split(':')[1];
       }
@@ -419,34 +420,34 @@ class ProjectController extends GetxController {
   }
 
   void setCurrentProjectRole(ProjectModel project) {
-    currentProjectRole.value = getCurrentUserRoleInProject(project) ?? "";
+    currentProjectRole.value = getCurrentUserRoleInProject(project) ?? '';
   }
 
   void navigateToAddProject() {
     if (_authController.currentUser.value == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para crear un proyecto.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para crear un proyecto.',
       );
       return;
     }
     currentEditingProject.value = null;
     _resetFormFields();
-    Get.toNamed(AppRoutes.PROJECT_FORM);
+    Get.toNamed<Object>(AppRoutes.PROJECT_FORM);
   }
 
   void navigateToEditProject(ProjectModel project) {
     if (_authController.currentUser.value == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para editar un proyecto.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para editar un proyecto.',
       );
       return;
     }
     if (!isCurrentUserAdmin(project)) {
       Get.snackbar(
-        "Permiso Denegado",
-        "Solo el administrador puede editar los detalles del proyecto.",
+        'Permiso Denegado',
+        'Solo el administrador puede editar los detalles del proyecto.',
       );
       return;
     }
@@ -456,27 +457,27 @@ class ProjectController extends GetxController {
     descriptionController.text = project.description ?? '';
     selectedColor.value = project.projectColor;
     selectedIconName.value = project.iconName;
-    Get.toNamed(AppRoutes.PROJECT_FORM);
+    Get.toNamed<Object>(AppRoutes.PROJECT_FORM);
   }
 
   void showJoinWithCodeDialog(BuildContext context) {
     accessCodeController.clear();
-    Get.defaultDialog(
-      title: "Unirse a Proyecto con Código",
+    Get.defaultDialog<void>(
+      title: 'Unirse a Proyecto con Código',
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            "Ingresa el código de acceso del proyecto al que quieres unirte.",
+            'Ingresa el código de acceso del proyecto al que quieres unirte.',
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: accessCodeController,
             decoration: const InputDecoration(
-              labelText: "Código de Acceso",
+              labelText: 'Código de Acceso',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.vpn_key),
-              hintText: "ABCXYZ",
+              hintText: 'ABCXYZ',
             ),
             autofocus: true,
             textCapitalization: TextCapitalization.characters,
@@ -487,11 +488,11 @@ class ProjectController extends GetxController {
       ),
       confirm: ElevatedButton(
         onPressed: performJoinProjectWithCode,
-        child: const Text("UNIRME"),
+        child: const Text('UNIRME'),
       ),
       cancel: ElevatedButton(
-        onPressed: () => Get.back(),
-        child: const Text("CANCELAR"),
+        onPressed: () => Get.back<Object>(),
+        child: const Text('CANCELAR'),
       ),
     );
   }
@@ -500,9 +501,11 @@ class ProjectController extends GetxController {
     nameController.clear();
     descriptionController.clear();
     selectedColor.value = predefinedColors.first;
-    selectedIconName.value = predefinedIcons.firstWhere(
-      (i) => i['name'] == 'default_icon',
-    )['name'];
+    final defaultIconData = predefinedIcons.firstWhere(
+      (i) => (i['name'] as String) == 'default_icon',
+      orElse: () => predefinedIcons.first, // Fallback si no se encuentra
+    );
+    selectedIconName.value = defaultIconData['name'] as String;
     inviteEmailController.clear();
     accessCodeController.clear();
     generatedAccessCode.value = '';
@@ -512,8 +515,8 @@ class ProjectController extends GetxController {
     final currentUserId = _authController.currentUser.value?.uid;
     if (currentUserId == null) {
       Get.snackbar(
-        "Error",
-        "Usuario no autenticado. No se puede guardar el proyecto.",
+        'Error',
+        'Usuario no autenticado. No se puede guardar el proyecto.',
       );
       isSavingProject.value = false;
       return;
@@ -523,25 +526,26 @@ class ProjectController extends GetxController {
       try {
         if (isEditing) {
           if (currentEditingProject.value == null) {
-            throw Exception("No hay proyecto para editar.");
+            throw Exception('No hay proyecto para editar.');
           }
-          ProjectModel projectToUpdate = currentEditingProject.value!.copyWith(
-            name: nameController.text.trim(),
-            description: descriptionController.text.trim().isNotEmpty
-                ? descriptionController.text.trim()
-                : null,
-            colorHex: ProjectModel.colorToHex(selectedColor.value),
-            iconName: selectedIconName.value,
-          );
+          final ProjectModel projectToUpdate = currentEditingProject.value!
+              .copyWith(
+                name: nameController.text.trim(),
+                description: descriptionController.text.trim().isNotEmpty
+                    ? descriptionController.text.trim()
+                    : null,
+                colorHex: ProjectModel.colorToHex(selectedColor.value),
+                iconName: selectedIconName.value,
+              );
           await _projectProvider.updateProject(projectToUpdate);
           Get.snackbar(
-            "Éxito",
-            "Proyecto actualizado correctamente.",
+            'Éxito',
+            'Proyecto actualizado correctamente.',
             backgroundColor: Colors.green,
             colorText: Colors.white,
           );
         } else {
-          ProjectModel newProjectData = ProjectModel(
+          final ProjectModel newProjectData = ProjectModel(
             name: nameController.text.trim(),
             description: descriptionController.text.trim().isNotEmpty
                 ? descriptionController.text.trim()
@@ -554,18 +558,18 @@ class ProjectController extends GetxController {
           );
           await _projectProvider.addProject(newProjectData);
           Get.snackbar(
-            "Éxito",
-            "Proyecto creado correctamente.",
+            'Éxito',
+            'Proyecto creado correctamente.',
             backgroundColor: Colors.green,
             colorText: Colors.white,
           );
         }
         _resetFormFields();
-        Get.back();
+        Get.back<Object>();
       } catch (e) {
         Get.snackbar(
-          "Error",
-          "No se pudo guardar el proyecto: ${e.toString()}",
+          'Error',
+          'No se pudo guardar el proyecto: ${e.toString()}',
           backgroundColor: Colors.red,
           colorText: Colors.white,
           duration: const Duration(seconds: 5),
@@ -579,46 +583,52 @@ class ProjectController extends GetxController {
   Future<void> handleDeleteProjectAction(ProjectModel project) async {
     final currentUser = _authController.currentUser.value;
     if (currentUser == null) {
-      Get.snackbar("Autenticación Requerida", "Debes iniciar sesión.");
+      Get.snackbar('Autenticación Requerida', 'Debes iniciar sesión.');
       return;
     }
 
     if (!isCurrentUserAdmin(project)) {
-      final existingRequest = pendingProjectDeletionRequests.firstWhereOrNull(
-        (req) => req.data?['projectId'] == project.id && req.isRead == false,
-      );
+      final existingRequest = pendingProjectDeletionRequests.firstWhereOrNull((
+        req,
+      ) {
+        final reqData = req.data;
+        if (reqData == null) return false;
+        // Hacemos cast explícito para la comparación
+        return (reqData['projectId'] as String?) == project.id &&
+            req.isRead == false;
+      });
       if (existingRequest != null) {
         Get.snackbar(
-          "Solicitud Existente",
-          "Ya existe una solicitud de eliminación pendiente para este proyecto.",
+          'Solicitud Existente',
+          'Ya existe una solicitud de eliminación pendiente para este proyecto.',
           snackPosition: SnackPosition.BOTTOM,
         );
         return;
       }
     }
 
-    Get.defaultDialog(
+    await Get.defaultDialog<void>(
       title: isCurrentUserAdmin(project)
-          ? "Confirmar Eliminación"
-          : "Solicitar Eliminación",
+          ? 'Confirmar Eliminación'
+          : 'Solicitar Eliminación',
       middleText: isCurrentUserAdmin(project)
           ? "ADVERTENCIA: ¿Estás seguro de que quieres eliminar el proyecto '${project.name}' y TODAS sus tareas? Esta acción es irreversible."
           : "Vas a solicitar la eliminación del proyecto '${project.name}'. El administrador del proyecto (${project.adminUserId}) deberá aprobarlo.",
       textConfirm: isCurrentUserAdmin(project)
-          ? "Sí, Eliminar Proyecto"
-          : "Sí, Solicitar",
-      textCancel: "Cancelar",
+          ? 'Sí, Eliminar Proyecto'
+          : 'Sí, Solicitar',
+      textCancel: 'Cancelar',
       confirmTextColor: Colors.white,
       buttonColor: Colors.red,
       onConfirm: () async {
-        Get.back();
+        Get.back<Object>();
         if (isCurrentUserAdmin(project)) {
           await _deleteProjectDirectly(project);
         } else {
           if (!isCurrentUserMemberOfProject(project)) {
             Get.snackbar(
-              "Permiso Denegado",
-              "No eres miembro de este proyecto para solicitar su eliminación.",
+              'Permiso Denegado',
+              'No eres miembro de este proyecto para solicitar su eliminación.',
               snackPosition: SnackPosition.BOTTOM,
             );
             return;
@@ -633,45 +643,47 @@ class ProjectController extends GetxController {
     isLoadingProjects.value = true;
     try {
       debugPrint(
-        "[ProjectController] Eliminando tareas para el proyecto ${project.id}...",
+        '[ProjectController] Eliminando tareas para el proyecto ${project.id}...',
       );
       await _taskProvider.deleteAllTasksForProject(project.id!);
       debugPrint(
-        "[ProjectController] Tareas eliminadas. Eliminando proyecto ${project.id}...",
+        '[ProjectController] Tareas eliminadas. Eliminando proyecto ${project.id}...',
       );
 
       await _projectProvider.deleteProject(project.id!);
-      debugPrint("[ProjectController] Proyecto ${project.id} eliminado.");
+      debugPrint('[ProjectController] Proyecto ${project.id} eliminado.');
 
       final pendingRequestsForThisProject = pendingProjectDeletionRequests
-          .where(
-            (req) =>
-                req.data?['projectId'] == project.id && req.isRead == false,
-          )
+          .where((req) {
+            final reqData = req.data;
+            if (reqData == null) return false;
+            return (reqData['projectId'] as String?) == project.id &&
+                req.isRead == false;
+          })
           .toList();
-      for (var req in pendingRequestsForThisProject) {
+      for (final req in pendingRequestsForThisProject) {
         if (req.id != null) await _notificationController.markAsRead(req.id!);
       }
 
       Get.snackbar(
-        "Proyecto Eliminado",
+        'Proyecto Eliminado',
         "El proyecto '${project.name}' y sus tareas han sido eliminados.",
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
       if (currentEditingProject.value?.id == project.id) {
         currentEditingProject.value = null;
-        currentProjectRole.value = "";
+        currentProjectRole.value = '';
       }
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo eliminar el proyecto: ${e.toString()}",
+        'Error',
+        'No se pudo eliminar el proyecto: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
       debugPrint(
-        "[ProjectController] Error eliminando proyecto directamente: $e",
+        '[ProjectController] Error eliminando proyecto directamente: $e',
       );
     } finally {
       isLoadingProjects.value = false;
@@ -683,25 +695,25 @@ class ProjectController extends GetxController {
   ) async {
     final requester = _authController.currentUser.value;
     if (requester == null) {
-      Get.snackbar("Error", "No se pudo procesar la solicitud. Faltan datos.");
+      Get.snackbar('Error', 'No se pudo procesar la solicitud. Faltan datos.');
       return;
     }
     if (requester.uid == project.adminUserId) {
       return;
     }
 
-    final String title = "Solicitud de Eliminación de Proyecto";
+    const String title = 'Solicitud de Eliminación de Proyecto';
     final String body =
         "${requester.name ?? requester.email} (${requester.email}) solicita la eliminación del proyecto '${project.name}'.";
 
-    Map<String, dynamic> notificationData = {
+    final Map<String, dynamic> notificationData = {
       'projectId': project.id!,
       'projectName': project.name,
       'projectAdminId': project.adminUserId,
       'requesterId': requester.uid,
       'requesterName': requester.name ?? requester.email,
       'requesterEmail': requester.email,
-      'requestType': "project_deletion",
+      'requestType': 'project_deletion',
     };
 
     final AppNotificationModel appNotification = AppNotificationModel(
@@ -720,21 +732,20 @@ class ProjectController extends GetxController {
         notification: appNotification,
       );
       debugPrint(
-        "[ProjectController] Notificación de solicitud guardada para admin ${project.adminUserId}",
+        '[ProjectController] Notificación de solicitud guardada para admin ${project.adminUserId}',
       );
 
-      List<String>? adminTokens = await _notificationProvider.getUserTokensById(
-        project.adminUserId,
-      );
+      final List<String>? adminTokens = await _notificationProvider
+          .getUserTokensById(project.adminUserId);
       if (adminTokens != null && adminTokens.isNotEmpty) {
-        Map<String, String> pushDataPayload = {
+        final Map<String, String> pushDataPayload = {
           'type': 'new_project_deletion_request',
           'projectId': project.id!,
           'screen': AppRoutes.PROJECTS_LIST,
           'title': title,
           'body': "Revisa la solicitud de eliminación para '${project.name}'.",
         };
-        for (String token in adminTokens) {
+        for (final String token in adminTokens) {
           await _notificationProvider.sendNotificationToToken(
             token: token,
             title: title,
@@ -744,20 +755,20 @@ class ProjectController extends GetxController {
         }
       }
       Get.snackbar(
-        "Solicitud Enviada",
+        'Solicitud Enviada',
         "Tu solicitud para eliminar '${project.name}' ha sido enviada al administrador.",
         backgroundColor: Colors.blue,
         colorText: Colors.white,
       );
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo enviar la solicitud: ${e.toString()}",
+        'Error',
+        'No se pudo enviar la solicitud: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
       debugPrint(
-        "[ProjectController] Error enviando solicitud de eliminación de proyecto: $e",
+        '[ProjectController] Error enviando solicitud de eliminación de proyecto: $e',
       );
     }
   }
@@ -770,7 +781,7 @@ class ProjectController extends GetxController {
     }
 
     isLoadingDeletionRequests.value = true;
-    _pendingDeletionRequestsSubscription?.cancel();
+    await _pendingDeletionRequestsSubscription?.cancel();
 
     _pendingDeletionRequestsSubscription = FirebaseFirestore.instance
         .collection('users')
@@ -790,12 +801,12 @@ class ProjectController extends GetxController {
                 .toList();
             isLoadingDeletionRequests.value = false;
             debugPrint(
-              "[ProjectController] Solicitudes de eliminación de proyecto cargadas: ${pendingProjectDeletionRequests.length}",
+              '[ProjectController] Solicitudes de eliminación de proyecto cargadas: ${pendingProjectDeletionRequests.length}',
             );
           },
-          onError: (error) {
+          onError: (Object error) {
             debugPrint(
-              "[ProjectController] Error al cargar solicitudes de eliminación de proyecto: $error",
+              '[ProjectController] Error al cargar solicitudes de eliminación de proyecto: $error',
             );
             pendingProjectDeletionRequests.clear();
             isLoadingDeletionRequests.value = false;
@@ -808,21 +819,28 @@ class ProjectController extends GetxController {
   ) async {
     final adminUser = _authController.currentUser.value;
     if (adminUser == null || request.data == null) {
-      Get.snackbar("Error", "No autorizado o solicitud inválida.");
+      Get.snackbar('Error', 'No autorizado o solicitud inválida.');
       return;
     }
 
     final requestData = request.data!;
-    final String projectId = requestData['projectId'];
-    final String projectName = requestData['projectName'];
-    final String requesterId = requestData['requesterId'];
-    final String? projectAdminIdFromRequest = requestData['projectAdminId'];
+    final String? projectId = requestData['projectId'] as String?;
+    final String? projectName = requestData['projectName'] as String?;
+    final String? requesterId = requestData['requesterId'] as String?;
+    final String? projectAdminIdFromRequest =
+        requestData['projectAdminId'] as String?;
+    final String? requesterEmail = requestData['requesterEmail'] as String?;
 
     if (adminUser.uid != projectAdminIdFromRequest) {
       Get.snackbar(
-        "Error",
-        "No eres el administrador designado para esta solicitud.",
+        'Error',
+        'No eres el administrador designado para esta solicitud.',
       );
+      return;
+    }
+
+    if (projectId == null || projectName == null || requesterId == null) {
+      Get.snackbar('Error', 'Datos de solicitud incompletos.');
       return;
     }
 
@@ -832,8 +850,8 @@ class ProjectController extends GetxController {
       if (projectToVerify == null ||
           projectToVerify.adminUserId != adminUser.uid) {
         Get.snackbar(
-          "Error",
-          "Proyecto no encontrado o no eres el administrador actual del proyecto.",
+          'Error',
+          'Proyecto no encontrado o no eres el administrador actual del proyecto.',
           backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
@@ -841,27 +859,27 @@ class ProjectController extends GetxController {
         return;
       }
     } catch (e) {
-      Get.snackbar("Error", "No se pudo verificar el proyecto: $e");
+      Get.snackbar('Error', 'No se pudo verificar el proyecto: $e');
       return;
     }
 
     isLoadingProjects.value = true;
     try {
       debugPrint(
-        "[ProjectController] Aprobando eliminación para proyecto $projectId...",
+        '[ProjectController] Aprobando eliminación para proyecto $projectId...',
       );
       await _taskProvider.deleteAllTasksForProject(projectId);
       debugPrint(
-        "[ProjectController] Tareas eliminadas. Eliminando proyecto $projectId...",
+        '[ProjectController] Tareas eliminadas. Eliminando proyecto $projectId...',
       );
       await _projectProvider.deleteProject(projectId);
       debugPrint(
-        "[ProjectController] Proyecto $projectId eliminado por aprobación.",
+        '[ProjectController] Proyecto $projectId eliminado por aprobación.',
       );
 
       await _notificationController.markAsRead(request.id!);
       Get.snackbar(
-        "Proyecto Eliminado",
+        'Proyecto Eliminado',
         "El proyecto '$projectName' ha sido eliminado por aprobación.",
         backgroundColor: Colors.green,
         colorText: Colors.white,
@@ -869,19 +887,19 @@ class ProjectController extends GetxController {
 
       await _sendProjectDeletionDecisionNotificationToRequester(
         requesterId: requesterId,
-        requesterEmail: requestData['requesterEmail'],
+        requesterEmail: requesterEmail,
         projectName: projectName,
         isApproved: true,
       );
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo procesar la aprobación: ${e.toString()}",
+        'Error',
+        'No se pudo procesar la aprobación: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
       debugPrint(
-        "[ProjectController] Error aprobando solicitud ${request.id}: $e",
+        '[ProjectController] Error aprobando solicitud ${request.id}: $e',
       );
     } finally {
       isLoadingProjects.value = false;
@@ -893,19 +911,27 @@ class ProjectController extends GetxController {
   ) async {
     final adminUser = _authController.currentUser.value;
     if (adminUser == null || request.data == null) {
-      Get.snackbar("Error", "No autorizado o solicitud inválida.");
+      Get.snackbar('Error', 'No autorizado o solicitud inválida.');
       return;
     }
 
     final requestData = request.data!;
-    final String projectName = requestData['projectName'];
-    final String requesterId = requestData['requesterId'];
-    final String? projectAdminIdFromRequest = requestData['projectAdminId'];
+    final String? projectName = requestData['projectName'] as String?;
+    final String? requesterId = requestData['requesterId'] as String?;
+    final String? projectAdminIdFromRequest =
+        requestData['projectAdminId'] as String?;
+    final String? requesterEmail = requestData['requesterEmail'] as String?;
+
+    // Comprobaciones de nulidad
+    if (projectName == null || requesterId == null) {
+      Get.snackbar('Error', 'Datos de solicitud incompletos.');
+      return;
+    }
 
     if (adminUser.uid != projectAdminIdFromRequest) {
       Get.snackbar(
-        "Error",
-        "No eres el administrador designado para esta solicitud.",
+        'Error',
+        'No eres el administrador designado para esta solicitud.',
       );
       return;
     }
@@ -913,7 +939,7 @@ class ProjectController extends GetxController {
     try {
       await _notificationController.markAsRead(request.id!);
       Get.snackbar(
-        "Solicitud Rechazada",
+        'Solicitud Rechazada',
         "La solicitud para eliminar '$projectName' ha sido rechazada.",
         backgroundColor: Colors.orange,
         colorText: Colors.white,
@@ -921,19 +947,19 @@ class ProjectController extends GetxController {
 
       await _sendProjectDeletionDecisionNotificationToRequester(
         requesterId: requesterId,
-        requesterEmail: requestData['requesterEmail'],
+        requesterEmail: requesterEmail,
         projectName: projectName,
         isApproved: false,
       );
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo procesar el rechazo: ${e.toString()}",
+        'Error',
+        'No se pudo procesar el rechazo: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
       debugPrint(
-        "[ProjectController] Error rechazando solicitud ${request.id}: $e",
+        '[ProjectController] Error rechazando solicitud ${request.id}: $e',
       );
     }
   }
@@ -945,9 +971,9 @@ class ProjectController extends GetxController {
     required bool isApproved,
   }) async {
     final String title = isApproved
-        ? "Solicitud Aprobada"
-        : "Solicitud Rechazada";
-    final String decision = isApproved ? "aprobada" : "rechazada";
+        ? 'Solicitud Aprobada'
+        : 'Solicitud Rechazada';
+    final String decision = isApproved ? 'aprobada' : 'rechazada';
     final String body =
         "Tu solicitud para eliminar el proyecto '$projectName' ha sido $decision por el administrador.";
 
@@ -970,10 +996,10 @@ class ProjectController extends GetxController {
       notification: feedbackNotification,
     );
 
-    List<String>? requesterTokens = await _notificationProvider
+    final List<String>? requesterTokens = await _notificationProvider
         .getUserTokensById(requesterId);
     if (requesterTokens != null && requesterTokens.isNotEmpty) {
-      Map<String, String> pushDataPayload = {
+      final Map<String, String> pushDataPayload = {
         'type': isApproved
             ? 'project_deletion_approved'
             : 'project_deletion_rejected',
@@ -981,8 +1007,8 @@ class ProjectController extends GetxController {
         'body': body,
         'screen': AppRoutes.PROJECTS_LIST,
       };
-      for (String token in requesterTokens) {
-        _notificationProvider.sendNotificationToToken(
+      for (final String token in requesterTokens) {
+        await _notificationProvider.sendNotificationToToken(
           token: token,
           title: title,
           body: body,
@@ -991,29 +1017,29 @@ class ProjectController extends GetxController {
       }
     }
     debugPrint(
-      "[ProjectController] Notificación de decisión enviada a $requesterId ($requesterEmail)",
+      '[ProjectController] Notificación de decisión enviada a $requesterId ($requesterEmail)',
     );
   }
 
   Future<void> performInviteUser(String projectId) async {
     if (_authController.currentUser.value == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para invitar usuarios.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para invitar usuarios.',
       );
       return;
     }
     final project = projects.firstWhereOrNull((p) => p.id == projectId);
     if (!isCurrentUserAdmin(project)) {
       Get.snackbar(
-        "Permiso Denegado",
-        "Solo el administrador puede invitar usuarios.",
+        'Permiso Denegado',
+        'Solo el administrador puede invitar usuarios.',
       );
       return;
     }
     if (inviteEmailController.text.trim().isEmpty ||
         !GetUtils.isEmail(inviteEmailController.text.trim())) {
-      Get.snackbar("Error", "Por favor, ingresa un correo electrónico válido.");
+      Get.snackbar('Error', 'Por favor, ingresa un correo electrónico válido.');
       return;
     }
     try {
@@ -1024,23 +1050,23 @@ class ProjectController extends GetxController {
       );
       inviteEmailController.clear();
     } catch (e) {
-      Get.snackbar("Error de Invitación", e.toString());
+      Get.snackbar('Error de Invitación', e.toString());
     }
   }
 
   Future<void> performGenerateAccessCode(String projectId) async {
     if (_authController.currentUser.value == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para generar códigos.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para generar códigos.',
       );
       return;
     }
     final project = projects.firstWhereOrNull((p) => p.id == projectId);
     if (!isCurrentUserAdmin(project)) {
       Get.snackbar(
-        "Permiso Denegado",
-        "Solo el administrador puede generar códigos de acceso.",
+        'Permiso Denegado',
+        'Solo el administrador puede generar códigos de acceso.',
       );
       return;
     }
@@ -1048,12 +1074,12 @@ class ProjectController extends GetxController {
       final code = await _projectProvider.generateAccessCode(projectId);
       generatedAccessCode.value = code;
       Get.snackbar(
-        "Código Generado",
-        "Código de acceso: $code. Compártelo con tus colaboradores.",
+        'Código Generado',
+        'Código de acceso: $code. Compártelo con tus colaboradores.',
         duration: const Duration(seconds: 6),
       );
     } catch (e) {
-      Get.snackbar("Error", "No se pudo generar el código: ${e.toString()}");
+      Get.snackbar('Error', 'No se pudo generar el código: ${e.toString()}');
     }
   }
 
@@ -1061,13 +1087,13 @@ class ProjectController extends GetxController {
     final currentUser = _authController.currentUser.value;
     if (currentUser == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para unirte a un proyecto.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para unirte a un proyecto.',
       );
       return;
     }
     if (accessCodeController.text.trim().isEmpty) {
-      Get.snackbar("Error", "Por favor, ingresa un código de acceso.");
+      Get.snackbar('Error', 'Por favor, ingresa un código de acceso.');
       return;
     }
 
@@ -1079,7 +1105,7 @@ class ProjectController extends GetxController {
 
       if (joinedProject != null) {
         Get.snackbar(
-          "Éxito",
+          'Éxito',
           "Te has unido al proyecto '${joinedProject.name}'.",
           backgroundColor: Colors.green,
           colorText: Colors.white,
@@ -1087,16 +1113,17 @@ class ProjectController extends GetxController {
         accessCodeController.clear();
 
         if (joinedProject.adminUserId != currentUser.uid) {
-          List<String>? adminTokens = await _notificationProvider
+          final List<String>? adminTokens = await _notificationProvider
               .getUserTokensById(joinedProject.adminUserId);
 
           if (adminTokens != null && adminTokens.isNotEmpty) {
-            String joiningUserName = currentUser.name ?? currentUser.email;
-            String title = "Nuevo Miembro en Proyecto";
-            String body =
+            final String joiningUserName =
+                currentUser.name ?? currentUser.email;
+            const String title = 'Nuevo Miembro en Proyecto';
+            final String body =
                 "$joiningUserName se ha unido a tu proyecto '${joinedProject.name}' mediante código de acceso.";
 
-            Map<String, String> pushDataPayload = {
+            final Map<String, String> pushDataPayload = {
               'type': 'new_member_joined_via_code',
               'projectId': joinedProject.id!,
               'projectName': joinedProject.name,
@@ -1117,7 +1144,7 @@ class ProjectController extends GetxController {
               notification: adminNotification,
             );
 
-            for (String token in adminTokens) {
+            for (final String token in adminTokens) {
               await _notificationProvider.sendNotificationToToken(
                 token: token,
                 title: title,
@@ -1126,26 +1153,26 @@ class ProjectController extends GetxController {
               );
             }
             debugPrint(
-              "[ProjectController] Notificación de nuevo miembro enviada al admin ${joinedProject.adminUserId}",
+              '[ProjectController] Notificación de nuevo miembro enviada al admin ${joinedProject.adminUserId}',
             );
           }
         }
       } else {
         Get.snackbar(
-          "Error al Unirse",
-          "Código de acceso inválido o no se pudo unir al proyecto.",
+          'Error al Unirse',
+          'Código de acceso inválido o no se pudo unir al proyecto.',
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
       }
     } catch (e) {
       Get.snackbar(
-        "Error al Unirse",
-        "Ocurrió un error: ${e.toString()}",
+        'Error al Unirse',
+        'Ocurrió un error: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
-      debugPrint("[ProjectController] Error al unirse con código: $e");
+      debugPrint('[ProjectController] Error al unirse con código: $e');
     } finally {
       isSavingProject.value = false;
     }
@@ -1155,39 +1182,39 @@ class ProjectController extends GetxController {
     final currentUser = _authController.currentUser.value;
     if (currentUser == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para aceptar invitaciones.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para aceptar invitaciones.',
       );
       return;
     }
     try {
-      ProjectInvitationModel? invitation = await _projectInvitationProvider
-          .getInvitationById(invitationId);
+      final ProjectInvitationModel? invitation =
+          await _projectInvitationProvider.getInvitationById(invitationId);
       if (invitation == null) {
-        Get.snackbar("Error", "Invitación no encontrada.");
+        Get.snackbar('Error', 'Invitación no encontrada.');
         return;
       }
 
       await _projectInvitationProvider.acceptInvitation(invitationId);
       Get.snackbar(
-        "Invitación Aceptada",
-        "Ahora eres miembro del proyecto.",
+        'Invitación Aceptada',
+        'Ahora eres miembro del proyecto.',
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
 
-      ProjectModel? project = await _projectProvider.getProjectById(
+      final ProjectModel? project = await _projectProvider.getProjectById(
         invitation.projectId,
       );
       if (project != null && project.adminUserId != currentUser.uid) {
-        List<String>? adminTokens = await _notificationProvider
+        final List<String>? adminTokens = await _notificationProvider
             .getUserTokensById(project.adminUserId);
         if (adminTokens != null && adminTokens.isNotEmpty) {
-          String userName = currentUser.name ?? currentUser.email;
-          String title = "Invitación Aceptada";
-          String body =
+          final String userName = currentUser.name ?? currentUser.email;
+          const String title = 'Invitación Aceptada';
+          final String body =
               "$userName ha aceptado tu invitación para unirse al proyecto '${project.name}'.";
-          Map<String, String> pushDataPayload = {
+          final Map<String, String> pushDataPayload = {
             'type': 'invitation_accepted',
             'projectId': project.id!,
             'projectName': project.name,
@@ -1210,7 +1237,7 @@ class ProjectController extends GetxController {
             notification: adminNotification,
           );
 
-          for (String token in adminTokens) {
+          for (final String token in adminTokens) {
             await _notificationProvider.sendNotificationToToken(
               token: token,
               title: title,
@@ -1219,14 +1246,14 @@ class ProjectController extends GetxController {
             );
           }
           debugPrint(
-            "[ProjectController] Notificación de aceptación de invitación enviada al admin ${project.adminUserId}",
+            '[ProjectController] Notificación de aceptación de invitación enviada al admin ${project.adminUserId}',
           );
         }
       }
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo aceptar la invitación: ${e.toString()}",
+        'Error',
+        'No se pudo aceptar la invitación: ${e.toString()}',
       );
     }
   }
@@ -1235,39 +1262,39 @@ class ProjectController extends GetxController {
     final currentUser = _authController.currentUser.value;
     if (currentUser == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para declinar invitaciones.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para declinar invitaciones.',
       );
       return;
     }
     try {
-      ProjectInvitationModel? invitation = await _projectInvitationProvider
-          .getInvitationById(invitationId);
+      final ProjectInvitationModel? invitation =
+          await _projectInvitationProvider.getInvitationById(invitationId);
       if (invitation == null) {
-        Get.snackbar("Error", "Invitación no encontrada.");
+        Get.snackbar('Error', 'Invitación no encontrada.');
         return;
       }
 
       await _projectInvitationProvider.declineInvitation(invitationId);
       Get.snackbar(
-        "Invitación Declinada",
-        "Has rechazado la invitación.",
+        'Invitación Declinada',
+        'Has rechazado la invitación.',
         backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
 
-      ProjectModel? project = await _projectProvider.getProjectById(
+      final ProjectModel? project = await _projectProvider.getProjectById(
         invitation.projectId,
       );
       if (project != null && project.adminUserId != currentUser.uid) {
-        List<String>? adminTokens = await _notificationProvider
+        final List<String>? adminTokens = await _notificationProvider
             .getUserTokensById(project.adminUserId);
         if (adminTokens != null && adminTokens.isNotEmpty) {
-          String userName = currentUser.name ?? currentUser.email;
-          String title = "Invitación Rechazada";
-          String body =
+          final String userName = currentUser.name ?? currentUser.email;
+          const String title = 'Invitación Rechazada';
+          final String body =
               "$userName ha rechazado tu invitación para unirse al proyecto '${project.name}'.";
-          Map<String, String> pushDataPayload = {
+          final Map<String, String> pushDataPayload = {
             'type': 'invitation_rejected',
             'projectId': project.id!,
             'projectName': project.name,
@@ -1288,7 +1315,7 @@ class ProjectController extends GetxController {
             notification: adminNotification,
           );
 
-          for (String token in adminTokens) {
+          for (final String token in adminTokens) {
             await _notificationProvider.sendNotificationToToken(
               token: token,
               title: title,
@@ -1297,14 +1324,14 @@ class ProjectController extends GetxController {
             );
           }
           debugPrint(
-            "[ProjectController] Notificación de rechazo de invitación enviada al admin ${project.adminUserId}",
+            '[ProjectController] Notificación de rechazo de invitación enviada al admin ${project.adminUserId}',
           );
         }
       }
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "No se pudo declinar la invitación: ${e.toString()}",
+        'Error',
+        'No se pudo declinar la invitación: ${e.toString()}',
       );
     }
   }
@@ -1312,36 +1339,36 @@ class ProjectController extends GetxController {
   Future<void> performLeaveProject(String projectId) async {
     if (_authController.currentUser.value == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para abandonar un proyecto.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para abandonar un proyecto.',
       );
       return;
     }
-    Get.defaultDialog(
-      title: "Abandonar Proyecto",
-      middleText: "¿Estás seguro de que quieres abandonar este proyecto?",
-      textConfirm: "Sí, abandonar",
-      textCancel: "Cancelar",
+    await Get.defaultDialog<void>(
+      title: 'Abandonar Proyecto',
+      middleText: '¿Estás seguro de que quieres abandonar este proyecto?',
+      textConfirm: 'Sí, abandonar',
+      textCancel: 'Cancelar',
       confirmTextColor: Colors.white,
       buttonColor: Colors.orange,
       onConfirm: () async {
-        Get.back();
+        Get.back<Object>();
         try {
           await _projectProvider.leaveProject(projectId);
           Get.snackbar(
-            "Has Abandonado el Proyecto",
-            "",
+            'Has Abandonado el Proyecto',
+            '',
             backgroundColor: Colors.blue,
             colorText: Colors.white,
           );
           if (currentEditingProject.value?.id == projectId) {
             currentEditingProject.value = null;
-            currentProjectRole.value = "";
+            currentProjectRole.value = '';
           }
         } catch (e) {
           Get.snackbar(
-            "Error",
-            "No se pudo abandonar el proyecto: ${e.toString()}",
+            'Error',
+            'No se pudo abandonar el proyecto: ${e.toString()}',
           );
         }
       },
@@ -1355,40 +1382,40 @@ class ProjectController extends GetxController {
   ) async {
     if (_authController.currentUser.value == null) {
       Get.snackbar(
-        "Autenticación Requerida",
-        "Debes iniciar sesión para remover miembros.",
+        'Autenticación Requerida',
+        'Debes iniciar sesión para remover miembros.',
       );
       return;
     }
     final project = projects.firstWhereOrNull((p) => p.id == projectId);
     if (!isCurrentUserAdmin(project)) {
       Get.snackbar(
-        "Permiso Denegado",
-        "Solo el administrador puede remover miembros.",
+        'Permiso Denegado',
+        'Solo el administrador puede remover miembros.',
       );
       return;
     }
-    Get.defaultDialog(
-      title: "Remover Miembro",
+    await Get.defaultDialog<void>(
+      title: 'Remover Miembro',
       middleText:
           "¿Estás seguro de que quieres remover a '$memberName' de este proyecto?",
-      textConfirm: "Sí, remover",
-      textCancel: "Cancelar",
+      textConfirm: 'Sí, remover',
+      textCancel: 'Cancelar',
       confirmTextColor: Colors.white,
       buttonColor: Colors.red,
       onConfirm: () async {
-        Get.back();
+        Get.back<Object>();
         try {
           Get.snackbar(
-            "Miembro Removido",
+            'Miembro Removido',
             "'$memberName' ha sido removido del proyecto.",
             backgroundColor: Colors.orange,
             colorText: Colors.white,
           );
         } catch (e) {
           Get.snackbar(
-            "Error",
-            "No se pudo remover al miembro: ${e.toString()}",
+            'Error',
+            'No se pudo remover al miembro: ${e.toString()}',
           );
         }
       },

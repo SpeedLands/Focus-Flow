@@ -65,20 +65,20 @@ class AuthController extends GetxController {
           final authRoutes = [AppRoutes.LOGIN, AppRoutes.REGISTER];
           if (authRoutes.contains(Get.currentRoute) ||
               Get.currentRoute.isEmpty) {
-            Get.offAllNamed(AppRoutes.HOME);
+            await Get.offAllNamed<Object>(AppRoutes.HOME);
           }
         } else {
-          debugPrint("Usuario autenticado sin datos en Firestore.");
+          debugPrint('Usuario autenticado sin datos en Firestore.');
           await logout();
         }
       } catch (e) {
-        debugPrint("Error al obtener datos de usuario: $e");
+        debugPrint('Error al obtener datos de usuario: $e');
         await logout();
       }
     } else {
       _clearSession();
       if (![AppRoutes.LOGIN, AppRoutes.REGISTER].contains(Get.currentRoute)) {
-        Get.offAllNamed(AppRoutes.LOGIN);
+        await Get.offAllNamed<Object>(AppRoutes.LOGIN);
       }
     }
   }
@@ -100,16 +100,16 @@ class AuthController extends GetxController {
   }
 
   Future<void> removeUserDeviceToken(String deviceTokenToRemove) async {
-    _notificationProvider.removeCurrentDeviceToken(deviceTokenToRemove);
+    await _notificationProvider.removeCurrentDeviceToken(deviceTokenToRemove);
   }
 
   Future<void> login() async {
     if (loginEmailController.text.isEmpty ||
         loginPasswordController.text.isEmpty) {
-      loginError.value = "Por favor, completa todos los campos.";
+      loginError.value = 'Por favor, completa todos los campos.';
       _showError(
-        "Campos incompletos",
-        "Por favor, completa todos los campos.",
+        'Campos incompletos',
+        'Por favor, completa todos los campos.',
         isLogin: true,
       );
       return;
@@ -122,23 +122,23 @@ class AuthController extends GetxController {
         loginPasswordController.text.trim(),
       );
       if (user == null && _authProvider.currentUser == null) {
-        loginError.value = "Credenciales incorrectas o error desconocido.";
+        loginError.value = 'Credenciales incorrectas o error desconocido.';
         _showError(
-          "Error de Inicio de Sesión",
-          "Credenciales incorrectas o error desconocido.",
+          'Error de Inicio de Sesión',
+          'Credenciales incorrectas o error desconocido.',
           isLogin: true,
         );
       }
     } on FirebaseAuthException catch (e) {
       loginError.value = _mapFirebaseAuthExceptionMessage(e);
       _showError(
-        "Error de Inicio de Sesión",
+        'Error de Inicio de Sesión',
         _mapFirebaseAuthExceptionMessage(e),
         isLogin: true,
       );
     } catch (e) {
-      loginError.value = "Ocurrió un error inesperado: ${e.toString()}";
-      _showError("Error Inesperado", e.toString(), isLogin: true);
+      loginError.value = 'Ocurrió un error inesperado: ${e.toString()}';
+      _showError('Error Inesperado', e.toString(), isLogin: true);
     } finally {
       isLoginLoading.value = false;
     }
@@ -152,8 +152,8 @@ class AuthController extends GetxController {
       registerConfirmPasswordController,
     ].any((c) => c.text.isEmpty)) {
       _showError(
-        "Campos incompletos",
-        "Completa todos los campos de registro.",
+        'Campos incompletos',
+        'Completa todos los campos de registro.',
         isLogin: false,
       );
       return;
@@ -161,15 +161,15 @@ class AuthController extends GetxController {
     if (registerPasswordController.text !=
         registerConfirmPasswordController.text) {
       _showError(
-        "Error de Contraseña",
-        "Las contraseñas no coinciden.",
+        'Error de Contraseña',
+        'Las contraseñas no coinciden.',
         isLogin: false,
       );
       return;
     }
     isRegisterLoading.value = true;
     registerError.value = '';
-    UserData newUserModel = UserData(
+    final UserData newUserModel = UserData(
       uid: '',
       email: registerEmailController.text.trim(),
       name: registerNameController.text.trim(),
@@ -182,30 +182,30 @@ class AuthController extends GetxController {
       );
       if (user != null) {
         Get.snackbar(
-          "Registro Exitoso",
-          "Se ha enviado un correo de verificación a ${user.email}. Por favor, verifica tu cuenta.",
+          'Registro Exitoso',
+          'Se ha enviado un correo de verificación a ${user.email}. Por favor, verifica tu cuenta.',
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 5),
         );
         clearRegisterFields();
       } else {
-        registerError.value = "Error desconocido durante el registro.";
+        registerError.value = 'Error desconocido durante el registro.';
         _showError(
-          "Error de Registro",
-          "No se pudo completar el registro.",
+          'Error de Registro',
+          'No se pudo completar el registro.',
           isLogin: false,
         );
       }
     } on FirebaseAuthException catch (e) {
       registerError.value = _mapFirebaseAuthExceptionMessage(e);
       _showError(
-        "Error de Registro",
+        'Error de Registro',
         _mapFirebaseAuthExceptionMessage(e),
         isLogin: false,
       );
     } catch (e) {
-      registerError.value = "Ocurrió un error inesperado: ${e.toString()}";
-      _showError("Error", e.toString(), isLogin: false);
+      registerError.value = 'Ocurrió un error inesperado: ${e.toString()}';
+      _showError('Error', e.toString(), isLogin: false);
     } finally {
       isRegisterLoading.value = false;
     }
@@ -220,7 +220,7 @@ class AuthController extends GetxController {
       await _authProvider.logout();
     } catch (e) {
       Get.snackbar(
-        "Error al cerrar sesión",
+        'Error al cerrar sesión',
         e.toString(),
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
@@ -232,8 +232,8 @@ class AuthController extends GetxController {
   Future<void> resetPassword(String email) async {
     if (email.isEmpty || !GetUtils.isEmail(email)) {
       _showError(
-        "Error",
-        "Por favor, introduce un correo electrónico válido.",
+        'Error',
+        'Por favor, introduce un correo electrónico válido.',
         isLogin: true,
       );
       return;
@@ -242,14 +242,14 @@ class AuthController extends GetxController {
     try {
       await _authProvider.resetPassword(email);
       Get.snackbar(
-        "Correo Enviado",
-        "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.",
+        'Correo Enviado',
+        'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.',
         snackPosition: SnackPosition.BOTTOM,
       );
     } on FirebaseAuthException catch (e) {
-      _showError("Error", _mapFirebaseAuthExceptionMessage(e), isLogin: true);
+      _showError('Error', _mapFirebaseAuthExceptionMessage(e), isLogin: true);
     } catch (e) {
-      _showError("Error", e.toString(), isLogin: true);
+      _showError('Error', e.toString(), isLogin: true);
     } finally {
       isLoginLoading.value = false;
     }
@@ -258,8 +258,8 @@ class AuthController extends GetxController {
   Future<void> updateUserName(String newName) async {
     if (newName.trim().isEmpty || currentUser.value == null) {
       _showError(
-        "Error",
-        "Nombre vacío o usuario no autenticado.",
+        'Error',
+        'Nombre vacío o usuario no autenticado.',
         isLogin: false,
       );
       return;

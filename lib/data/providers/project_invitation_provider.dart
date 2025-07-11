@@ -12,8 +12,8 @@ class ProjectInvitationProvider {
   final AuthProviderApp _authProviderApp;
   final NotificationProvider _notificationProvider;
 
-  final String _invitesCollection = "projectInvitations";
-  final String _projectsCollection = "projects";
+  final String _invitesCollection = 'projectInvitations';
+  final String _projectsCollection = 'projects';
 
   ProjectInvitationProvider(
     this._firestoreService,
@@ -31,17 +31,17 @@ class ProjectInvitationProvider {
           _invitesCollection,
           filters: [
             QueryFilter(
-              field: "invitedUserEmail",
+              field: 'invitedUserEmail',
               operator: FilterOperator.isEqualTo,
               value: email,
             ),
             QueryFilter(
-              field: "status",
+              field: 'status',
               operator: FilterOperator.isEqualTo,
               value: InvitationStatus.pending.toString(),
             ),
           ],
-          orderByField: "createdAt",
+          orderByField: 'createdAt',
           descending: true,
         )
         .map(
@@ -85,7 +85,7 @@ class ProjectInvitationProvider {
     String invitedEmail,
   ) async {
     final currentUser = _authProviderApp.currentUser;
-    if (currentUser == null) throw Exception("No autenticado");
+    if (currentUser == null) throw Exception('No autenticado');
 
     final projectDoc = await _firestoreService.getDocument(
       _projectsCollection,
@@ -93,7 +93,7 @@ class ProjectInvitationProvider {
     );
     final project = projectDoc?.data() as Map<String, dynamic>?;
     if (project == null || project['adminUserId'] != currentUser.uid) {
-      throw Exception("Sin permisos de administrador");
+      throw Exception('Sin permisos de administrador');
     }
 
     final cleanEmail = invitedEmail.trim().toLowerCase();
@@ -110,13 +110,13 @@ class ProjectInvitationProvider {
       invitation.toJson(),
     );
     if (invitationId == null) {
-      throw Exception("No se pudo crear la invitación");
+      throw Exception('No se pudo crear la invitación');
     }
 
     // Crear notificación en BD
     final appNotif = AppNotificationModel(
-      title: "Invitación al proyecto: $projectName",
-      body: "${currentUser.displayName ?? currentUser.email} te invitó",
+      title: 'Invitación al proyecto: $projectName',
+      body: '${currentUser.displayName ?? currentUser.email} te invitó',
       type: AppNotificationType.projectInvitation,
       routeToNavigate: AppRoutes.PROJECTS_LIST,
       data: {
@@ -156,24 +156,24 @@ class ProjectInvitationProvider {
 
   Future<void> acceptInvitation(String invitationId) async {
     final currentUser = _authProviderApp.currentUser;
-    if (currentUser == null) throw Exception("No autenticado");
+    if (currentUser == null) throw Exception('No autenticado');
 
     final docSnap = await _firestoreService.getDocument(
       _invitesCollection,
       invitationId,
     );
     if (docSnap == null || !docSnap.exists) {
-      throw Exception("Invitación no existe");
+      throw Exception('Invitación no existe');
     }
 
     final inv = ProjectInvitationModel.fromFirestore(
       docSnap as DocumentSnapshot<Map<String, dynamic>>,
     );
     if (inv.invitedUserEmail != currentUser.email!.toLowerCase()) {
-      throw Exception("No es tu invitación");
+      throw Exception('No es tu invitación');
     }
     if (inv.status != InvitationStatus.pending) {
-      throw Exception("Invitación ya ${inv.status}");
+      throw Exception('Invitación ya ${inv.status}');
     }
 
     // Batch update: marcar invitación aceptada + agregar usuario al proyecto
@@ -196,23 +196,39 @@ class ProjectInvitationProvider {
 
   Future<void> removeMember(String projectId, String memberIdToRemove) async {
     final currentUser = _authProviderApp.currentUser;
-    if (currentUser == null) throw Exception("No autenticado");
+    if (currentUser == null) throw Exception('No autenticado');
 
     final projectDoc = await _firestoreService.getDocument(
       _projectsCollection,
       projectId,
     );
-    final proj = projectDoc?.data() as Map<String, dynamic>?;
-    if (proj == null || proj['adminUserId'] != currentUser.uid) {
-      throw Exception("Sin permisos");
+
+    // Casting explícito del mapa de datos
+    final projData = projectDoc?.data() as Map<String, dynamic>?;
+
+    // Comprobación segura de permisos
+    if (projData == null || projData['adminUserId'] != currentUser.uid) {
+      throw Exception('Sin permisos');
     }
 
-    final roleEntry = proj['userRoles'].firstWhere(
-      (r) => r.startsWith('$memberIdToRemove:'),
-      orElse: () => '',
-    );
-    if (roleEntry.isEmpty) return;
+    // --- LA CORRECCIÓN PRINCIPAL ESTÁ AQUÍ ---
+    // 1. Obtenemos la lista de forma segura y la casteamos a List<String>
+    final userRoles = (projData['userRoles'] as List?)?.cast<String>() ?? [];
 
+    // 2. Ahora 'userRoles' es una List<String>, por lo que 'firstWhere' devuelve un String.
+    final String roleEntry = userRoles.firstWhere(
+      (r) => r.startsWith('$memberIdToRemove:'),
+      orElse: () => '', // orElse devuelve un String vacío
+    );
+
+    // 3. La condición del 'if' ahora es segura porque .isEmpty en un String devuelve un bool.
+    if (roleEntry.isEmpty) {
+      // La condición ahora es un booleano estático, el error desaparece.
+      debugPrint('No se encontró el rol para el miembro: $memberIdToRemove');
+      return;
+    }
+
+    // El resto de la función es seguro
     await _firestoreService.updateDocument(_projectsCollection, projectId, {
       'userRoles': FieldValue.arrayRemove([roleEntry]),
       'updatedAt': Timestamp.now(),

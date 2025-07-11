@@ -12,8 +12,8 @@ class PendingInvitations extends StatelessWidget {
     return Obx(() {
       if (controller.isLoadingInvitations.value &&
           controller.projectInvitations.isEmpty) {
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
+        return const Padding(
+          padding: EdgeInsets.all(8.0),
           child: Center(
             child: GFLoader(type: GFLoaderType.square, size: GFSize.LARGE),
           ),
@@ -33,10 +33,10 @@ class PendingInvitations extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+            const Padding(
+              padding: EdgeInsets.only(left: 8.0, bottom: 4.0),
               child: Text(
-                "Invitaciones Pendientes",
+                'Invitaciones Pendientes',
                 style: TextStyle(
                   color: GFColors.DARK,
                   fontWeight: FontWeight.bold,
@@ -52,9 +52,9 @@ class PendingInvitations extends StatelessWidget {
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   child: GFListTile(
-                    icon: Icon(Icons.mail_outline, color: GFColors.INFO),
-                    title: Text("Invitación a: ${invitation.projectName}"),
-                    subTitle: Text("De: ${invitation.invitedByUserId}"),
+                    icon: const Icon(Icons.mail_outline, color: GFColors.INFO),
+                    title: Text('Invitación a: ${invitation.projectName}'),
+                    subTitle: Text('De: ${invitation.invitedByUserId}'),
                     firstButtonTitle: 'Aceptar',
                     onFirstButtonTap: () =>
                         controller.performAcceptInvitation(invitation.id!),

@@ -227,7 +227,7 @@ class PomodoroConfigFormScreen extends GetView<PomodoroControllerAna> {
   }
 
   Widget _buildTvPomodoroScreen(BuildContext context) {
-    return Scaffold();
+    return const Scaffold();
   }
 
   @override

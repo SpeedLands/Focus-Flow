@@ -13,14 +13,14 @@ class NotificationListScreen extends GetView<NotificationController> {
   Widget _buildMobileTasksScreen(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Notificaciones"),
+        title: const Text('Notificaciones'),
         actions: [
           Obx(
             () => controller.unreadNotificationCount.value > 0
                 ? TextButton(
                     onPressed: controller.markAllAsRead,
                     child: Text(
-                      "Marcar Todas Leídas",
+                      'Marcar Todas Leídas',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                       ),
@@ -47,7 +47,7 @@ class NotificationListScreen extends GetView<NotificationController> {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  "No tienes notificaciones",
+                  'No tienes notificaciones',
                   style: TextStyle(fontSize: 18, color: Colors.grey),
                 ),
               ],
@@ -82,7 +82,7 @@ class NotificationListScreen extends GetView<NotificationController> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      "Eliminar",
+                      'Eliminar',
                       style: TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ],
@@ -97,7 +97,7 @@ class NotificationListScreen extends GetView<NotificationController> {
   }
 
   Widget _buildTvTasksScreen(BuildContext context) {
-    return Scaffold();
+    return const Scaffold();
   }
 
   Widget _buildWatchTasksScreen(BuildContext context) {
@@ -109,7 +109,7 @@ class NotificationListScreen extends GetView<NotificationController> {
           child: Column(
             children: [
               const Text(
-                "Notificaciones",
+                'Notificaciones',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -133,7 +133,7 @@ class NotificationListScreen extends GetView<NotificationController> {
                   if (controller.appNotifications.isEmpty) {
                     return const Center(
                       child: Text(
-                        "Sin notificaciones",
+                        'Sin notificaciones',
                         style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     );
@@ -170,7 +170,7 @@ class NotificationListScreen extends GetView<NotificationController> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                            "$time · ${n.body}",
+                            '$time · ${n.body}',
                             style: const TextStyle(
                               fontSize: 11,
                               color: Colors.white70,
@@ -435,7 +435,7 @@ class NotificationListScreen extends GetView<NotificationController> {
                       GFButton(
                         onPressed: () => controller
                             .acceptTaskModificationRequest(notification),
-                        text: "Aprobar",
+                        text: 'Aprobar',
                         icon: const Icon(
                           Icons.check_circle_outline,
                           color: Colors.white,
@@ -456,7 +456,7 @@ class NotificationListScreen extends GetView<NotificationController> {
                       GFButton(
                         onPressed: () => controller
                             .rejectTaskModificationRequest(notification),
-                        text: "Rechazar",
+                        text: 'Rechazar',
                         icon: const Icon(
                           Icons.cancel_outlined,
                           color: Colors.white,

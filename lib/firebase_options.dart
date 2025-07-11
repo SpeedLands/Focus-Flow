@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'focusflow-acd29.firebasestorage.app',
     measurementId: 'G-YG1EY5VGPW',
   );
-
 }

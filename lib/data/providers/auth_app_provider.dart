@@ -1,10 +1,10 @@
-import "package:cloud_firestore/cloud_firestore.dart";
-import "package:flutter/material.dart";
-import "package:focus_flow/data/providers/notification_provider.dart";
-import "package:focus_flow/data/services/auth_service.dart";
-import "package:focus_flow/data/models/user_model.dart";
-import "package:firebase_auth/firebase_auth.dart";
-import "package:focus_flow/data/services/firestore_service.dart";
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:focus_flow/data/providers/notification_provider.dart';
+import 'package:focus_flow/data/services/auth_service.dart';
+import 'package:focus_flow/data/models/user_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:focus_flow/data/services/firestore_service.dart';
 
 class AuthProviderApp {
   final AuthService _authService;
@@ -17,12 +17,12 @@ class AuthProviderApp {
     this._notificationProvider,
   );
 
-  final String _collectionName = "users";
-  final String emailField = "email";
+  final String _collectionName = 'users';
+  final String emailField = 'email';
 
   Future<UserData?> getUserData(String uid) async {
     try {
-      DocumentSnapshot? doc = await _firestoreService.getDocument(
+      final DocumentSnapshot? doc = await _firestoreService.getDocument(
         _collectionName,
         uid,
       );
@@ -31,7 +31,7 @@ class AuthProviderApp {
       }
       return null;
     } catch (e) {
-      debugPrint("AuthService Error (getUserData): $e");
+      debugPrint('AuthService Error (getUserData): $e');
       rethrow;
     }
   }
@@ -39,29 +39,29 @@ class AuthProviderApp {
   Future<void> updateUserName(String newName) async {
     final currentUserAuth = _authService.currentUser;
     if (currentUserAuth == null) {
-      debugPrint("UpdateUserName: Usuario no autenticado.");
+      debugPrint('UpdateUserName: Usuario no autenticado.');
       return;
     }
     final trimmedNewName = newName.trim();
     if (trimmedNewName.isEmpty) {
-      debugPrint("UpdateUserName: El nuevo nombre no puede estar vacío.");
+      debugPrint('UpdateUserName: El nuevo nombre no puede estar vacío.');
       return;
     }
 
     final UserData? currentUserData = await getUserData(currentUserAuth.uid);
     if (currentUserData == null) {
       debugPrint(
-        "UpdateUserName: No se pudieron obtener los datos del usuario actual desde Firestore.",
+        'UpdateUserName: No se pudieron obtener los datos del usuario actual desde Firestore.',
       );
       return;
     }
 
     final String userId = currentUserAuth.uid;
-    final String oldName = currentUserData.name ?? "Usuario";
+    final String oldName = currentUserData.name ?? 'Usuario';
 
     if (oldName == trimmedNewName) {
       debugPrint(
-        "UpdateUserName: El nuevo nombre es igual al anterior. No se realizan cambios.",
+        'UpdateUserName: El nuevo nombre es igual al anterior. No se realizan cambios.',
       );
       return;
     }
@@ -69,18 +69,18 @@ class AuthProviderApp {
     try {
       await currentUserAuth.updateDisplayName(trimmedNewName);
       debugPrint(
-        "Nombre de usuario actualizado en Firebase Auth a: $trimmedNewName",
+        'Nombre de usuario actualizado en Firebase Auth a: $trimmedNewName',
       );
 
       await _firestoreService.updateDocument(_collectionName, userId, {
         'name': trimmedNewName,
       });
       debugPrint(
-        "Nombre de usuario actualizado en Firestore para UID: $userId a $trimmedNewName",
+        'Nombre de usuario actualizado en Firestore para UID: $userId a $trimmedNewName',
       );
     } catch (e, stackTrace) {
       debugPrint(
-        "Error actualizando el nombre de usuario (Auth o Firestore): $e\nStackTrace: $stackTrace",
+        'Error actualizando el nombre de usuario (Auth o Firestore): $e\nStackTrace: $stackTrace',
       );
     }
 
@@ -88,12 +88,12 @@ class AuthProviderApp {
       final String? currentDeviceToken = await _notificationProvider
           .getCurrentDeviceToken();
 
-      List<String>? allUserTokens = await _notificationProvider
+      final List<String>? allUserTokens = await _notificationProvider
           .getUserTokensById(userId);
 
       if (allUserTokens == null || allUserTokens.isEmpty) {
         debugPrint(
-          "UpdateUserName: Usuario $userId no tiene tokens FCM, no se envía notificación de actualización de nombre.",
+          'UpdateUserName: Usuario $userId no tiene tokens FCM, no se envía notificación de actualización de nombre.',
         );
         return;
       }
@@ -108,12 +108,12 @@ class AuthProviderApp {
 
       if (otherDeviceTokens.isEmpty) {
         debugPrint(
-          "UpdateUserName: No se encontraron otros dispositivos para el usuario $userId para enviar notificación de actualización de nombre.",
+          'UpdateUserName: No se encontraron otros dispositivos para el usuario $userId para enviar notificación de actualización de nombre.',
         );
         return;
       }
 
-      final String notificationTitle = "Nombre actualizado";
+      const String notificationTitle = 'Nombre actualizado';
       final String notificationBody =
           "Tu nombre ha sido cambiado de '$oldName' a '$trimmedNewName'.";
       final Map<String, dynamic> dataPayload = {
@@ -124,12 +124,12 @@ class AuthProviderApp {
       };
 
       debugPrint(
-        "UpdateUserName: Enviando notificación de actualización de nombre a ${otherDeviceTokens.length} dispositivo(s).",
+        'UpdateUserName: Enviando notificación de actualización de nombre a ${otherDeviceTokens.length} dispositivo(s).',
       );
 
-      for (String token in otherDeviceTokens) {
+      for (final String token in otherDeviceTokens) {
         try {
-          bool sent = await _notificationProvider.sendNotificationToToken(
+          final bool sent = await _notificationProvider.sendNotificationToToken(
             token: token,
             title: notificationTitle,
             body: notificationBody,
@@ -137,22 +137,22 @@ class AuthProviderApp {
           );
           if (sent) {
             debugPrint(
-              "Notificación de actualización de nombre enviada a token: $token",
+              'Notificación de actualización de nombre enviada a token: $token',
             );
           } else {
             debugPrint(
-              "FALLO al enviar notificación de actualización de nombre a token: $token",
+              'FALLO al enviar notificación de actualización de nombre a token: $token',
             );
           }
         } catch (e, stackTrace) {
           debugPrint(
-            "UpdateUserName: Falló el envío de notificación de actualización de nombre al token $token: $e\nStackTrace: $stackTrace",
+            'UpdateUserName: Falló el envío de notificación de actualización de nombre al token $token: $e\nStackTrace: $stackTrace',
           );
         }
       }
     } catch (e, stackTrace) {
       debugPrint(
-        "Error en la lógica de envío de notificación de actualización de nombre: $e\nStackTrace: $stackTrace",
+        'Error en la lógica de envío de notificación de actualización de nombre: $e\nStackTrace: $stackTrace',
       );
     }
   }
@@ -162,12 +162,12 @@ class AuthProviderApp {
     String password,
     UserData userDataModel,
   ) async {
-    UserCredential? userCredential = await _authService.register(
+    final UserCredential? userCredential = await _authService.register(
       email,
       password,
       userDataModel,
     );
-    User? firebaseUser = userCredential?.user;
+    final User? firebaseUser = userCredential?.user;
     if (firebaseUser != null) {
       await _firestoreService.setDocument(
         firebaseUser.uid,
@@ -181,12 +181,15 @@ class AuthProviderApp {
   }
 
   Future<UserData?> login(String email, String password) async {
-    UserCredential? userCredential = await _authService.login(email, password);
-    User? firebaseUser = userCredential?.user;
+    final UserCredential? userCredential = await _authService.login(
+      email,
+      password,
+    );
+    final User? firebaseUser = userCredential?.user;
     if (firebaseUser != null) {
-      String? currentDeviceToken = await _notificationProvider
+      final String? currentDeviceToken = await _notificationProvider
           .getCurrentDeviceToken();
-      List<String>? allUserTokens = await _notificationProvider
+      final List<String>? allUserTokens = await _notificationProvider
           .getUserTokensById(firebaseUser.uid);
       final List<String> otherDeviceTokens =
           allUserTokens
@@ -195,14 +198,14 @@ class AuthProviderApp {
               )
               .toList() ??
           [];
-      final String title = "Nuevo Inicio de Sesión";
-      final String body =
-          "Tu cuenta ha sido accedida desde un nuevo dispositivo.";
+      const String title = 'Nuevo Inicio de Sesión';
+      const String body =
+          'Tu cuenta ha sido accedida desde un nuevo dispositivo.';
       final Map<String, String> dataPayload = {
         'type': 'new_device_login',
         'userId': firebaseUser.uid,
       };
-      for (String token in otherDeviceTokens) {
+      for (final String token in otherDeviceTokens) {
         try {
           await _notificationProvider.sendNotificationToToken(
             token: token,
@@ -211,11 +214,11 @@ class AuthProviderApp {
             data: dataPayload,
           );
           debugPrint(
-            "AuthController: New device login notification sent to token $token",
+            'AuthController: New device login notification sent to token $token',
           );
         } catch (e) {
           debugPrint(
-            "AuthController: Failed to send new device login notification to token $token: $e",
+            'AuthController: Failed to send new device login notification to token $token: $e',
           );
         }
       }
@@ -226,7 +229,7 @@ class AuthProviderApp {
 
   Future<UserData?> getUserDataByEmail(String email) async {
     if (email.isEmpty) {
-      debugPrint("Error: Email proporcionado está vacío.");
+      debugPrint('Error: Email proporcionado está vacío.');
       return null;
     }
     final String normalizedEmail = email.trim().toLowerCase();

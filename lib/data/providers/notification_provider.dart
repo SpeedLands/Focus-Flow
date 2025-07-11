@@ -221,7 +221,7 @@ class NotificationProvider {
     try {
       return UserData.fromFirestore(docs.first);
     } catch (e) {
-      debugPrint("Error convirtiendo UserData: $e");
+      debugPrint('Error convirtiendo UserData: $e');
       return null;
     }
   }

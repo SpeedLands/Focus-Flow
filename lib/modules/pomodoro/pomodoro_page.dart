@@ -38,7 +38,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
                     icon: const Icon(Icons.home_outlined, size: 18),
                     label: const Text('Ir a Home'),
                     onPressed: () {
-                      Get.offAllNamed(AppRoutes.HOME);
+                      Get.offAllNamed<Object>(AppRoutes.HOME);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal[700],
@@ -56,7 +56,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
               const Padding(
                 padding: EdgeInsets.only(top: 25.0, bottom: 8.0),
                 child: Text(
-                  "Selecciona Config",
+                  'Selecciona Config',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -78,7 +78,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
                   child: InkWell(
                     onTap: () {
                       controller.selectConfigForTimer(config);
-                      Get.toNamed(AppRoutes.POMODORO_TIMER);
+                      Get.toNamed<Object>(AppRoutes.POMODORO_TIMER);
                     },
                     borderRadius: BorderRadius.circular(20.0),
                     child: Padding(
@@ -120,7 +120,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
                   ),
                   backgroundColor: Colors.teal[700],
                   onPressed: () {
-                    Get.offAllNamed(AppRoutes.HOME);
+                    Get.offAllNamed<Object>(AppRoutes.HOME);
                   },
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -138,37 +138,6 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
     );
   }
 
-  Widget _buildTvPomodoroScreen(BuildContext context) {
-    return Scaffold(
-      appBar: GFAppBar(
-        title: const Text('Configuraciones Pomodoro (TV)'),
-        backgroundColor: GFColors.PRIMARY,
-        leading: GFIconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Get.offAllNamed(AppRoutes.HOME),
-        ),
-      ),
-      body: Center(
-        child: Text(
-          "Interfaz para TV aún no implementada. \n"
-          "Considera una GridView o una disposición más amplia.",
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-      floatingActionButton: GFIconButton(
-        onPressed: () {
-          controller.prepareFormForNewConfig();
-          Get.toNamed(AppRoutes.POMODORO_FORM);
-        },
-        tooltip: 'Añadir Configuración',
-        icon: const Icon(Icons.add),
-        type: GFButtonType.solid,
-        shape: GFIconButtonShape.circle,
-      ),
-    );
-  }
-
   Widget _buildMobilePomodoroScreen(BuildContext context) {
     return Scaffold(
       appBar: GFAppBar(
@@ -176,7 +145,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
         backgroundColor: GFColors.PRIMARY,
         leading: GFIconButton(
           icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Get.offAllNamed(AppRoutes.HOME),
+          onPressed: () => Get.offAllNamed<Object>(AppRoutes.HOME),
         ),
       ),
       body: Obx(() {
@@ -208,7 +177,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
                 ),
                 onTap: () {
                   controller.selectConfigForTimer(config);
-                  Get.toNamed(AppRoutes.POMODORO_TIMER);
+                  Get.toNamed<Object>(AppRoutes.POMODORO_TIMER);
                 },
                 icon: PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert),
@@ -216,21 +185,21 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
                   onSelected: (value) {
                     if (value == 'start') {
                       controller.selectConfigForTimer(config);
-                      Get.toNamed(AppRoutes.POMODORO_TIMER);
+                      Get.toNamed<Object>(AppRoutes.POMODORO_TIMER);
                     } else if (value == 'edit') {
                       controller.prepareFormForEdit(config);
-                      Get.toNamed(AppRoutes.POMODORO_FORM);
+                      Get.toNamed<Object>(AppRoutes.POMODORO_FORM);
                     } else if (value == 'delete') {
-                      Get.defaultDialog(
-                        title: "Confirmar Eliminación",
+                      Get.defaultDialog<void>(
+                        title: 'Confirmar Eliminación',
                         middleText:
                             "¿Estás seguro de que quieres eliminar la configuración '${config.name}'?",
-                        textConfirm: "Eliminar",
-                        textCancel: "Cancelar",
+                        textConfirm: 'Eliminar',
+                        textCancel: 'Cancelar',
                         confirmTextColor: Colors.white,
                         onConfirm: () {
                           controller.deleteConfig(config.id);
-                          Get.back();
+                          Get.back<Object>();
                         },
                       );
                     }
@@ -274,7 +243,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
       floatingActionButton: GFIconButton(
         onPressed: () {
           controller.prepareFormForNewConfig();
-          Get.toNamed(AppRoutes.POMODORO_FORM);
+          Get.toNamed<Object>(AppRoutes.POMODORO_FORM);
         },
         tooltip: 'Añadir Configuración',
         icon: const Icon(Icons.add),

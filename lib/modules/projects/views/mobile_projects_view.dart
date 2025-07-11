@@ -20,19 +20,19 @@ class MobileProjectsView extends StatelessWidget {
       appBar: GFAppBar(
         backgroundColor: GFColors.PRIMARY,
         title: const GFTypography(
-          text: "Mis Proyectos",
+          text: 'Mis Proyectos',
           type: GFTypographyType.typo1,
           textColor: GFColors.WHITE,
           showDivider: false,
         ),
         leading: GFIconButton(
           icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Get.offAllNamed(AppRoutes.HOME),
+          onPressed: () => Get.offAllNamed<Object>(AppRoutes.HOME),
         ),
         actions: [
           GFIconButton(
             icon: const Icon(Icons.group_add_outlined),
-            tooltip: "Unirse con Código",
+            tooltip: 'Unirse con Código',
             onPressed: () => controller.showJoinWithCodeDialog(context),
           ),
         ],
@@ -77,7 +77,7 @@ class MobileProjectsView extends StatelessWidget {
       floatingActionButton: GFIconButton(
         onPressed: controller.navigateToAddProject,
         icon: const Icon(Icons.add),
-        tooltip: "Nuevo Proyecto",
+        tooltip: 'Nuevo Proyecto',
         shape: GFIconButtonShape.pills,
       ),
     );

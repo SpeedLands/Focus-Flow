@@ -1,5 +1,5 @@
-import "package:cloud_firestore/cloud_firestore.dart";
-import "package:flutter/material.dart";
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 enum FilterOperator {
   isEqualTo,
@@ -37,7 +37,7 @@ class FirestoreService {
       final docRef = await _firestore.collection(collection).add(data);
       return docRef.id;
     } catch (e) {
-      debugPrint("Error agregando documento: $e");
+      debugPrint('Error agregando documento: $e');
       return null;
     }
   }
@@ -58,12 +58,12 @@ class FirestoreService {
         subCollectionName.isEmpty ||
         documentId.isEmpty) {
       debugPrint(
-        "Error: Nombres de colección/subcolección o ID de documento no pueden estar vacíos.",
+        'Error: Nombres de colección/subcolección o ID de documento no pueden estar vacíos.',
       );
       return null;
     }
     if (data.isEmpty) {
-      debugPrint("Error: Los datos para el documento no pueden estar vacíos.");
+      debugPrint('Error: Los datos para el documento no pueden estar vacíos.');
       return null;
     }
 
@@ -104,7 +104,7 @@ class FirestoreService {
           .doc(documentId)
           .set(data, options);
     } catch (e) {
-      debugPrint("Error estableciendo documento: $e");
+      debugPrint('Error estableciendo documento: $e');
       return;
     }
   }
@@ -113,7 +113,7 @@ class FirestoreService {
     try {
       return await _firestore.collection(collection).doc(docId).get();
     } catch (e) {
-      debugPrint("Error obteniendo documento: $e");
+      debugPrint('Error obteniendo documento: $e');
       return null;
     }
   }
@@ -135,12 +135,12 @@ class FirestoreService {
       return querySnapshot.docs;
     } on FirebaseException catch (e, stackTrace) {
       debugPrint(
-        "FirebaseException en getDocumentsWhere ($collectionName where $field == $isEqualToValue): ${e.message} (Code: ${e.code})\nStackTrace: $stackTrace",
+        'FirebaseException en getDocumentsWhere ($collectionName where $field == $isEqualToValue): ${e.message} (Code: ${e.code})\nStackTrace: $stackTrace',
       );
       return null;
     } catch (e, stackTrace) {
       debugPrint(
-        "Error inesperado en getDocumentsWhere ($collectionName where $field == $isEqualToValue): $e\nStackTrace: $stackTrace",
+        'Error inesperado en getDocumentsWhere ($collectionName where $field == $isEqualToValue): $e\nStackTrace: $stackTrace',
       );
       return null;
     }
@@ -169,7 +169,7 @@ class FirestoreService {
       await _firestore.collection(collection).doc(docId).update(data);
       return true;
     } catch (e) {
-      debugPrint("Error actualizando documento: $e");
+      debugPrint('Error actualizando documento: $e');
       return false;
     }
   }
@@ -179,7 +179,7 @@ class FirestoreService {
       await _firestore.collection(collection).doc(docId).delete();
       return true;
     } catch (e) {
-      debugPrint("Error eliminando documento: $e");
+      debugPrint('Error eliminando documento: $e');
       return false;
     }
   }
@@ -195,7 +195,7 @@ class FirestoreService {
     bool descending = false,
     int? limit,
   }) {
-    Query query = _firestore.collection(collectionPath);
+    Query<Map<String, dynamic>> query = _firestore.collection(collectionPath);
 
     if (filters != null && filters.isNotEmpty) {
       for (final filter in filters) {
@@ -227,13 +227,14 @@ class FirestoreService {
           case FilterOperator.arrayContains:
             query = query.where(filter.field, arrayContains: filter.value);
             break;
+
           case FilterOperator.arrayContainsAny:
-            if (filter.value is List && (filter.value as List).isNotEmpty) {
-              if ((filter.value as List).length <= 30) {
-                query = query.where(
-                  filter.field,
-                  arrayContainsAny: filter.value,
-                );
+            // Hacemos el cast a una variable local.
+            final valueList = filter.value as List?;
+            if (valueList != null && valueList.isNotEmpty) {
+              if (valueList.length <= 30) {
+                // Ahora pasamos la variable local fuertemente tipada.
+                query = query.where(filter.field, arrayContainsAny: valueList);
               } else {
                 debugPrint(
                   "Advertencia: 'arrayContainsAny' para el campo '${filter.field}' excede el límite de 30 elementos. El filtro podría no funcionar como se espera o Firestore podría rechazar la consulta.",
@@ -246,9 +247,10 @@ class FirestoreService {
             }
             break;
           case FilterOperator.whereIn:
-            if (filter.value is List && (filter.value as List).isNotEmpty) {
-              if ((filter.value as List).length <= 30) {
-                query = query.where(filter.field, whereIn: filter.value);
+            final valueList = filter.value as List?;
+            if (valueList != null && valueList.isNotEmpty) {
+              if (valueList.length <= 30) {
+                query = query.where(filter.field, whereIn: valueList);
               } else {
                 debugPrint(
                   "Advertencia: 'whereIn' para el campo '${filter.field}' excede el límite de 30 elementos. El filtro podría no funcionar como se espera o Firestore podría rechazar la consulta.",
@@ -261,9 +263,10 @@ class FirestoreService {
             }
             break;
           case FilterOperator.whereNotIn:
-            if (filter.value is List && (filter.value as List).isNotEmpty) {
-              if ((filter.value as List).length <= 10) {
-                query = query.where(filter.field, whereNotIn: filter.value);
+            final valueList = filter.value as List?;
+            if (valueList != null && valueList.isNotEmpty) {
+              if (valueList.length <= 10) {
+                query = query.where(filter.field, whereNotIn: valueList);
               } else {
                 debugPrint(
                   "Advertencia: 'whereNotIn' para el campo '${filter.field}' excede el límite de 10 elementos. El filtro podría no funcionar como se espera o Firestore podría rechazar la consulta.",

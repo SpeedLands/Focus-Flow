@@ -14,7 +14,7 @@ class PomodoroController extends GetxController {
 
   final RxList<PomodoroConfig> configs = <PomodoroConfig>[].obs;
   final Rx<PomodoroConfig?> selectedConfig = Rx<PomodoroConfig?>(null);
-  StreamSubscription? _configSubscription;
+  StreamSubscription<List<PomodoroConfig>>? _configSubscription;
   RxBool isLoadingConfigs = true.obs;
   RxBool isSavingConfig = false.obs;
 
@@ -50,6 +50,28 @@ class PomodoroController extends GetxController {
     }
   }
 
+  String get nextTimerStateLabel {
+    if (selectedConfig.value == null) return '';
+
+    final config = selectedConfig.value!;
+    final currentState = timerState.value == PomodoroTimerState.paused
+        ? stateBeforePause ?? timerState.value
+        : timerState.value;
+
+    switch (currentState) {
+      case PomodoroTimerState.work:
+        if (currentRound.value < config.rounds) {
+          return 'Descanso Corto';
+        }
+        return 'Descanso Largo';
+      case PomodoroTimerState.shortBreak:
+      case PomodoroTimerState.longBreak:
+        return 'Trabajo';
+      default:
+        return '';
+    }
+  }
+
   void _initFormControllers({PomodoroConfig? config}) {
     nameController = TextEditingController(text: config?.name ?? '');
     workTimeController = TextEditingController(
@@ -77,7 +99,7 @@ class PomodoroController extends GetxController {
     }
 
     int totalTime = selectedConfig.value!.workTime; // Valor por defecto
-    PomodoroTimerState currentState =
+    final PomodoroTimerState currentState =
         timerState.value == PomodoroTimerState.paused
         ? stateBeforePause ?? PomodoroTimerState.work
         : timerState.value;
@@ -124,7 +146,7 @@ class PomodoroController extends GetxController {
             }
             isLoadingConfigs.value = false;
           },
-          onError: (error) {
+          onError: (Object error) {
             isLoadingConfigs.value = false;
             Get.snackbar(
               'Error',
@@ -144,7 +166,7 @@ class PomodoroController extends GetxController {
   }
 
   Future<void> saveConfig() async {
-    String uid = _authController.currentUser.value?.uid ?? '';
+    final String uid = _authController.currentUser.value?.uid ?? '';
     if (formKey.currentState?.validate() ?? false) {
       isSavingConfig.value = true;
       try {
@@ -163,7 +185,7 @@ class PomodoroController extends GetxController {
         if (editingConfigId == null) {
           final newId = await _pomodoroProvider.addConfig(config, uid);
           if (newId != null) {
-            Get.back();
+            Get.back<Object>();
             Get.snackbar('Éxito', 'Configuración "${config.name}" añadida.');
           } else {
             Get.snackbar('Error', 'No se pudo añadir la configuración.');
@@ -185,7 +207,7 @@ class PomodoroController extends GetxController {
             uid,
           );
           if (success) {
-            Get.back();
+            Get.back<Object>();
             Get.snackbar(
               'Éxito',
               'Configuración "${config.name}" actualizada.',
@@ -206,15 +228,15 @@ class PomodoroController extends GetxController {
   }
 
   Future<void> deleteConfig(String configId) async {
-    String uid = _authController.currentUser.value?.uid ?? '';
-    Get.defaultDialog(
-      title: "Confirmar Eliminación",
-      middleText: "¿Estás seguro de que quieres eliminar esta configuración?",
-      textConfirm: "Eliminar",
-      textCancel: "Cancelar",
+    final String uid = _authController.currentUser.value?.uid ?? '';
+    await Get.defaultDialog<void>(
+      title: 'Confirmar Eliminación',
+      middleText: '¿Estás seguro de que quieres eliminar esta configuración?',
+      textConfirm: 'Eliminar',
+      textCancel: 'Cancelar',
       confirmTextColor: Colors.white,
       onConfirm: () async {
-        Get.back();
+        Get.back<Object>();
         isSavingConfig.value = true;
         final success = await _pomodoroProvider.deleteConfig(configId, uid);
         isSavingConfig.value = false;
@@ -425,17 +447,17 @@ class PomodoroController extends GetxController {
   String get currentTimerStateLabel {
     switch (timerState.value) {
       case PomodoroTimerState.work:
-        return "Trabajo";
+        return 'Trabajo';
       case PomodoroTimerState.shortBreak:
-        return "Descanso Corto";
+        return 'Descanso Corto';
       case PomodoroTimerState.longBreak:
-        return "Descanso Largo";
+        return 'Descanso Largo';
       case PomodoroTimerState.paused:
-        return "Pausado";
+        return 'Pausado';
       case PomodoroTimerState.finished:
-        return "Completado";
+        return 'Completado';
       case PomodoroTimerState.idle:
-        return "Listo";
+        return 'Listo';
     }
   }
 

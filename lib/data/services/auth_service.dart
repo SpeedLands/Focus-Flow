@@ -11,28 +11,28 @@ class AuthService {
     UserData userDataModel,
   ) async {
     try {
-      UserCredential userCredential = await _firebaseAuth
+      final UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      debugPrint("AuthService Error (register): ${e.code} - ${e.message}");
+      debugPrint('AuthService Error (register): ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
-      debugPrint("AuthService Error (register - general): $e");
+      debugPrint('AuthService Error (register - general): $e');
       rethrow;
     }
   }
 
   Future<UserCredential?> login(String email, String password) async {
     try {
-      UserCredential userCredential = await _firebaseAuth
+      final UserCredential userCredential = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      debugPrint("AuthService Error (login): ${e.code} - ${e.message}");
+      debugPrint('AuthService Error (login): ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
-      debugPrint("AuthService Error (login - general): $e");
+      debugPrint('AuthService Error (login - general): $e');
       rethrow;
     }
   }
@@ -41,7 +41,7 @@ class AuthService {
     try {
       await _firebaseAuth.signOut();
     } catch (e) {
-      debugPrint("AuthService Error (logout): $e");
+      debugPrint('AuthService Error (logout): $e');
       rethrow;
     }
   }
@@ -50,10 +50,10 @@ class AuthService {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
-      debugPrint("AuthService Error (resetPassword): ${e.code} - ${e.message}");
+      debugPrint('AuthService Error (resetPassword): ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
-      debugPrint("AuthService Error (resetPassword - general): $e");
+      debugPrint('AuthService Error (resetPassword - general): $e');
       rethrow;
     }
   }

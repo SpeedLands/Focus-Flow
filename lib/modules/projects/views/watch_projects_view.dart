@@ -27,10 +27,10 @@ class WatchProjectsView extends StatelessWidget {
                       size: 18,
                       color: Colors.white,
                     ),
-                    onPressed: () => Get.back(),
+                    onPressed: () => Get.back<Object>(),
                   ),
                   const Text(
-                    "Proyectos",
+                    'Proyectos',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -68,7 +68,7 @@ class WatchProjectsView extends StatelessWidget {
                   if (controller.projects.isEmpty) {
                     return const Center(
                       child: Text(
-                        "No hay proyectos.",
+                        'No hay proyectos.',
                         style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     );
@@ -105,7 +105,7 @@ class WatchProjectsView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         onTap: () {
-                          Get.toNamed(
+                          Get.toNamed<Object>(
                             AppRoutes.TASKS_LIST,
                             arguments: {
                               'projectId': project.id,

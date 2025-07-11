@@ -36,7 +36,7 @@ class RegisterScreen extends GetView<AuthController> {
           icon: Icon(Icons.arrow_back_ios, color: isTV ? Colors.white : null),
           onPressed: () {
             controller.clearRegisterFields();
-            Get.back();
+            Get.back<Object>();
           },
         ),
       ),
@@ -89,8 +89,8 @@ class RegisterScreen extends GetView<AuthController> {
                   controller: controller.registerNameController,
                   focusNode: nameFocusNode,
                   nextFocusNode: emailFocusNode,
-                  labelText: "Nombre Completo",
-                  hintText: "Tu nombre",
+                  labelText: 'Nombre Completo',
+                  hintText: 'Tu nombre',
                   prefixIcon: Icons.person_outline,
                   keyboardType: TextInputType.name,
                   textInputAction: TextInputAction.next,
@@ -109,8 +109,8 @@ class RegisterScreen extends GetView<AuthController> {
                   controller: controller.registerEmailController,
                   focusNode: emailFocusNode,
                   nextFocusNode: passwordFocusNode,
-                  labelText: "Correo Electrónico",
-                  hintText: "tu.correo@ejemplo.com",
+                  labelText: 'Correo Electrónico',
+                  hintText: 'tu.correo@ejemplo.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -132,8 +132,8 @@ class RegisterScreen extends GetView<AuthController> {
                     controller: controller.registerPasswordController,
                     focusNode: passwordFocusNode,
                     nextFocusNode: confirmPasswordFocusNode,
-                    labelText: "Contraseña",
-                    hintText: "Crea una contraseña",
+                    labelText: 'Contraseña',
+                    hintText: 'Crea una contraseña',
                     prefixIcon: Icons.lock_outline,
                     obscureText: !controller.registerPasswordVisible.value,
                     textInputAction: TextInputAction.next,
@@ -162,8 +162,8 @@ class RegisterScreen extends GetView<AuthController> {
                   () => _buildFormField(
                     controller: controller.registerConfirmPasswordController,
                     focusNode: confirmPasswordFocusNode,
-                    labelText: "Confirmar Contraseña",
-                    hintText: "Vuelve a escribirla",
+                    labelText: 'Confirmar Contraseña',
+                    hintText: 'Vuelve a escribirla',
                     prefixIcon: Icons.lock_outline,
                     obscureText:
                         !controller.registerConfirmPasswordVisible.value,
@@ -199,10 +199,10 @@ class RegisterScreen extends GetView<AuthController> {
                         ? null
                         : controller.registerWithFormValidation,
                     text: controller.isRegisterLoading.value
-                        ? "Registrando..."
-                        : "REGISTRARME",
+                        ? 'Registrando...'
+                        : 'REGISTRARME',
                     icon: controller.isRegisterLoading.value
-                        ? GFLoader(
+                        ? const GFLoader(
                             type: GFLoaderType.ios,
                             size: GFSize.SMALL,
                             loaderColorOne: Colors.white,
@@ -228,7 +228,7 @@ class RegisterScreen extends GetView<AuthController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "¿Ya tienes una cuenta?",
+                      '¿Ya tienes una cuenta?',
                       style: TextStyle(
                         color: isTV ? Colors.white70 : Colors.black54,
                       ),
@@ -236,9 +236,9 @@ class RegisterScreen extends GetView<AuthController> {
                     GFButton(
                       onPressed: () {
                         controller.clearRegisterFields();
-                        Get.offNamed(AppRoutes.LOGIN);
+                        Get.offNamed<Object>(AppRoutes.LOGIN);
                       },
-                      text: "INICIA SESIÓN",
+                      text: 'INICIA SESIÓN',
                       type: GFButtonType.transparent,
                       textColor: isTV
                           ? colorScheme.secondary
@@ -270,7 +270,7 @@ class RegisterScreen extends GetView<AuthController> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  "Crear Cuenta",
+                  'Crear Cuenta',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
@@ -283,8 +283,8 @@ class RegisterScreen extends GetView<AuthController> {
                   controller: controller.registerEmailController,
                   focusNode: emailFocusNode,
                   nextFocusNode: passwordFocusNode,
-                  labelText: "Email",
-                  hintText: "tu@correo.com",
+                  labelText: 'Email',
+                  hintText: 'tu@correo.com',
                   prefixIcon: null,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -303,8 +303,8 @@ class RegisterScreen extends GetView<AuthController> {
                   () => _buildFormField(
                     controller: controller.registerPasswordController,
                     focusNode: passwordFocusNode,
-                    labelText: "Contraseña",
-                    hintText: "Mín. 6 car.",
+                    labelText: 'Contraseña',
+                    hintText: 'Mín. 6 car.',
                     prefixIcon: null,
                     obscureText: !controller.registerPasswordVisible.value,
                     textInputAction: TextInputAction.done,
@@ -326,8 +326,8 @@ class RegisterScreen extends GetView<AuthController> {
                         ? null
                         : controller.registerWithFormValidation,
                     text: controller.isRegisterLoading.value
-                        ? "..."
-                        : "REGISTRAR",
+                        ? '...'
+                        : 'REGISTRAR',
                     size: GFSize.MEDIUM,
                     type: GFButtonType.solid,
                     shape: GFButtonShape.pills,
@@ -338,9 +338,9 @@ class RegisterScreen extends GetView<AuthController> {
                 GFButton(
                   onPressed: () {
                     controller.clearRegisterFields();
-                    Get.offNamed(AppRoutes.LOGIN);
+                    Get.offNamed<Object>(AppRoutes.LOGIN);
                   },
-                  text: "Ya tengo cuenta",
+                  text: 'Ya tengo cuenta',
                   type: GFButtonType.outline,
                   size: GFSize.SMALL,
                   textColor: Colors.white70,
@@ -366,7 +366,7 @@ class RegisterScreen extends GetView<AuthController> {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     TextInputAction textInputAction = TextInputAction.next,
-    Function(String)? onFieldSubmitted,
+    void Function(String)? onFieldSubmitted,
     String? Function(String?)? validator,
     required bool isTV,
     bool isWatch = false,
@@ -433,7 +433,7 @@ class RegisterScreen extends GetView<AuthController> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: GFColors.SUCCESS, width: 1.5),
+          borderSide: const BorderSide(color: GFColors.SUCCESS, width: 1.5),
         ),
         contentPadding: contentPadding,
         isDense: true,
@@ -454,7 +454,7 @@ class RegisterScreen extends GetView<AuthController> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: GFColors.SUCCESS, width: 2),
+          borderSide: const BorderSide(color: GFColors.SUCCESS, width: 2),
         ),
         contentPadding: contentPadding,
       );

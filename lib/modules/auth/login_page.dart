@@ -59,7 +59,7 @@ class LoginScreen extends GetView<AuthController> {
                 ),
                 _gap(config.spacing * 1.5),
                 Text(
-                  "Iniciar Sesión",
+                  'Iniciar Sesión',
                   textAlign: TextAlign.center,
                   style: config.titleStyle ?? const TextStyle(fontSize: 20),
                 ),
@@ -69,8 +69,8 @@ class LoginScreen extends GetView<AuthController> {
                   controller: controller.loginEmailController,
                   focusNode: emailFocusNode,
                   nextFocusNode: passwordFocusNode,
-                  labelText: "Correo Electrónico",
-                  hintText: "tu.correo@ejemplo.com",
+                  labelText: 'Correo Electrónico',
+                  hintText: 'tu.correo@ejemplo.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: _validateEmail,
@@ -85,8 +85,8 @@ class LoginScreen extends GetView<AuthController> {
                     nextFocusNode: deviceType == DeviceType.tv
                         ? loginButtonFocusNode
                         : null,
-                    labelText: "Contraseña",
-                    hintText: "Tu contraseña",
+                    labelText: 'Contraseña',
+                    hintText: 'Tu contraseña',
                     prefixIcon: Icons.lock_outline,
                     obscureText: !controller.loginPasswordVisible.value,
                     textInputAction: deviceType == DeviceType.tv
@@ -113,7 +113,7 @@ class LoginScreen extends GetView<AuthController> {
                 Align(
                   child: GFButton(
                     onPressed: () => _showForgotPasswordDialog(context, config),
-                    text: "Olvidé mi contraseña",
+                    text: 'Olvidé mi contraseña',
                     type: GFButtonType.transparent,
                     textColor: config.textColor ?? Colors.black,
                     size: GFSize.MEDIUM,
@@ -128,10 +128,13 @@ class LoginScreen extends GetView<AuthController> {
                         ? null
                         : controller.loginWithFormValidation,
                     text: controller.isLoginLoading.value
-                        ? "Ingresando..."
-                        : "INGRESAR",
+                        ? 'Ingresando...'
+                        : 'INGRESAR',
                     icon: controller.isLoginLoading.value
-                        ? GFLoader(type: GFLoaderType.ios, size: GFSize.SMALL)
+                        ? const GFLoader(
+                            type: GFLoaderType.ios,
+                            size: GFSize.SMALL,
+                          )
                         : const Icon(Icons.login, color: Colors.white),
                     fullWidthButton: true,
                     size: GFSize.LARGE,
@@ -148,7 +151,7 @@ class LoginScreen extends GetView<AuthController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "¿No tienes una cuenta?",
+                      '¿No tienes una cuenta?',
                       style:
                           config.captionStyle ??
                           const TextStyle(color: Colors.grey),
@@ -156,9 +159,9 @@ class LoginScreen extends GetView<AuthController> {
                     GFButton(
                       onPressed: () {
                         controller.clearLoginFields();
-                        Get.toNamed(AppRoutes.REGISTER);
+                        Get.toNamed<Object>(AppRoutes.REGISTER);
                       },
-                      text: "REGÍSTRATE",
+                      text: 'REGÍSTRATE',
                       type: GFButtonType.transparent,
                       textColor: config.linkColor ?? Colors.green,
                     ),
@@ -173,11 +176,11 @@ class LoginScreen extends GetView<AuthController> {
   }
 
   Widget _buildWatchLoginScreen(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.black,
       body: Center(
         child: Text(
-          "Watch login form (reducido)",
+          'Watch login form (reducido)',
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -197,7 +200,7 @@ class LoginScreen extends GetView<AuthController> {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     TextInputAction textInputAction = TextInputAction.next,
-    Function(String)? onFieldSubmitted,
+    void Function(String)? onFieldSubmitted,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -242,25 +245,25 @@ class LoginScreen extends GetView<AuthController> {
     );
     final resetFocus = FocusNode();
 
-    Get.defaultDialog(
-      title: "Restablecer Contraseña",
-      titleStyle: TextStyle(fontWeight: FontWeight.bold),
+    Get.defaultDialog<void>(
+      title: 'Restablecer Contraseña',
+      titleStyle: const TextStyle(fontWeight: FontWeight.bold),
       content: Column(
         children: [
-          Text("Ingresa tu correo para enviarte un enlace."),
+          const Text('Ingresa tu correo para enviarte un enlace.'),
           _gap(10),
           _buildFormField(
             controller: resetEmailController,
             focusNode: resetFocus,
-            labelText: "Correo Electrónico",
-            hintText: "ejemplo@email.com",
+            labelText: 'Correo Electrónico',
+            hintText: 'ejemplo@email.com',
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             validator: _validateEmail,
             onFieldSubmitted: (_) {
               controller.resetPassword(resetEmailController.text.trim());
-              if (Get.isDialogOpen ?? false) Get.back();
+              if (Get.isDialogOpen ?? false) Get.back<Object>();
             },
           ),
         ],
@@ -269,14 +272,14 @@ class LoginScreen extends GetView<AuthController> {
         onPressed: () {
           if (GetUtils.isEmail(resetEmailController.text.trim())) {
             controller.resetPassword(resetEmailController.text.trim());
-            Get.back();
+            Get.back<Object>();
           }
         },
-        text: "ENVIAR",
+        text: 'ENVIAR',
       ),
       cancel: GFButton(
-        onPressed: () => Get.back(),
-        text: "CANCELAR",
+        onPressed: () => Get.back<Object>(),
+        text: 'CANCELAR',
         type: GFButtonType.outline,
       ),
     );

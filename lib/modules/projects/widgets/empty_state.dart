@@ -26,20 +26,20 @@ class EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              "No Hay Proyectos",
+              'No Hay Proyectos',
               style: Get.textTheme.headlineSmall?.copyWith(color: titleColor),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
             Text(
-              "Crea tu primer proyecto para empezar a organizar tus tareas.",
+              'Crea tu primer proyecto para empezar a organizar tus tareas.',
               style: Get.textTheme.bodyLarge?.copyWith(color: textColor),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 25),
             GFButton(
               onPressed: controller.navigateToAddProject,
-              text: "Crear Nuevo Proyecto",
+              text: 'Crear Nuevo Proyecto',
               icon: const Icon(Icons.add_circle_outline, color: Colors.white),
               type: isTV ? GFButtonType.outline2x : GFButtonType.solid,
               textColor: isTV ? Colors.white : null,

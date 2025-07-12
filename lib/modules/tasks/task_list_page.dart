@@ -377,6 +377,7 @@ class _TasksListScreenState extends State<TasksListScreen>
           onPressed: () => Get.offAllNamed<Object>(AppRoutes.PROJECTS_LIST),
           type: GFButtonType.transparent,
         ),
+        automaticallyImplyLeading: false,
         // BARRA DE HERRAMIENTAS PARA CAMBIAR DE VISTA
         actions: [
           _buildViewSwitcherTV(), // Botones para cambiar de vista

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:focus_flow/data/models/app_notification_model.dart';
 import 'package:focus_flow/data/providers/notification_provider.dart';
@@ -286,8 +287,11 @@ class ProjectController extends GetxController {
   }
 
   void changeTvDetailView(int index) {
-    selectedTvDetailViewIndex.value = index;
-    fetchDetailsForTv(); // Vuelve a cargar datos si es necesario para la nueva vista
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      // Mueve aquí el código que cambia el estado
+      selectedTvDetailViewIndex.value = index;
+      fetchDetailsForTv();
+    });
   }
 
   Future<void> fetchDetailsForTv() async {

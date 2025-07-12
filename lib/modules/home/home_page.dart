@@ -353,6 +353,7 @@ class HomeScreen extends GetView<HomeController> {
           textColor: GFColors.WHITE,
         ),
         elevation: 2.0,
+        automaticallyImplyLeading: false,
         actions: [const NotificationIconBadge(), const GoToSettingsButton()],
       ),
       body: SingleChildScrollView(

@@ -4,6 +4,7 @@ import 'package:focus_flow/modules/projects/widgets/carousel.dart';
 import 'package:focus_flow/modules/projects/widgets/details.dart';
 import 'package:focus_flow/modules/projects/widgets/empty_state.dart';
 import 'package:focus_flow/modules/projects/widgets/error_state.dart';
+import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 
@@ -25,20 +26,30 @@ class TvProjectsView extends StatelessWidget {
           textColor: GFColors.WHITE,
           showDivider: false,
         ),
+        leading: GFIconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: GFColors.WHITE),
+          onPressed: () {
+            Get.toNamed<Object>(AppRoutes.HOME);
+          },
+          color: const Color(0xFF1a2436),
+          hoverColor: GFColors.FOCUS,
+        ),
         actions: [
           GFIconButton(
             icon: const Icon(Icons.group_add_outlined, color: Colors.white),
             tooltip: 'Unirse con Código',
             onPressed: () => controller.showJoinWithCodeDialog(context),
-            hoverColor: GFColors.PRIMARY.withValues(alpha: 0.3),
+            hoverColor: GFColors.FOCUS,
             focusColor: GFColors.SUCCESS,
+            color: const Color(0xFF1a2436),
           ),
           GFIconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             tooltip: 'Refrescar Datos',
             onPressed: () => controller.reloadProjects(),
-            hoverColor: GFColors.PRIMARY.withValues(alpha: 0.3),
+            hoverColor: GFColors.FOCUS,
             focusColor: GFColors.SUCCESS,
+            color: const Color(0xFF1a2436),
           ),
         ],
       ),

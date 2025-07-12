@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:focus_flow/modules/pomodoro/pomodoro_controller.dart';
+import 'package:focus_flow/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:simple_animations/simple_animations.dart';
@@ -491,6 +492,15 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
                     ? controller.skipToNextState
                     : null,
               ),
+              const SizedBox(width: 40),
+              _controlButtonTV(
+                icon: Icons.arrow_back,
+                label: 'Regresar',
+                onPressed: () {
+                  Get.toNamed<Object>(AppRoutes.POMODORO_LIST);
+                },
+                isPrimary: true,
+              ),
             ],
           ),
         ),
@@ -516,7 +526,7 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
             'Siguiente: $nextStateLabel',
             style: const TextStyle(color: Colors.white70),
           ),
-          backgroundColor: Colors.white.withValues(alpha: 0.1),
+          backgroundColor: const Color(0xFF1a2436),
         ),
       );
     });

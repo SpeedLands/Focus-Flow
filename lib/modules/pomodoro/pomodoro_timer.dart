@@ -250,7 +250,7 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
 
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(40.0),
+                padding: const EdgeInsets.all(10.0),
                 child: Column(
                   children: [
                     _buildHeaderTV(),
@@ -354,8 +354,8 @@ class PomodoroTimerScreen extends GetView<PomodoroController> {
       final color = isWork ? Colors.tealAccent : Colors.orangeAccent;
 
       return SizedBox(
-        width: 350,
-        height: 350,
+        width: 300,
+        height: 300,
         child: Stack(
           fit: StackFit.expand,
           children: [

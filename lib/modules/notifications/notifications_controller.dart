@@ -54,6 +54,19 @@ class NotificationController extends GetxController {
       isLoadingNotifications.value = false;
       _clearAndResetNotifications();
     }
+
+    once(appNotifications, (_) async {
+      // Marcamos el callback como async
+      if (appNotifications.isNotEmpty) {
+        // Espera un momento mínimo. Esto le da tiempo al motor de renderizado
+        // a terminar el frame actual antes de que intentemos causar otra reconstrucción.
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        final firstUnread = appNotifications.firstWhereOrNull((n) => !n.isRead);
+        // Actualiza el estado DESPUÉS de la pequeña pausa.
+        selectedNotification.value = firstUnread ?? appNotifications.first;
+      }
+    }, condition: () => appNotifications.isNotEmpty);
   }
 
   void _bindAppNotificationsStream(String userId) {
@@ -239,6 +252,8 @@ class NotificationController extends GetxController {
       );
     }
   }
+
+  final selectedNotification = Rx<AppNotificationModel?>(null);
 
   void navigateFromNotification(AppNotificationModel notification) {
     final AuthController authController = Get.find<AuthController>();

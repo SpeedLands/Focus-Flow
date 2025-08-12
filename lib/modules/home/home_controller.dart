@@ -40,12 +40,8 @@ class HomeController extends GetxController {
     if (shortestSide < 300 && screenWidth < 350) {
       deviceType.value = DeviceType.watch;
     } else if (shortestSide >= 600) {
-      if (GetPlatform.isWeb ||
-          GetPlatform.isDesktop ||
-          (screenWidth > 800 && screenHeight > 500)) {
+      if (GetPlatform.isWeb || GetPlatform.isDesktop || (screenWidth > 800)) {
         deviceType.value = DeviceType.tv;
-      } else {
-        deviceType.value = DeviceType.tablet;
       }
     } else {
       deviceType.value = DeviceType.mobile;

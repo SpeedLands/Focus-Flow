@@ -253,6 +253,153 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
     );
   }
 
+  // --- VERSIÓN DE TV USANDO GETWIDGET ---
+
+  Widget _buildTvPomodoroScreen(BuildContext context) {
+    final FocusNode firstItemFocusNode = FocusNode();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (firstItemFocusNode.context != null) {
+        firstItemFocusNode.requestFocus();
+      }
+    });
+
+    return Scaffold(
+      backgroundColor: Colors.blueGrey[900],
+      appBar: GFAppBar(
+        backgroundColor: Colors.blueGrey[800],
+        automaticallyImplyLeading: false,
+        title: const Text('Configuraciones Pomodoro'),
+        leading: GFIconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.offAllNamed<Object>(AppRoutes.HOME),
+          type: GFButtonType.transparent,
+        ),
+      ),
+      body: WillPopScope(
+        onWillPop: () async {
+          firstItemFocusNode.dispose();
+          return true;
+        },
+        child: Obx(() {
+          if (controller.isLoadingConfigs.value) {
+            return const Center(
+              child: GFLoader(
+                type: GFLoaderType.circle,
+                loaderColorOne: Colors.white,
+              ),
+            );
+          }
+          if (controller.configs.isEmpty) {
+            // Reutilizamos el helper de botón para el estado vacío
+            return _buildTvEmptyStateWithGetWidget();
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 30),
+            itemCount: controller.configs.length,
+            itemBuilder: (context, index) {
+              final PomodoroConfig config = controller.configs[index];
+              return _buildTvConfigCardWithGetWidget(
+                config: config,
+                focusNode: index == 0 ? firstItemFocusNode : null,
+              );
+            },
+          );
+        }),
+      ),
+    );
+  }
+
+  // Tarjeta de configuración usando GFCard y GFButton
+  Widget _buildTvConfigCardWithGetWidget({
+    required PomodoroConfig config,
+    FocusNode? focusNode,
+  }) {
+    // TRUCO: Envolvemos el GFCard en un widget Focus para poder asignarle el focusNode.
+    return Focus(
+      focusNode: focusNode,
+      child: Builder(
+        builder: (context) {
+          final isFocused = Focus.of(context).hasFocus;
+          return GFCard(
+            margin: const EdgeInsets.only(bottom: 25),
+            padding: const EdgeInsets.all(
+              2,
+            ), // Padding para que el borde se vea bien
+            color: isFocused ? GFColors.PRIMARY : Colors.blueGrey[800],
+            content: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GFTypography(
+                    text: config.name,
+                    type: GFTypographyType.typo4,
+                    textColor: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Trabajo: ${config.workTime ~/ 60} min | Descanso: ${config.shortBreak ~/ 60} min | Rondas: ${config.rounds}',
+                    style: Get.textTheme.titleMedium?.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+            buttonBar: GFButtonBar(
+              padding: const EdgeInsets.only(bottom: 10, right: 10),
+              children: [
+                GFButton(
+                  onPressed: () {
+                    controller.selectConfigForTimer(config);
+                    Get.toNamed<Object>(AppRoutes.POMODORO_TIMER);
+                  },
+                  text: 'Iniciar',
+                  icon: const Icon(
+                    Icons.play_circle_outline,
+                    color: Colors.white,
+                  ),
+                  color: GFColors.SUCCESS,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Estado vacío usando GFButton
+  Widget _buildTvEmptyStateWithGetWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'No hay configuraciones guardadas',
+            style: Get.textTheme.headlineMedium?.copyWith(
+              color: Colors.white70,
+            ),
+          ),
+          const SizedBox(height: 30),
+          GFButton(
+            onPressed: () {
+              controller.prepareFormForNewConfig();
+              Get.toNamed<Object>(AppRoutes.POMODORO_FORM);
+            },
+            text: 'Añadir la primera',
+            icon: const Icon(Icons.add, color: Colors.white),
+            color: GFColors.SUCCESS,
+            size: GFSize.LARGE,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = Get.width;
@@ -262,9 +409,7 @@ class PomodoroConfigListView extends GetView<PomodoroController> {
     if (isWatch) {
       return _buildWatchPomodoroScreen(context);
     } else if (isTV) {
-      return _buildMobilePomodoroScreen(
-        context,
-      ); //_buildTvPomodoroScreen(context);
+      return _buildTvPomodoroScreen(context);
     } else {
       return _buildMobilePomodoroScreen(context);
     }

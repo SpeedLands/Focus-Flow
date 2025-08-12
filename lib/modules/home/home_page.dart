@@ -9,22 +9,29 @@ import 'package:focus_flow/modules/home/home_controller.dart';
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
+  DeviceType get deviceType {
+    final width = Get.width;
+    final height = Get.height;
+    if (width < 320) return DeviceType.watch;
+    if (width > 800 && height > 500) return DeviceType.tv;
+    if (Get.mediaQuery.size.shortestSide >= 600) return DeviceType.tablet;
+    return DeviceType.mobile;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final currentDeviceType = controller.deviceType.value;
+    final currentDeviceType = deviceType;
 
-      switch (currentDeviceType) {
-        case DeviceType.watch:
-          return _buildWatchHomeScreen(context);
-        case DeviceType.tv:
-          return _buildMobileHomeScreen(context); //_buildTvHomeScreen(context);
-        case DeviceType.tablet:
-          return _buildTabletHomeScreen(context);
-        case DeviceType.mobile:
-          return _buildMobileHomeScreen(context);
-      }
-    });
+    switch (currentDeviceType) {
+      case DeviceType.watch:
+        return _buildWatchHomeScreen(context);
+      case DeviceType.tv:
+        return _buildTvHomeScreen(context);
+      case DeviceType.tablet:
+        return _buildTabletHomeScreen(context);
+      case DeviceType.mobile:
+        return _buildMobileHomeScreen(context);
+    }
   }
 
   Widget _buildWatchHomeScreen(BuildContext context) {
@@ -168,16 +175,17 @@ class HomeScreen extends GetView<HomeController> {
                   onTap: () => Get.toNamed<Object>(AppRoutes.PROJECTS_LIST),
                 ),
                 _buildFeatureCardTV(
-                  title: 'Temporizador Pomodoro',
-                  icon: Icons.timer_outlined,
-                  color: GFColors.WARNING,
-                  onTap: () => Get.snackbar('TV', 'Pomodoro (Próximamente)'),
+                  title: 'Notificaciones',
+                  icon: Icons.notifications,
+                  color: GFColors.INFO,
+                  onTap: () =>
+                      Get.toNamed<Object>(AppRoutes.NOTIFICATIONS_LIST),
                 ),
                 _buildFeatureCardTV(
                   title: 'Temporizador Pomodoro',
                   icon: Icons.timer_outlined,
                   color: GFColors.WARNING,
-                  onTap: () => Get.snackbar('TV', 'Pomodoro (Próximamente)'),
+                  onTap: () => Get.toNamed<Object>(AppRoutes.POMODORO_LIST),
                 ),
                 _buildFeatureCardTV(
                   title: 'Cerrar Sesión',
@@ -198,12 +206,14 @@ class HomeScreen extends GetView<HomeController> {
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
+    bool autoFocus = false,
   }) {
     return Material(
       color: Colors.blueGrey[800],
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
+        autofocus: autoFocus,
         borderRadius: BorderRadius.circular(12),
         focusColor: color.withValues(alpha: 0.3),
         child: Padding(
@@ -392,15 +402,6 @@ class HomeScreen extends GetView<HomeController> {
               color: GFColors.WARNING,
               onTap: () {
                 Get.offAllNamed<Object>(AppRoutes.POMODORO_LIST);
-              },
-              isTV: false,
-            ),
-            _buildFeatureSection(
-              title: 'Temporizador Pomodoro',
-              icon: Icons.timer_outlined,
-              color: GFColors.WARNING,
-              onTap: () {
-                Get.offAllNamed<Object>(AppRoutes.POMODORO_LIST_ANA);
               },
               isTV: false,
             ),

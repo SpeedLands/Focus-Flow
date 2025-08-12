@@ -249,6 +249,10 @@ class Details extends StatelessWidget {
                           borderRadius: const BorderRadius.all(
                             Radius.circular(6),
                           ),
+                          color: Colors.transparent,
+                          // gradient: LinearGradient(
+                          //   colors: [completedColor, pendingColor],
+                          // ),
                           rodStackItems: [
                             // Tareas Completadas (base de la barra)
                             BarChartRodStackItem(

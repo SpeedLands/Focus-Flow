@@ -73,10 +73,10 @@ class AccessCodeViewTvState extends State<AccessCodeViewTv> {
               context,
             ).textTheme.headlineMedium?.copyWith(color: Colors.white70),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 12),
           // La tarjeta que contiene el código
           _buildCodeCard(project),
-          const SizedBox(height: 40),
+          const SizedBox(height: 10),
           // Botones de acción
           _buildActionButtons(project),
         ],
@@ -142,7 +142,7 @@ class AccessCodeViewTvState extends State<AccessCodeViewTv> {
           color: Colors.white,
           hoverColor: project.projectColor.withValues(alpha: 0.3),
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 10),
         // Botón de Copiar Código
         Obx(() {
           final code = widget.controller.generatedAccessCode.value;
